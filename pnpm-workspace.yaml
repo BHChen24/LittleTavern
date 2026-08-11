@@ -1,0 +1,11 @@
+packages:
+  - "packages/*"
+
+# Install scripts are denied by default. Both of these arrive transitively via
+# @earendil-works/pi-ai -> @google/genai. Neither does anything we need:
+#   @google/genai  preinstall  -> `echo 'preinstall: no-op'`
+#   protobufjs     postinstall -> a version-scheme warning check that early-returns
+# Revisit only if a provider actually breaks.
+allowBuilds:
+  "@google/genai": false
+  protobufjs: false

@@ -1,0 +1,19 @@
+{
+  "name": "@littletavern/engine",
+  "version": "1.0.0",
+  "description": "Prompt assembly, output segmentation and game state for LittleTavern.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@earendil-works/pi-ai": "^0.84.1",
+    "@littletavern/data": "workspace:*",
+    "pino": "^10.3.1"
+  }
+}

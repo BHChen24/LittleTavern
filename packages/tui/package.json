@@ -1,0 +1,22 @@
+{
+  "name": "@littletavern/tui",
+  "version": "1.0.0",
+  "description": "The LittleTavern terminal application.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "littletavern": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@littletavern/engine": "workspace:*",
+    "ink": "^7.1.1",
+    "react": "^19.2.8"
+  }
+}
