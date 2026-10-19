@@ -357,8 +357,18 @@ Do not introduce any of these here until settled.
 - Config file format (TOML vs YAML); secrets storage (env vs database vs OS keychain — never let it
   default silently into a plaintext column); Ink theme/styling layer; keybinding scheme; user-facing
   error model; UI testing approach (Ink needs a library to capture frames, and
-  `ink-testing-library` is stale — verify early, it gates the whole UI test story); packaging and
-  distribution.
+  `ink-testing-library` is stale — verify early, it gates the whole UI test story).
+
+- **CI/CD.** Deliberately deferred. Note that CI itself needs **no packages** — `pnpm build`,
+  `pnpm lint` and `pnpm test` already exist, so a GitHub Actions workflow is a YAML file calling
+  them (remote is `github.com/BHChen24/LittleTavern`, no `.github/` yet). Only three things here are
+  actual dependencies, and each waits on a trigger:
+  - git hooks (`lefthook` / `simple-git-hooks`) — worth it once commits are frequent enough that
+    pre-commit lint saves more than it costs;
+  - a bundler (`tsdown` / `tsup`) — needed at first release, because `tsc` emits a mirrored tree
+    rather than a shippable artifact;
+  - `changesets` — only if packages are ever published separately, which is currently not planned
+    since all three are `private: true`.
 
 ## Structure
 
