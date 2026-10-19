@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*.ts", "**/*.tsx", "**/*.json", "!**/dist", "!.claude", "!.omo"]
+    "includes": ["**/*.ts", "**/*.json", "!**/dist", "!.claude", "!.agents", "!.specify", "!.omo"]
   },
   "formatter": {
     "enabled": true,
