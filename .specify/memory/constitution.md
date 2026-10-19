@@ -1,0 +1,127 @@
+# LittleTavern Constitution
+
+LittleTavern is a terminal (TUI) client for character-card roleplay. SillyTavern is a design
+reference, not a specification: output parity with it is not a goal.
+
+## Core Principles
+
+### I. Build on pi, Own the Context
+
+- Infrastructure MUST come from the pi framework (`@earendil-works/pi-*`) wherever pi provides it:
+  provider transport and streaming, the agent/tool-call loop, the terminal UI, session storage and
+  compaction utilities. Hand-rolling a piece of infrastructure that pi already provides requires a
+  written justification in the feature's plan.
+- **Prompt construction and the context engine are ours** and MUST NOT be delegated to pi. This
+  covers dynamic prompt assembly, lorebook activation, and every retrieval, trimming, compression
+  and context-management policy. pi's mechanisms (e.g. compaction helpers, `transformContext`)
+  MAY be used as building blocks, but the policy deciding what enters the context is our code.
+- pi's coding-agent features MUST be disabled: built-in coding tools, skills, prompt templates and
+  project context files (`AGENTS.md`/`CLAUDE.md` injection). pi's per-user directories MUST NOT be
+  shared with a user's own pi install.
+
+Rationale: pi gives a maintained, coherent harness, which keeps our logic small and readable.
+Context engineering is the product; it is the one place we refuse to outsource.
+
+### II. Wrap pi Behind Our Own Types
+
+- pi packages MUST be pinned to exact versions (no `^`/`~`). An upgrade is a deliberate change
+  with its own commit, after reading pi's changelog for breaking changes.
+- The public APIs of `data` and `engine` MUST expose only LittleTavern types. pi imports in those
+  packages are confined to adapter modules, so a pi breaking change is absorbed in one place.
+- The `tui` package MAY use `pi-tui` directly; it is the UI framework, not a dependency to hide.
+- Facts about pi used in specs and plans MUST be verified against the pinned version's source
+  (the `../pi` reference clone checked out at that tag), not recalled from memory.
+
+Rationale: pi went from 0.87 to 1.0 within ten days and removed APIs we had planned around. An
+anti-corruption layer turns the next such release into a local repair instead of a rewrite.
+
+### III. Mechanism, Not Policy
+
+- LittleTavern ships mechanism; the user's configuration, cards and prompts determine whether a
+  particular setup works. We do not build model-compliance detection, schema-repair heuristics,
+  or fallback paths for every malformed block a model might emit.
+- When output does not match a user's configured pattern, nothing happens. Failures MUST be
+  visible and cheap rather than guessed around.
+
+Rationale: this is a deliberate scope limit that keeps the codebase small enough to reason about.
+
+### IV. Lossless Ecosystem Data
+
+- Ecosystem formats MUST import losslessly: character cards (PNG with `chara`/`ccv3` text chunks,
+  plain JSON; spec V2 and V3) and lorebooks (embedded `character_book` and standalone files).
+- The original source JSON MUST be preserved verbatim at import. Unknown and extension fields
+  MUST survive a round trip; this is enforced by tests using real-world fixtures.
+- SillyTavern application state (settings, presets, chats, regex scripts) is not a core import
+  format. Converters for it, if built, are separate from the core.
+
+Rationale: a source blob not captured at import can never be recovered later. Fidelity to other
+people's data is a feature in itself.
+
+### V. Explainable Context
+
+- Every request the engine assembles MUST be accompanied by a machine-readable trace: which
+  sources contributed (card fields, lorebook entries, history, injected state), why each lorebook
+  entry activated or was excluded (matched key, constant, budget cut), and its token cost.
+- The trace MUST be produced by the same code path that builds the request, not reconstructed
+  afterwards. Engine tests assert on the trace as well as on the prompt.
+- Full traces are developer-facing by default; users can enable a debug mode that shows them.
+  This is a visibility default, not a security boundary.
+
+Rationale: context engineering cannot be developed, tested or trusted if its decisions are
+invisible. The trace is both the main debugging tool and the clearest demonstration of the engine.
+
+### VI. MVP First, One Decided Piece at a Time
+
+- The current goal is a runnable, demonstrable first version. Work not required by the active
+  feature spec MUST NOT be built "for later" (plugin sockets, layered config, retrieval, swipes,
+  group chat and similar wait for their own specs).
+- Undecided design MUST NOT be written into committed files as if it were settled. Open questions
+  are recorded as open in the spec that owns them.
+- The engine MUST stay importable and testable without loading the TUI: dependency direction is
+  `tui → engine → data`, and `engine`/`data` never import `pi-tui`.
+
+Rationale: a small finished thing beats a large planned one, and early guesses written down as
+decisions are hard to unlearn.
+
+## Licensing, Safety and Technology Constraints
+
+- **Licensing.** LittleTavern is MIT. SillyTavern and most comparable projects are AGPL/GPL. Read
+  them to learn formats and ideas, describe them in our own words, and implement independently.
+  Never copy source, translate functions statement by statement, or vendor their files. File
+  formats, field names and enum values are not code and may be used as-is.
+- **Reference trees are read-only.** Never modify or write into `../SillyTavern`, any SillyTavern
+  installation, or the `../pi` reference clone (other than checking out a release tag).
+- **Secrets.** API keys MUST never default silently into plaintext storage. Logs MUST redact
+  secrets from the first commit that logs a request.
+- **Logging.** The TUI owns stdout; logs go to a file in structured form.
+- **Stack.** Node with pnpm workspaces; TypeScript built with `tsc -b`; `erasableSyntaxOnly`
+  (no `enum`, runtime `namespace`, or constructor parameter properties); explicit `.ts` import
+  extensions; Vitest; Biome. pi packages as in Principle II.
+- **Dependencies.** Each new dependency must be needed by the active spec. Install scripts stay
+  denied by default in `pnpm-workspace.yaml`.
+
+## Development Workflow
+
+- Spec Kit is the control flow: constitution → spec → plan → tasks → implementation. Specs and
+  plans MUST be self-sufficient, because implementation is largely done by a separate agent
+  (Codex) that has no access to design conversations.
+- Specs state what and why; technology choices belong in the plan. The plan's Constitution Check
+  MUST cite the principles above and justify any exception.
+- Development happens on `main`. Every commit MUST pass `pnpm build`, `pnpm lint` and `pnpm test`.
+- Engine behaviour (import, lore activation, prompt assembly, trace) is covered by unit tests with
+  fixtures; UI is verified by running the app.
+- Tests that run a local LLM or use the GPU require the owner's explicit go-ahead first.
+
+## Governance
+
+This constitution supersedes `AGENTS.md` and any other guidance file. `AGENTS.md` holds runtime
+guidance only (commands, repository conventions) and MUST defer to this document where they
+overlap.
+
+Amendments are made through `/speckit-constitution` and versioned semantically: MAJOR for removing
+or redefining a principle, MINOR for adding a principle or materially expanding guidance, PATCH
+for clarifications. Each amendment updates the Sync Impact Report and the dates below. Every plan
+and review checks compliance; an exception is allowed only when the plan records why it is needed
+and why the simpler compliant option was rejected.
+
+**Version**: 1.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
