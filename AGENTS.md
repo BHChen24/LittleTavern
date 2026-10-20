@@ -64,6 +64,8 @@ All run from the repository root:
 | `pnpm test` / `pnpm test:watch` | Vitest |
 | `pnpm lint` | Biome check (lint + format, read-only) |
 | `pnpm lint:fix` | Biome check with `--write` |
+| `pnpm release:build` | Build the standalone npm release tarball |
+| `pnpm release:check` | Build and verify release contents and scan for secrets |
 
 Every commit must pass `pnpm build`, `pnpm lint` and `pnpm test`.
 

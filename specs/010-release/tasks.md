@@ -145,8 +145,8 @@ after the owner pushes (quickstart).
 
 ## Phase 7: User Story 5 - The README matches the release (P3)
 
-- [ ] T014 [US5] Update `README.md` (FR-014): the install section becomes `npm install -g littletavern`, with "Node.js 22.19 or newer (tested on 22, 24 and 26)"; the quick start mentions that Alice and the Wonderland lorebook are ready on first start; installing from source moves into the Development section; `/import` is described as importing from the import folders, with `littletavern import <file>` for other locations. Keep everything else
-- [ ] T015 [US5] Add `pnpm release:build` and `pnpm release:check` to the Commands table in `AGENTS.md`, with one line each
+- [X] T014 [US5] Update `README.md` (FR-014): the install section becomes `npm install -g littletavern`, with "Node.js 22.19 or newer (tested on 22, 24 and 26)"; the quick start mentions that Alice and the Wonderland lorebook are ready on first start; installing from source moves into the Development section; `/import` is described as importing from the import folders, with `littletavern import <file>` for other locations. Keep everything else
+- [X] T015 [US5] Add `pnpm release:build` and `pnpm release:check` to the Commands table in `AGENTS.md`, with one line each
 
 **Checkpoint**: checks pass. Commit.
 

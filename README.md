@@ -27,34 +27,31 @@ agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
 ## Requirements
 
-- Node.js 26 or newer
+- Node.js 22.19 or newer (tested on 22, 24 and 26)
 - An [OpenRouter](https://openrouter.ai/) API key. Models from the OpenAI and Gemini families are
   supported.
 
 ## Install
 
-Prebuilt releases are not published yet. To install from source (needs [pnpm](https://pnpm.io/)):
-
 ```bash
-git clone https://github.com/BHChen24/LittleTavern.git
-cd LittleTavern
-pnpm install
-pnpm build
-cd packages/tui && pnpm link --global
+npm install -g littletavern
 ```
 
 `littletavern` is now available in any directory. Remove it with
-`pnpm remove --global @littletavern/tui`.
+`npm uninstall -g littletavern`.
 
 ## Quick start
 
-1. Put character cards in `~/.littletavern/characters/` and lorebooks in
-   `~/.littletavern/lorebooks/`, or import them later with `/import`.
-2. Run `littletavern` and press Enter. The app lists the setup steps that are still missing.
-3. `/apikey` adds your OpenRouter key. You choose whether it is kept for this session only or
+1. Run `littletavern` and press Enter. On the first interactive start, Alice and the Wonderland
+   lorebook are added to your library, with Wonderland already attached to Alice.
+2. `/apikey` adds your OpenRouter key. You choose whether it is kept for this session only or
    saved to a file only you can read.
-4. `/model` chooses a model.
-5. `/characters` starts a chat, or creates a new character. `/persona` sets who you are.
+3. `/model` chooses a model.
+4. `/characters` starts a chat with Alice, another character, or creates a new one. `/persona`
+   sets who you are.
+5. To add your own content, put character cards in `~/.littletavern/characters/` and lorebooks in
+   `~/.littletavern/lorebooks/`, then use `/import` to browse the import folders. For other
+   locations, run `littletavern import <file>` in a shell.
 
 Type `/` at any time to see the commands, with completion.
 
@@ -70,7 +67,7 @@ Type `/` at any time to see the commands, with completion.
 | `/attach <id>`, `/detach <id>` | Attach or detach a lorebook for the current character |
 | `/lorebooks` | List the active lorebooks |
 | `/persona` | Choose, create or edit who you are in the story |
-| `/import [path]` | Import a card or lorebook; without a path, browse the import folders |
+| `/import` | Import a card or lorebook from the import folders |
 | `/library`, `/show <id>` | List the library, or inspect one item |
 | `/innkeeper` | Talk to the innkeeper (a chat without a character) |
 | `/model` | Choose a model |
@@ -129,6 +126,22 @@ in one directory instead.
 - The key is removed from anything the app displays or logs.
 
 ## Development
+
+### Install from source
+
+This needs [pnpm](https://pnpm.io/):
+
+```bash
+git clone https://github.com/BHChen24/LittleTavern.git
+cd LittleTavern
+pnpm install
+pnpm build
+cd packages/tui && pnpm link --global
+```
+
+Remove the source-linked command with `pnpm remove --global @littletavern/tui`.
+
+### Checks
 
 ```bash
 pnpm install       # also installs the git hooks

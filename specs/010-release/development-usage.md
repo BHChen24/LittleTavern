@@ -154,3 +154,15 @@ in the session transcript. No environment file or real credentials are read or u
 90. `write_stdin`: collect temporary installer verification. Outcome: succeeded.
 91. `exec_command`: mark T012-T013 and update usage. Outcome: workflows ready to commit;
     live GitHub execution remains an owner check, no push/tag/publication performed.
+
+## Release documentation
+
+92. `exec_command` (escalated): commit workflows. Outcome: b8b46dd; hooks passed.
+93. `exec_command`: read README, prior report structure and converge skill. Outcome: documentation
+    edits scoped; convergence procedure loaded for T017.
+94. `exec_command`: update npm install, Node wording, Alice quick start, source developer section,
+    import description and AGENTS release commands; run gate. Outcome: build/lint and 342 tests passed.
+95. `write_stdin`: collect documentation gate. Outcome: passed.
+96. `exec_command`: review documentation diff and whitespace. Outcome: changes match T014-T015;
+    no whitespace errors.
+97. `exec_command`: mark T014-T015 and update usage. Outcome: documentation phase ready to commit.
