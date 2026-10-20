@@ -125,7 +125,9 @@ it("shows all placeholders, follows persona changes, and hides invalid active pe
   );
   const result = importFile(paths, file);
   if (!result.ok) throw new Error(result.reason);
-  await app.submit(`/chat ${result.item.id}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${result.item.id}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   expect(lines().join("\n")).toContain("Talk to Mira… (/ for commands)");
   mkdirSync(paths.importPersonasDir, { recursive: true });
   writeFileSync(join(paths.importPersonasDir, "traveller.md"), "## Name\nTraveller\n");
@@ -202,4 +204,37 @@ it("keeps the draft and reports an editor failure", () => {
   input("\x0f");
   expect(app.editor.getText()).toBe("Keep this draft.");
   expect(lines().join("\n")).toContain("Error: Could not run editor");
+});
+
+it("fits help inside a 60x24 terminal, scrolls and restores editor focus on Esc", async () => {
+  const { app, input, terminal } = fixture();
+  terminal.columns = 60;
+  terminal.rows = 24;
+  const write = vi.spyOn(terminal, "write");
+  app.start();
+  app.enterChat();
+  await app.submit("/help");
+  const help = app.tui.getFocusedComponent();
+  const lines = help?.render(60) ?? [];
+  expect(lines.length).toBeLessThanOrEqual(24);
+  expect(stripVTControlCharacters(lines[0] ?? "").startsWith("┌")).toBe(true);
+  expect(stripVTControlCharacters(lines.at(-1) ?? "").endsWith("┘")).toBe(true);
+  expect(lines.every((line) => visibleWidth(line) === 60)).toBe(true);
+  const firstPage = lines.join("\n");
+  expect(firstPage).toContain("/characters");
+  expect(firstPage).not.toContain("Ctrl+Shift+F");
+  await vi.waitFor(() => {
+    const output = stripVTControlCharacters(write.mock.calls.map(([text]) => text).join(""));
+    expect(output).toContain("┌");
+    expect(output).toContain("└");
+  });
+  input("\x1b[6~");
+  expect(help?.render(60).join("\n")).not.toBe(firstPage);
+  input("\x1b[F");
+  expect(help?.render(60).join("\n")).toContain("Ctrl+Shift+F");
+  input("\x1b[H");
+  expect(help?.render(60).join("\n")).toBe(firstPage);
+  input("\x1b");
+  expect(app.tui.hasOverlay()).toBe(false);
+  expect(app.tui.getFocusedComponent()).toBe(app.editor);
 });

@@ -108,12 +108,17 @@ it("never renders escape sequences from a card or a reply in the app", async () 
     await app.submit("/characters");
     expectSafe(app.tui.getFocusedComponent()?.render(100).join("\n") ?? "");
     app.tui.getFocusedComponent()?.handleInput?.("\x1b");
-    await app.submit(`/chat ${report.item.id}`);
+    await app.submit("/characters");
+    app.tui.getFocusedComponent()?.handleInput?.(`${report.item.id}`);
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("k");
     await vi.waitFor(() => expect(screen()).toContain("reply"));
     await app.submit("/trace");
     expectSafe(app.tui.getFocusedComponent()?.render(100).join("\n") ?? "");
-    await app.submit(`/show ${report.item.id}`);
+    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+    await app.submit("/show");
+    app.tui.getFocusedComponent()?.handleInput?.(report.item.id);
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     expectSafe(screen());
     expect(screen()).toContain("Hello");
   } finally {

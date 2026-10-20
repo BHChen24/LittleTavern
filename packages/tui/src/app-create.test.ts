@@ -60,7 +60,7 @@ it("creates from the character picker without a key through a fake VISUAL and co
     expect(existsSync(paths.credentialsFile)).toBe(false);
     expect(screen()).toContain("No API key — /apikey");
     expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
-    expect(screen()).toContain("Start chatting with /chat");
+    expect(screen()).toContain("Choose the character with /characters to start chatting.");
     await app.submit("/library");
     expect(screen()).toContain("Mira");
     expect(readdirSync(join(paths.importRoot, "drafts"))).toEqual([]);
@@ -81,7 +81,9 @@ it("creates from the character picker without a key through a fake VISUAL and co
     );
     expect(readdirSync(join(paths.importRoot, "drafts"))).toEqual([]);
     const item = listLibrary(paths).find((entry) => entry.name === "Mira");
-    await app.submit(`/chat ${item?.id}`);
+    await app.submit("/characters");
+    app.tui.getFocusedComponent()?.handleInput?.(`${item?.id}`);
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     expect(screen()).toContain("Welcome!");
     expect(screen()).toContain("No API key — /apikey");
     expect(existsSync(paths.credentialsFile)).toBe(false);
