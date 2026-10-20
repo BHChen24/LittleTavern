@@ -49,9 +49,9 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 1: Foundational
 
-- [ ] T001 [P] Rework `packages/tui/src/theme.ts` into named styles with the palette in research R3: `user`, `character`, `notice`, `error`, `dialogue`, `accent`, `muted`. Under a non-empty `NO_COLOR`, remove colours only and keep `bold`, `italic` and `dim` (R3 explains why plain `styleText` is not enough). Write tests T-i1
-- [ ] T002 [P] Add `colourDialogue(text)` in `packages/tui/src/dialogue.ts` (R3). Write tests T-a
-- [ ] T003 [P] Add `mouse?: boolean` to `Settings` in `packages/data/src/settings.ts`. It is validated as a boolean, and absent means `true`. Extend `settings.test.ts`
+- [X] T001 [P] Rework `packages/tui/src/theme.ts` into named styles with the palette in research R3: `user`, `character`, `notice`, `error`, `dialogue`, `accent`, `muted`. Under a non-empty `NO_COLOR`, remove colours only and keep `bold`, `italic` and `dim` (R3 explains why plain `styleText` is not enough). Write tests T-i1
+- [X] T002 [P] Add `colourDialogue(text)` in `packages/tui/src/dialogue.ts` (R3). Write tests T-a
+- [X] T003 [P] Add `mouse?: boolean` to `Settings` in `packages/data/src/settings.ts`. It is validated as a boolean, and absent means `true`. Extend `settings.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 

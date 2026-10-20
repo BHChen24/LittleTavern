@@ -84,3 +84,21 @@ it("merges on write and keeps unknown fields", () => {
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("validates mouse capture independently and defaults missing values to on at use", () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-settings-mouse-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  try {
+    expect(readSettings(paths).mouse !== false).toBe(true);
+    for (const mouse of [false, true]) {
+      writeSettings(paths, { mouse });
+      expect(readSettings(paths).mouse).toBe(mouse);
+    }
+    for (const mouse of ["false", 0, null, []]) {
+      writeFileSync(paths.settingsFile, JSON.stringify({ mouse, userName: "Parker" }));
+      expect(readSettings(paths)).toEqual({ userName: "Parker" });
+    }
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
