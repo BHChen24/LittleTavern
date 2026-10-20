@@ -63,7 +63,7 @@ quickstart.md
 
 ## Phase 1: Setup
 
-- [ ] T001 (FR-011) In `.github/workflows/ci.yml`, change the trigger to `on: { push: { branches: [main] }, pull_request: {} }`, written in block YAML style like the rest of the file (research R7). Check that it parses with the `yaml` package (for example `node -e` run from `packages/data`) and that `push.branches` is `["main"]` and `pull_request` is present (T-j). Record the command and output for the report
+- [X] T001 (FR-011) In `.github/workflows/ci.yml`, change the trigger to `on: { push: { branches: [main] }, pull_request: {} }`, written in block YAML style like the rest of the file (research R7). Check that it parses with the `yaml` package (for example `node -e` run from `packages/data`) and that `push.branches` is `["main"]` and `pull_request` is present (T-j). Record the command and output for the report
 
 **Checkpoint**: checks pass. Commit.
 
