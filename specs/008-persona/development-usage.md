@@ -39,3 +39,12 @@ Total platform-reported development tokens: **unknown**. No run total is exposed
 35. `exec_command` — Inspect picker testing patterns, sanitization, acceptance options and converge skill. Outcome: Success.
 36. `functions.exec / write_stdin` — Collect Phase 3 full gate results. Outcome: See output.
 37. `functions.exec / exec_command` — Mark Phase 3 complete and update usage. Outcome: Build/lint passed; 48 test files, 281 tests.
+38. `exec_command` — Commit validated Phase 3 assembly integration. Outcome: See commit output.
+39. `functions.exec / exec_command` — Confirm command guards, terminal test harness and pinned overlay API. Outcome: See output.
+40. `functions.exec / apply_patch` — Add command, fake editor persona picker and draft separation tests before implementation. Outcome: Success; reused small terminal harness.
+41. `exec_command` — Run Phase 4 tests before implementation. Outcome: Started; expected command and UI failures.
+42. `functions.exec / write_stdin` — Collect Phase 4 red-test failures. Outcome: Expected missing /persona.
+43. `apply_patch` — Implement T007/T008 command, picker and editor flows, and update command contract. Outcome: Success.
+44. `exec_command` — Run Phase 4 full validation gate. Outcome: Started.
+45. `functions.exec / write_stdin` — Collect Phase 4 validation results. Outcome: See output.
+46. `functions.exec / exec_command` — Mark Phase 4 complete and update usage. Outcome: Build/lint passed; 49 test files, 284 tests.

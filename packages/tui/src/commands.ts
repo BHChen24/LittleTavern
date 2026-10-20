@@ -116,6 +116,7 @@ export function COMMANDS(context?: CommandContext): SlashCommand[] {
       getArgumentCompletions: library(),
     },
     { name: "new-character", description: "Write a new character in your editor" },
+    { name: "persona", description: "Choose who you are in the story" },
     { name: "model", description: "Choose a model" },
     { name: "apikey", description: "Add, replace or forget your OpenRouter API key" },
     { name: "help", description: "Show commands and key bindings" },

@@ -20,6 +20,7 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/library` | — | List the library |
 | `/show <id>` | library items | Inspect an item |
 | `/new-character` | — | Write a new character in your editor (added by 007) |
+| `/persona` | — | Choose who you are in the story (added by 008) |
 | `/model` | — | Choose a model |
 | `/apikey` | — | Add, replace or forget your OpenRouter API key |
 | `/help` | — | Show commands and key bindings |

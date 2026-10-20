@@ -89,8 +89,8 @@ description: "Task list for 008-persona"
 
 ## Phase 4: User Story 2 - Choose who I am (P1)
 
-- [ ] T007 [US2] Add `/persona` to `COMMANDS` in `packages/tui/src/commands.ts`, with the description "Choose who you are in the story". Update `commands.test.ts` and the command row in 006's `contracts/commands.md`
-- [ ] T008 [US2] In `packages/tui/src/app.ts`, open a `ListPicker` from `/persona`.
+- [X] T007 [US2] Add `/persona` to `COMMANDS` in `packages/tui/src/commands.ts`, with the description "Choose who you are in the story". Update `commands.test.ts` and the command row in 006's `contracts/commands.md`
+- [X] T008 [US2] In `packages/tui/src/app.ts`, open a `ListPicker` from `/persona`.
   - **Entries**: one per persona, with `● ` before the active one. Invalid persona files are shown with their error and cannot be selected.
   - **Actions**:
     - "New persona": a draft from `PERSONA_TEMPLATE` in **`<importRoot>/drafts/personas/`**, a sub-folder, so that `/new-character`, which lists only `.md` files directly in `drafts/`, never offers persona drafts (regression test T-i), opened with `openInEditor` and the `tui.stop`/`tui.start` pattern from `/new-character`, then `createPersonaFromDraft`, which activates the new persona on success;

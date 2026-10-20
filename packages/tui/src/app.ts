@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   CombinedAutocompleteProvider,
@@ -22,6 +22,7 @@ import {
   ChatSession,
   createCharacterFromDraft,
   createLogger,
+  createPersonaFromDraft,
   DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
@@ -33,6 +34,10 @@ import {
   importFile,
   listChats,
   listLibrary,
+  listPersonas,
+  PERSONA_TEMPLATE,
+  type PersonaItem,
+  parsePersona,
   readSavedKey,
   readSettings,
   resolveApiKey,
@@ -48,7 +53,7 @@ import { COMMANDS, helpText } from "./commands.ts";
 import { FileBrowser } from "./components/file-browser.ts";
 import { HomeScreen } from "./components/home-screen.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
-import { ListPicker } from "./components/list-picker.ts";
+import { ListPicker, type PickerItem } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
@@ -352,6 +357,96 @@ export function createApp(options: AppOptions = {}) {
       notice(`${error instanceof Error ? error.message : String(error)} Draft folder: ${folder}`);
     }
   }
+  function editPersona(existingFile?: string): void {
+    let file = existingFile;
+    let draft: string | undefined;
+    try {
+      if (!file) {
+        const folder = join(paths.importRoot, "drafts", "personas");
+        mkdirSync(folder, { recursive: true });
+        draft = join(folder, `new-persona-${randomUUID()}.md`);
+        writeFileSync(draft, PERSONA_TEMPLATE, { flag: "wx" });
+      }
+      const editorPath = file ? join(paths.importPersonasDir, file) : draft;
+      if (!editorPath) return;
+      tui.stop();
+      try {
+        const result = openInEditor(editorPath, env.VISUAL || env.EDITOR);
+        if (!result.ok) {
+          notice(`${result.reason} File kept at ${editorPath}`);
+          return;
+        }
+      } finally {
+        tui.start();
+        tui.requestRender(true);
+      }
+      if (draft) {
+        const result = createPersonaFromDraft(paths, draft);
+        if ("error" in result) {
+          notice(`${result.error} Draft kept at ${result.draftPath}`);
+          return;
+        }
+        if ("cancelled" in result) {
+          notice(`Cancelled — the template was not changed. Draft kept at ${draft}`);
+          return;
+        }
+        file = result.file;
+      }
+      if (!file) return;
+      const persona = parsePersona(readFileSync(join(paths.importPersonasDir, file), "utf8"));
+      if ("error" in persona) {
+        notice(`${persona.error} File kept at ${join(paths.importPersonasDir, file)}`);
+        return;
+      }
+      writeSettings(paths, { persona: file });
+      notice(`You are now ${persona.name}`);
+    } catch (error) {
+      notice(
+        `${error instanceof Error ? error.message : String(error)} File path: ${draft ?? file}`,
+      );
+    }
+  }
+  function openPersonaPicker(): void {
+    try {
+      const personas = listPersonas(paths);
+      const activeFile = readSettings(paths).persona;
+      const active = personas.find((item) => item.file === activeFile);
+      type Choice = PersonaItem | "new" | "edit" | "none";
+      const entries: PickerItem<Choice>[] = personas.map((item) => ({
+        value: item,
+        label: `${item.file === activeFile ? "● " : ""}${display("name" in item ? item.name : item.file)}`,
+        description: display("error" in item ? item.error : item.file),
+        search: `${"name" in item ? item.name : ""} ${item.file}`,
+      }));
+      entries.push({ value: "new", label: "New persona", search: "New persona" });
+      if (active)
+        entries.push({
+          value: "edit",
+          label: "Edit active persona",
+          search: "Edit active persona",
+        });
+      entries.push({ value: "none", label: "No persona", search: "No persona" });
+      const picker = new ListPicker("Choose who you are in the story", entries);
+      picker.onCancel = closeOverlay;
+      picker.onSelect = (choice) => {
+        if (typeof choice === "object" && "error" in choice) return;
+        closeOverlay();
+        if (choice === "new") editPersona();
+        else if (choice === "edit" && active) editPersona(active.file);
+        else if (choice === "none") {
+          writeSettings(paths, { persona: null });
+          notice("No persona is active.");
+        } else if (typeof choice === "object") {
+          writeSettings(paths, { persona: choice.file });
+          notice(`You are now ${choice.name}`);
+        }
+      };
+      tui.showOverlay(picker, { width: "90%" });
+      tui.requestRender();
+    } catch (error) {
+      notice(error instanceof Error ? error.message : String(error));
+    }
+  }
   async function openSessionPicker(): Promise<void> {
     const chats = await listChats(paths);
     const picker = new ListPicker(
@@ -535,6 +630,7 @@ export function createApp(options: AppOptions = {}) {
         return;
       },
       "new-character": () => newCharacter(),
+      persona: openPersonaPicker,
       show: async () => {
         const id = text.slice("/show".length).trim();
         if (!id) {

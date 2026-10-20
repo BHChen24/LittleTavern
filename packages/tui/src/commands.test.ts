@@ -24,6 +24,7 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     "library",
     "show",
     "new-character",
+    "persona",
     "model",
     "apikey",
     "help",
