@@ -1,29 +1,28 @@
 # LittleTavern
 
-A terminal app for character-card roleplay. Import the character cards and lorebooks you already
-have, choose who you are in the story, and chat in a full-screen TUI. When a reply surprises you,
-LittleTavern can show you exactly what was sent to the model and why.
+A terminal app for character-card roleplay. It imports character cards and lorebooks, lets you
+set a persona, and runs the chat in a full-screen TUI. It can also show what was sent to the model
+in the last request and why each lorebook entry was or was not included.
 
 It is in the same family as [SillyTavern](https://github.com/SillyTavern/SillyTavern), but it is
 its own application, not a port. SillyTavern is a design reference: LittleTavern takes the ideas
 and implements them independently. It is built on the [pi](https://github.com/earendil-works/pi)
 agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
-> **Status:** v0.1, early. Usable for everyday roleplay; expect rough edges.
+> **Status:** v0.1, an early version. Expect rough edges.
 
 ## Features
 
-- **Bring your cards.** Character Card V2 and V3, as JSON or PNG, plus SillyTavern lorebooks.
-  Unknown fields and extensions are kept as they are, never executed and never lost.
-- **Explainable context.** `/trace` shows every part of the last request (instructions, persona,
-  character, lore, history), with estimated tokens and the reason each lorebook entry was or was
-  not included. `littletavern dry-run` shows the next request without sending anything.
-- **Personas.** Write who you are once, as a Markdown file, and switch between personas at any time.
-- **Write characters in your editor.** Create a character from a Markdown template in `$EDITOR`;
-  it is saved as a standard V3 card.
-- **A comfortable TUI.** Full screen, with mouse scrolling and copy-on-select, coloured dialogue,
-  transcript search, and resumable chats with regenerate.
-- **Cost you can see.** Tokens, cache hits and cost for the session are shown in the status bar.
+- Character Card V2 and V3 (JSON or PNG) and SillyTavern lorebooks. Fields the app does not use
+  are kept in the stored card.
+- `/trace` lists the parts of the last request (instructions, persona, character, lore, history)
+  with estimated tokens, and why each lorebook entry was or was not included.
+  `littletavern dry-run` shows the next request without sending it.
+- Personas are Markdown files; you can switch between them at any time.
+- New characters can be written from a Markdown template in `$EDITOR` and are saved as V3 cards.
+- Full-screen TUI with mouse scrolling, copy-on-select, transcript search, saved chats and
+  regenerate.
+- The status bar shows the session's tokens, cache hits and cost.
 
 ## Requirements
 
