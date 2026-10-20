@@ -15,6 +15,8 @@ import {
   listPersonas,
   readSettings,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
   writeSettings,
 } from "@littletavern/engine";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -27,6 +29,7 @@ let terminal: Terminal;
 let editorCommand: string;
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "lt-app-persona-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const script = join(home, "editor.cjs");
   writeFileSync(

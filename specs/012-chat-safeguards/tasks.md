@@ -175,7 +175,7 @@ again shows B.
 **Independent test**: a fresh home shows the prompt with `Traveler`; Enter saves it; a restart
 does not ask again.
 
-- [ ] T011 [US4] Create `packages/tui/src/components/name-prompt.ts`, a pi-tui `Input` prefilled with `Traveler` and titled as in the contract, forwarding `focused`. In `enterChat()` (`packages/tui/src/app.ts`), open it through `showPanel` before the setup notice when `readSettings(paths).userName` is absent and `readActivePersona(paths).persona` is null (research R8; a missing or invalid persona file counts as none):
+- [X] T011 [US4] Create `packages/tui/src/components/name-prompt.ts`, a pi-tui `Input` prefilled with `Traveler` and titled as in the contract, forwarding `focused`. In `enterChat()` (`packages/tui/src/app.ts`), open it through `showPanel` before the setup notice when `readSettings(paths).userName` is absent and `readActivePersona(paths).persona` is null (research R8; a missing or invalid persona file counts as none):
   - Enter: clean the text with `stripControls` and trim it. An empty result shows `Please enter a name.` and keeps the prompt open. Otherwise `writeSettings(paths, { userName })` and show the saved message.
   - Esc: close and save nothing.
 

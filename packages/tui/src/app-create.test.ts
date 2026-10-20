@@ -10,12 +10,18 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
-import { listLibrary, resolveAppPaths } from "@littletavern/engine";
+import {
+  listLibrary,
+  resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
+} from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
 it("creates from the character picker without a key through a fake VISUAL and continues a retained draft", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-create-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const script = join(home, "editor.cjs");
   writeFileSync(

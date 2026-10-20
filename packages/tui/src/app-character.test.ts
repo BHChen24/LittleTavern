@@ -9,6 +9,8 @@ import {
   importFile,
   readUsageRecords,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
 } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
@@ -34,6 +36,7 @@ const terminal: Terminal = {
 
 it("starts a character chat, regenerates the reply and records usage under the chat's session", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-character-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const card = join(home, "mira.json");
   writeFileSync(

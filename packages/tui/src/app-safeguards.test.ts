@@ -371,3 +371,67 @@ it.each(["/prev", "/new"])(
     }
   },
 );
+
+it.each(["default", "typed", "escape"])(
+  "handles the first-start name prompt: %s",
+  async (action) => {
+    const f = fixture([], {}, true);
+    f.app.enterChat();
+    expect(f.overlay()).toContain("What should characters call you?");
+    expect(f.overlay()).toContain("Traveler");
+    if (action === "typed") {
+      f.input("\x15");
+      f.input("Mira");
+    }
+    f.input(action === "escape" ? "\x1b" : "\r");
+    expect(f.app.tui.hasOverlay()).toBe(false);
+    const { readSettings } = await import("@littletavern/engine");
+    expect(readSettings(f.paths).userName).toBe(
+      action === "escape" ? undefined : action === "typed" ? "Mira" : "Traveler",
+    );
+    await f.character();
+    expect(f.screen()).toContain(action === "typed" ? "Welcome, Mira." : "Welcome, Traveler.");
+    await f.app.quit();
+    const restarted = createApp({ paths: f.paths, env: {} });
+    try {
+      restarted.enterChat();
+      expect(restarted.tui.hasOverlay()).toBe(action === "escape");
+    } finally {
+      await restarted.quit();
+    }
+  },
+);
+
+it("rejects blank names and strips controls before saving", async () => {
+  const f = fixture([], {}, true);
+  f.app.enterChat();
+  f.input("\x15");
+  f.input("   ");
+  f.input("\r");
+  expect(f.overlay()).toContain("Please enter a name.");
+  f.input("\x15");
+  f.input("\x1b[200~Mira\x07\x1b[201~");
+  f.input("\r");
+  const { readSettings } = await import("@littletavern/engine");
+  expect(readSettings(f.paths).userName).toBe("Mira");
+});
+
+it.each(["saved", "active", "missing", "invalid"])(
+  "resolves the name prompt with a %s name or persona",
+  async (state) => {
+    const f = fixture([], state === "saved" ? {} : { persona: "player.md" }, state !== "saved");
+    if (state === "active" || state === "invalid") {
+      mkdirSync(f.paths.importPersonasDir, { recursive: true });
+      writeFileSync(
+        join(f.paths.importPersonasDir, "player.md"),
+        state === "active" ? "## Name\nSailor\n## Description\nA visitor.\n" : "invalid persona",
+      );
+    }
+    f.app.enterChat();
+    expect(f.app.tui.hasOverlay()).toBe(state === "missing" || state === "invalid");
+    if (state === "active") {
+      await f.character();
+      expect(f.screen()).toContain("Welcome, Sailor.");
+    }
+  },
+);

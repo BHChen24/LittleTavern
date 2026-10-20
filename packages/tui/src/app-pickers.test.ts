@@ -13,7 +13,9 @@ import {
   listLibrary,
   readSettings,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
   type SimulatedReply,
+  writeSettings as writeFixtureSettings,
   writeSettings,
 } from "@littletavern/engine";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -26,6 +28,7 @@ let app: ReturnType<typeof createApp>;
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "lt-app-pickers-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   ensureImportFolders(paths);
 });

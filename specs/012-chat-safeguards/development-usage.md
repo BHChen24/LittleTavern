@@ -82,4 +82,18 @@ see conversation output for completion of the final refresh.
 | 73 | write_stdin | Collect expected pre-implementation previous-reply failures | exit 0 |
 | 74 | exec_command | Assess name-prompt integration and legacy app harness setup | exit 0 |
 | 75 | write_stdin | Collect phase-four validation | exit 0 |
+| 76 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 77 | exec_command | Commit validated phase four | completed; see conversation output |
+| 78 | exec_command | Add first-name setup and persona precedence tests before implementation | completed; see conversation output |
+| 79 | apply_patch | Implement first-start name prompt with sanitization and resolved persona checks | completed; see conversation output |
+| 80 | exec_command | Format and validate first-name setup phase | completed; see conversation output |
+| 81 | write_stdin | Collect previous-reply commit result | exit 0 |
+| 82 | write_stdin | Collect name-prompt validation | exit 1 |
+| 83 | exec_command | Identify legacy startup assumptions and inspect trace formatting tests | exit 0 |
+| 84 | exec_command | Check safe legacy fixture seeding and name editing key bindings | exit 0 |
+| 85 | exec_command | Inspect prefilled input cursor behavior | exit 0 |
+| 86 | exec_command | Verify the supported way to edit prefilled pi input | exit 0 |
+| 87 | exec_command | Seed returning-user legacy fixtures and fix the prefilled input cursor | completed; see conversation output |
+| 88 | write_stdin | Collect name-prompt regression checks | exit 0 |
+| 89 | exec_command | Review phase-five results and trace insertion point | exit 0 |
 

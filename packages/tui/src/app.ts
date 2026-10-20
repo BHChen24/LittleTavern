@@ -79,6 +79,7 @@ import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker, type PickerItem } from "./components/list-picker.ts";
 import { MessageView } from "./components/message-view.ts";
 import { ModelPicker } from "./components/model-picker.ts";
+import { NamePrompt } from "./components/name-prompt.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
 import { openInEditor } from "./editor-launch.ts";
@@ -191,7 +192,27 @@ export function createApp(options: AppOptions = {}) {
       ]),
     );
     tui.setFocus(editor);
-    updateSetupNotice();
+    const savedSettings = readSettings(paths);
+    if (!savedSettings.userName && !readActivePersona(paths).persona) {
+      const prompt = new NamePrompt();
+      prompt.onSubmit = (value) => {
+        const userName = stripControls(value).trim();
+        if (!userName) {
+          prompt.error = "Please enter a name.";
+          tui.requestRender();
+          return;
+        }
+        writeSettings(paths, { userName });
+        closeOverlay();
+        updateSetupNotice();
+        notice(`Characters will call you ${userName}. A persona's name takes precedence.`);
+      };
+      prompt.onCancel = () => {
+        closeOverlay();
+        updateSetupNotice();
+      };
+      showPanel(prompt);
+    } else updateSetupNotice();
     tui.requestRender();
   }
   let reply: MessageView | undefined;

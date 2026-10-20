@@ -8,6 +8,8 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   importFile,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
 } from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
@@ -67,6 +69,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 it("never prints escape sequences from a card on the command line", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-untrusted-cli-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   vi.stubEnv("LITTLETAVERN_HOME", home);
   const output: string[] = [];
   const out = (text: string) => {
@@ -87,6 +90,7 @@ it("never prints escape sequences from a card on the command line", async () => 
 
 it("never renders escape sequences from a card or a reply in the app", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-untrusted-app-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const report = importFile(paths, writeEvilCard(home));
   if (!report.ok) throw new Error(report.reason);

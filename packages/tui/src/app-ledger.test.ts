@@ -8,7 +8,9 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   readUsageRecords,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
   sumUsage,
+  writeSettings as writeFixtureSettings,
 } from "@littletavern/engine";
 import { expect, it } from "vitest";
 import { createApp } from "./app.ts";
@@ -36,6 +38,7 @@ function terminal(): Terminal {
 
 it("records a rejected key, preserves the transcript, and points to /apikey without opening a prompt", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-error-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const key = "synthetic-key-1234";
   const session = new ChatSession({
@@ -70,6 +73,7 @@ it("records a rejected key, preserves the transcript, and points to /apikey with
 
 it("waits for the interrupted ledger record before quitting and shows ledger totals", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-quit-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const session = new ChatSession({
     modelId: DEFAULT_MODEL_ID,
