@@ -48,3 +48,15 @@ Do these once, in this order. They are outside the implementer's scope.
 6. Tag and push: `git tag v0.1.0 && git push origin v0.1.0`. The release workflow publishes the
    package and creates the GitHub release.
 7. On a clean machine: `npm install -g littletavern`, then follow the README.
+
+## Later releases (changed after v0.1.0)
+
+v0.1.0 was published with a short-lived token. Since then, npm trusted publishing (OIDC) is
+configured for `release.yml` with stage-only permission, tokens are disallowed for the package,
+and the `NPM_TOKEN` secret is gone.
+
+1. Bump `version` in `packages/tui/package.json`, commit and push.
+2. Tag and push: `git tag -a v<version> -m "LittleTavern <version>" && git push origin v<version>`.
+   The release workflow stages the package on npm and creates the GitHub release.
+3. Approve the staged version with 2FA, on npmjs.com or with `npm stage list littletavern` and
+   `npm stage approve <stage-id>`. Until then the new version is not installable.

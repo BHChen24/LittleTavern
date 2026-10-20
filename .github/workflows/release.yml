@@ -96,10 +96,9 @@ jobs:
           "$smoke_dir/prefix/bin/littletavern" --version
           "$smoke_dir/prefix/bin/littletavern" import "$smoke_dir/prefix/lib/node_modules/littletavern/examples/characters/alice.json"
           "$smoke_dir/prefix/bin/littletavern" list
-      - name: Publish to npm
-        run: npm publish ./release/littletavern-*.tgz --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing (OIDC) allows staging only; a maintainer approves the version with 2FA.
+      - name: Stage on npm
+        run: npm stage publish ./release/littletavern-*.tgz --provenance
       - name: Create GitHub release
         run: gh release create "$GITHUB_REF_NAME" release/*.tgz --generate-notes
         env:
