@@ -166,3 +166,37 @@ in the session transcript. No environment file or real credentials are read or u
 96. `exec_command`: review documentation diff and whitespace. Outcome: changes match T014-T015;
     no whitespace errors.
 97. `exec_command`: mark T014-T015 and update usage. Outcome: documentation phase ready to commit.
+
+## Final validation and convergence
+
+98. `exec_command` (escalated): commit documentation. Outcome: 1e667f4; hooks passed.
+99. `write_stdin`: collect documentation commit. Outcome: committed.
+100. `exec_command` (escalated): run T016 full gate, correct-tag release check and external
+     offline acceptance against this checkout. Outcome: build/lint, 342 tests, package checks
+     and all 19 acceptance checks passed; record v1-acceptance-20261020-104839.md.
+101. `exec_command`: assess bundler/checker, examples helper, browser and pinned pi autocomplete
+     for convergence. Outcome: implementations match requirements; command completion removal
+     confirmed against pi source.
+102. `exec_command`: assess app dispatch/import, release workflow, implementation notes and CLI
+     startup regression. Outcome: release is gated; generated fixtures used outside justified T-g.
+103. `write_stdin`: collect final gate/package/acceptance. Outcome: all passed; no real provider used.
+104. `exec_command`: check converge pre-hooks, run converge prerequisites once and enumerate
+     requirements/tasks; inspect pi command autocomplete. Outcome: correct feature, no hooks;
+     no argument completions without a command provider; one quickstart path gap identified.
+105. `apply_patch`: append convergence T019 under Phase 9 without changing existing tasks.
+     Outcome: one MEDIUM partial validation-guide correction appended.
+106. `exec_command`: check convergence post-hooks. Outcome: no extension configuration; skipped.
+107. `exec_command`: implement T019, consolidate notes and update usage. Outcome: quickstart
+     uses the same explicit local tarball path as the successful smoke test.
+108. `write_stdin`: collect final post-correction gate. Outcome: build/lint and 342 tests passed.
+109. `exec_command`: count acceptance/edge inventory, verify corrected quickstart, check hooks
+     and whitespace/status. Outcome: 17 acceptance scenarios, 9 edges, local path correct,
+     no extension configuration and no whitespace errors.
+110. `exec_command`: finalize report, mark T016-T019 and update usage. Outcome: all 19 tasks
+     complete; validation evidence, manual owner work and convergence recorded.
+111. `exec_command`: validate final task/checklist totals, branch, whitespace, hook absence,
+     report structure and acceptance-record identity. Outcome: 19/19 tasks checked, all checklist
+     items checked, correct feature branch; validation passed.
+112. `exec_command` (escalated): commit the validated final report, convergence correction and
+     task closure with normal hooks, then verify branch/status. Outcome is recorded by the final
+     commit and verification output in the session transcript; no push, tag or publication.

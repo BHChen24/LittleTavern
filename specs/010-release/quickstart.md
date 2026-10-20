@@ -15,7 +15,7 @@ If the network is available, also run the install smoke test:
 
 ```bash
 tmp=$(mktemp -d)
-npm install --global --prefix "$tmp/prefix" release/littletavern-*.tgz
+npm install --global --prefix "$tmp/prefix" ./release/littletavern-*.tgz
 LITTLETAVERN_HOME="$tmp/home" "$tmp/prefix/bin/littletavern" --version
 LITTLETAVERN_HOME="$tmp/home" "$tmp/prefix/bin/littletavern" import "$tmp/prefix/lib/node_modules/littletavern/examples/characters/alice.json"
 LITTLETAVERN_HOME="$tmp/home" "$tmp/prefix/bin/littletavern" list

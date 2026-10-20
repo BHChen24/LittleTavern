@@ -154,9 +154,9 @@ after the owner pushes (quickstart).
 
 ## Phase 8: Polish
 
-- [ ] T016 Run `pnpm build && pnpm lint && pnpm test`, `pnpm release:check`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
-- [ ] T017 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T018 Write `specs/010-release/report.md` with the same sections as the earlier reports, including the `release:check` output, the smoke test result or its deferral, and the owner's manual checks and release checklist from `quickstart.md`. Commit
+- [X] T016 Run `pnpm build && pnpm lint && pnpm test`, `pnpm release:check`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
+- [X] T017 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T018 Write `specs/010-release/report.md` with the same sections as the earlier reports, including the `release:check` output, the smoke test result or its deferral, and the owner's manual checks and release checklist from `quickstart.md`. Commit
 
 ## Dependencies & Execution Order
 
@@ -176,3 +176,7 @@ US1 and US2 make the app itself ready; US4 makes it shippable; US3 and US5 make 
 and readable. The feature is complete only when all phases are done. If a run is interrupted,
 leave the remaining tasks unchecked and say so in the report; do not present a partial run as
 delivered.
+
+## Phase 9: Convergence
+
+- [X] T019 Correct the local tarball argument in `specs/010-release/quickstart.md` to `./release/littletavern-*.tgz` per T011/T018's reproducible install validation guide (partial). The actual install smoke test showed that npm interprets the unprefixed `release/...tgz` as GitHub shorthand; the workflows already use the explicit local path.
