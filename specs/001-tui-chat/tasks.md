@@ -107,26 +107,26 @@ saved key can be forgotten.
 **Independent Test**: T-b and the edge-case tests pass. The owner then checks quickstart steps
 1–2, 9 and 10.
 
-- [ ] T020 [P] [US2] Implement `packages/data/src/credentials.ts`:
+- [X] T020 [P] [US2] Implement `packages/data/src/credentials.ts`:
   - `readSavedKey(paths)` returns `{ key: string | null, warning?: "permissions-too-open", error?: string }`. It warns when the file mode allows group or other access, and returns an error for an unreadable file or malformed JSON.
   - `saveKey(paths, key)` creates the directory with mode `0o700` and writes `{ "openrouter": key }` with mode `0o600`.
   - `forgetKey(paths)` removes the `openrouter` field and rewrites with `0o600`.
 
   Tests T-b in `packages/data/src/credentials.test.ts`, using a temporary `LITTLETAVERN_HOME`.
-- [ ] T021 [P] [US2] Implement `MaskedKeyInput` in `packages/tui/src/components/masked-key-input.ts` per research R4: own a pi-tui `Input`, forward `handleInput` to it, render `•` for all characters except the last 4, and expose `onSubmit`
-- [ ] T022 [US2] Implement `packages/tui/src/components/key-prompt.ts`.
+- [X] T021 [P] [US2] Implement `MaskedKeyInput` in `packages/tui/src/components/masked-key-input.ts` per research R4: own a pi-tui `Input`, forward `handleInput` to it, render `•` for all characters except the last 4, and expose `onSubmit`
+- [X] T022 [US2] Implement `packages/tui/src/components/key-prompt.ts`.
   - **Step 1**: explain that an OpenRouter key is needed and where to get one (`https://openrouter.ai/keys`), then show the `MaskedKeyInput`. A blank submit shows "Key cannot be empty" and keeps the prompt open.
   - **Step 2**: show "The key will be saved to `<full credentialsFile path>`, readable only by your user account", then a `SelectList` with "Save" and "This session only".
   - **Result**: `{ key, save: boolean }`.
-- [ ] T023 [US2] In `packages/tui/src/app.ts`, add the `needs-key` state.
+- [X] T023 [US2] In `packages/tui/src/app.ts`, add the `needs-key` state.
   - **At launch**: call `resolveApiKey` with the environment value and `readSavedKey(...)`. If it returns null, show the key prompt; otherwise go to `ready`. Show `readSavedKey` warnings and errors as transcript notices, then fall back to prompting.
   - **On "Save"**: call `saveKey`. Either way, the entered key becomes the `session` or `saved` source.
   - **CLI**: remove the US1 exit-on-missing-key path from `cli.ts`.
-- [ ] T024 [US2] In `packages/tui/src/app.ts`:
+- [X] T024 [US2] In `packages/tui/src/app.ts`:
   - **Rejected key**: when `describeProviderError` returns `key-rejected`, show "OpenRouter rejected the key", keep the transcript, and return to `needs-key`.
   - **`/key`**: opens the key prompt.
   - **`/forget-key`**: calls `forgetKey`. If the environment key is active it stays active; otherwise the state becomes `needs-key`.
-- [ ] T025 [US2] Extend `packages/engine/src/api-key.test.ts` with the spec's edge cases: an empty environment variable plus a saved key uses the saved key; a whitespace-only environment variable with nothing saved returns null; environment plus saved reports `source: "environment"`
+- [X] T025 [US2] Extend `packages/engine/src/api-key.test.ts` with the spec's edge cases: an empty environment variable plus a saved key uses the saved key; a whitespace-only environment variable with nothing saved returns null; environment plus saved reports `source: "environment"`
 
 **Checkpoint**: checks pass. Commit.
 

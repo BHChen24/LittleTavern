@@ -30,7 +30,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   const key = "synthetic-key";
   const app = createApp({
     terminal: stubTerminal(),
-    env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: key },
+    env: { LITTLETAVERN_HOME: home },
     session: new ChatSession({
       modelId: DEFAULT_MODEL_ID,
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
@@ -40,6 +40,11 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   });
   try {
     expect(app.tui.render(80).join("\n")).toContain("LittleTavern 0.1.0");
+    const prompt = app.tui.getFocusedComponent();
+    prompt?.handleInput?.(key);
+    prompt?.handleInput?.("\r");
+    prompt?.handleInput?.("\x1b[B");
+    prompt?.handleInput?.("\r");
     app.editor.handleInput("hi");
     app.editor.handleInput("\r");
     await vi.waitFor(() => expect(app.tui.render(80).join("\n")).toContain("Hello there."));

@@ -30,3 +30,12 @@ Phase 3: `exec_command` wrote the chat test first (expected missing-module failu
 implemented the adapter, UI and terminal cleanup. The first typecheck identified callback
 narrowing and Text input-handler errors; both were corrected. Final build/lint and 24 tests
 in 8 files passed, including T-i with a 54-line test file.
+
+Phase 4: `exec_command` wrote credential storage, masked input, consent prompt and tests,
+updated key state and CLI, and ran formatting/build/lint/tests. All 33 tests in 10 files passed.
+T-i now includes entering a key and choosing session-only before editor input (59 lines).
+
+Correction: the final T-i key-entry extension initially failed because it used getFocus()
+instead of pi 1.3.0's getFocusedComponent(). Phase 4 was prematurely committed before
+that result was inspected. The method is corrected and the commit is amended only after
+all three checks pass.

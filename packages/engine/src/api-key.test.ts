@@ -15,3 +15,15 @@ it("treats all blank sources as absent", () => {
 it("shows only the last four characters", () => {
   expect(maskKey("abcdef1234")).toBe("••••1234");
 });
+
+it("uses a saved key when the environment value is empty", () => {
+  expect(resolveApiKey({ envValue: "", savedValue: "saved-key" })?.source).toBe("saved");
+});
+it("returns null for a whitespace-only environment and no saved key", () => {
+  expect(resolveApiKey({ envValue: " \t " })).toBeNull();
+});
+it("reports environment as the source when both are present", () => {
+  expect(resolveApiKey({ envValue: "env-key", savedValue: "saved-key" })?.source).toBe(
+    "environment",
+  );
+});

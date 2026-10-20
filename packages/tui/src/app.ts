@@ -15,10 +15,14 @@ import {
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
+  forgetKey,
+  readSavedKey,
   resolveApiKey,
   resolveAppPaths,
+  saveKey,
   scrubSecrets,
 } from "@littletavern/engine";
+import { KeyPrompt } from "./components/key-prompt.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { VERSION } from "./version.ts";
@@ -42,8 +46,11 @@ export interface AppOptions {
 export function createApp(options: AppOptions = {}) {
   const env = options.env ?? process.env;
   const paths = options.paths ?? resolveAppPaths(env);
-  const activeKey = resolveApiKey({ envValue: env.OPENROUTER_API_KEY });
-  const secrets = activeKey ? [activeKey.value] : [];
+  const saved = readSavedKey(paths);
+  let activeKey = resolveApiKey({ envValue: env.OPENROUTER_API_KEY, savedValue: saved.key });
+  const secrets = [env.OPENROUTER_API_KEY, saved.key].filter((value): value is string =>
+    Boolean(value?.trim()),
+  );
   const logger = createLogger(paths.logFile, () => secrets);
   const session =
     options.session ??
@@ -71,10 +78,45 @@ export function createApp(options: AppOptions = {}) {
   });
   let started = false;
   let helpOpen = false;
+  let needsKey = !activeKey;
+  let keyPrompt: KeyPrompt | undefined;
   const notice = (text: string) => {
     transcript.addChild(new Text(scrubSecrets(text, secrets)));
     tui.requestRender();
   };
+  function promptForKey(): void {
+    needsKey = true;
+    editor.disableSubmit = true;
+    keyPrompt = new KeyPrompt(paths.credentialsFile);
+    keyPrompt.onResult = ({ key, save }) => {
+      secrets.push(key);
+      let source: "saved" | "session" = "session";
+      if (save) {
+        try {
+          saveKey(paths, key);
+          source = "saved";
+        } catch {
+          notice("Could not save the key; using it for this session only.");
+        }
+      }
+      // Explicit replacement must supersede a rejected environment key for this run.
+      activeKey = { value: key, source, masked: `••••${key.slice(-4)}` };
+      needsKey = false;
+      keyPrompt = undefined;
+      tui.hideOverlay();
+      tui.setFocus(editor);
+      editor.disableSubmit = false;
+      status.update(DEFAULT_MODEL_ID, activeKey.source);
+      tui.requestRender();
+    };
+    tui.showOverlay(keyPrompt, { width: "90%" });
+    tui.requestRender();
+  }
+  if (saved.warning)
+    notice("Saved credentials permissions allow access by other users; expected 0600.");
+  if (saved.error) notice(saved.error);
+  if (needsKey) promptForKey();
+
   const onDelta = session.onDelta((delta) => {
     response += delta;
     reply?.setText(scrubSecrets(response, secrets));
@@ -90,6 +132,7 @@ export function createApp(options: AppOptions = {}) {
         describeProviderError(scrubSecrets(turn.errorMessage ?? "Unknown error", secrets)).text,
       );
       logger.error({ error: turn.errorMessage }, "Provider request failed");
+      if (describeProviderError(turn.errorMessage ?? "").kind === "key-rejected") promptForKey();
     }
     tui.requestRender();
   });
@@ -130,6 +173,24 @@ export function createApp(options: AppOptions = {}) {
       await quit();
       return;
     }
+    if (text === "/key") {
+      promptForKey();
+      return;
+    }
+    if (text === "/forget-key") {
+      try {
+        forgetKey(paths);
+      } catch {
+        notice("Could not forget the saved key; check the credentials file.");
+        return;
+      }
+      if (activeKey?.source !== "environment") {
+        activeKey = null;
+        promptForKey();
+      } else notice("Saved key forgotten; the environment key remains active.");
+      return;
+    }
+    if (needsKey) return;
     if (text === "/help") {
       const help = new Text(APP_HELP);
       tui.showOverlay(help);
@@ -153,7 +214,7 @@ export function createApp(options: AppOptions = {}) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
       notice("Chat request failed. See the diagnostic log.");
     } finally {
-      editor.disableSubmit = false;
+      editor.disableSubmit = needsKey;
       tui.requestRender();
     }
   }

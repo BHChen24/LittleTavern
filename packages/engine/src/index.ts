@@ -1,4 +1,12 @@
-export { type AppPaths, createLogger, resolveAppPaths, scrubSecrets } from "@littletavern/data";
+export {
+  type AppPaths,
+  createLogger,
+  forgetKey,
+  readSavedKey,
+  resolveAppPaths,
+  saveKey,
+  scrubSecrets,
+} from "@littletavern/data";
 export * from "./api-key.ts";
 export * from "./chat-session.ts";
 export * from "./models.ts";
