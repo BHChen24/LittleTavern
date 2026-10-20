@@ -18,6 +18,7 @@ it("offers only permitted families without batch or image variants", () => {
 });
 it("has the documented default and detects invalid remembered models", () => {
   expect(findAllowedModel(DEFAULT_MODEL_ID)?.id).toBe(DEFAULT_MODEL_ID);
+  expect(findAllowedModel(DEFAULT_MODEL_ID)?.contextWindow).toBeGreaterThan(0);
   expect(findAllowedModel("missing/model")).toBeUndefined();
   expect(findAllowedModel("missing/model") ?? findAllowedModel(DEFAULT_MODEL_ID)).toHaveProperty(
     "id",

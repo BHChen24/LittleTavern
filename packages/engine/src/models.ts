@@ -9,6 +9,7 @@ export interface ModelInfo {
   id: string;
   name: string;
   family: "openai" | "gemini";
+  contextWindow: number;
   price: ModelPrice | null;
 }
 
@@ -28,6 +29,7 @@ export function listAllowedModels(): ModelInfo[] {
     .map((model) => ({
       id: model.id,
       name: model.name,
+      contextWindow: model.contextWindow,
       family: model.id.startsWith("openai/") ? "openai" : "gemini",
       price: model.cost
         ? { inputPerMTok: model.cost.input, outputPerMTok: model.cost.output }

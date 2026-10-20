@@ -46,9 +46,9 @@ invariants).
 
 ## Phase 2: Foundational
 
-- [ ] T003 [P] Implement `estimateTokens(text)` in `packages/engine/src/assembly/tokens.ts` per research R3: count the characters matching `/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u` as one token each, and add `Math.ceil(rest / 4)`. Write tests T-a in `tokens.test.ts`
-- [ ] T004 [P] Implement `replaceMacros(text, { char, user })` in `packages/engine/src/assembly/macros.ts` per R4, using `/\{\{\s*(char|user)\s*\}\}/gi`. Write tests T-b in `macros.test.ts`
-- [ ] T005 [P] Add `contextWindow: number` to `ModelInfo` in `packages/engine/src/models.ts`, taken from pi's `model.contextWindow`, and extend `models.test.ts` to check that the default model has a positive value
+- [X] T003 [P] Implement `estimateTokens(text)` in `packages/engine/src/assembly/tokens.ts` per research R3: count the characters matching `/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u` as one token each, and add `Math.ceil(rest / 4)`. Write tests T-a in `tokens.test.ts`
+- [X] T004 [P] Implement `replaceMacros(text, { char, user })` in `packages/engine/src/assembly/macros.ts` per R4, using `/\{\{\s*(char|user)\s*\}\}/gi`. Write tests T-b in `macros.test.ts`
+- [X] T005 [P] Add `contextWindow: number` to `ModelInfo` in `packages/engine/src/models.ts`, taken from pi's `model.contextWindow`, and extend `models.test.ts` to check that the default model has a positive value
 
 **Checkpoint**: checks pass. Commit.
 
