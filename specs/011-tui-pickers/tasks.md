@@ -191,7 +191,7 @@ earlier history, and `/sessions` lists both chats.
 ## Phase 8: Polish
 
 - [X] T015 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures. (The script's guided step 12 still mentions `/chat` and `/attach`; it is outside the repository and is updated by the owner's side, not here)
-- [ ] T016 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T016 Run `speckit-converge` on this feature and complete any appended tasks
 - [X] T017 Write `specs/011-tui-pickers/report.md` with the same sections as `specs/010-release/report.md`. Include the test results, the T-j output, deferred tests, the owner's manual checks from `quickstart.md`, and the note that 0.1.1 is released by the owner after merge. Commit
 
 ## Dependencies & Execution Order
@@ -216,3 +216,7 @@ unchecked and say so in the report; do not present a partial run as delivered.
 
 - [X] T018 Resolve owner design question Q1 in `specs/011-tui-pickers/questions.md` before completing T009: reconcile FR-007, SC-003 and US3/AC1 with pi's deferred persistence of greeting-only chats (`partial`, HIGH). Once the owner specifies whether these chats must be saved and updates the affected design, implement that decision in `packages/engine/src/character-chat.ts` and add a synthetic regression test in `packages/tui/src/app-pickers.test.ts`. Do not invent a session-storage policy or rewrite the spec during implementation. **Owner decision (2026-10-20)**: greeting-only chats are not saved, as pi already does, so **no engine change**. Complete T009 as written. Add tests for spec US3 scenarios 1 and 2: a chat with a message is kept and listed after `/new`; a greeting-only chat is replaced and not listed. Then mark T009 and T018
 - [X] T019 Resolve owner design question Q2 in `specs/011-tui-pickers/questions.md`: specify how a panel taller than the terminal keeps all borders visible per FR-008 and US4/AC1 (`partial`, MEDIUM). A real renderer check at 60 columns and 24 rows renders help at 32 rows and omits the bottom border. Once the owner specifies clipping, scrolling or another overflow policy, implement it in the planned overlay/frame touchpoints and add a terminal-harness regression check; do not silently choose new overflow behavior. **Owner decision (2026-10-20)**, per research R1 "Height" and the contract's frame section: `/help` uses `TraceOverlay` with `wrapTextWithAnsi`-wrapped `helpText()` lines and height `max(3, rows - 8)`, closed by Esc through `onClose`, which replaces the `helpOpen` Esc path. `Frame` gets an optional maximum height; content that does not fit is cut, with `…` as the last visible line, and `showPanel` passes `() => tui.terminal.rows`. Tests: a `Frame` unit test of clipping with `…` and a complete border; an app test that `/help` at 60×24 renders a complete border and scrolls
+
+## Phase 10: Convergence
+
+- [X] T020 Correct manual quickstart step 4 in `specs/011-tui-pickers/quickstart.md` per FR-007, SC-003, US3/AC1–AC2 and the owner decision in T018 (`partial`, MEDIUM): after `/new`, `/sessions` lists the previous chat with messages; the new greeting-only chat is listed only after sending it a message. Make the validation sequence match that behavior without changing application code or storage policy

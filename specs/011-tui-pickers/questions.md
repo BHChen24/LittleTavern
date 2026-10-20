@@ -26,8 +26,8 @@ entry, so a chat with only that greeting is absent from `/sessions`.
 The implemented `/new` follows T009's explicit `startChat(item)` design. A previous chat with a
 user message stays saved and resumable, as the planned tests demonstrate. However, `/new`
 before any user message replaces a greeting-only chat which has never been saved. A new chat
-also does not appear in `/sessions` until it has a user message. This conflicts with FR-007's
-unqualified preservation requirement and SC-003's “100% of cases”.
+also does not appear in `/sessions` until it has a user message. This originally conflicted with FR-007's
+unqualified preservation requirement and SC-003's “100% of cases”; the updated spec resolves it.
 
 The owner subsequently chose the existing pi behavior, as recorded below and in the updated
 spec. T018 adds coverage for replacing a greeting-only chat and immediately listing a previous
@@ -59,3 +59,9 @@ The original reproduction used a temporary home, no key and no network.
 - **Q2**: `/help` scrolls like `/trace`. Other panels taller than the terminal are clipped, with a
   complete border and `…` as the last visible line. See research R1 "Height", the contract's
   frame section, and T019.
+
+## Follow-up validation guide correction
+
+Convergence T020 aligns manual quickstart step 4 with the owner's Q1 decision: the previous chat
+with messages is listed immediately after `/new`; the new chat appears after its first message.
+There are no unresolved behavior questions.

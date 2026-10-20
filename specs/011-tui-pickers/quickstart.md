@@ -28,7 +28,9 @@ LITTLETAVERN_HOME=$(mktemp -d) node packages/tui/dist/cli.js
    Choose it again: "Attached Wonderland."
 3. Put any lorebook file in the import folders' `lorebooks/` folder. `/lorebooks` → `Import a
    lorebook…` → choose it: the import report and "Attached …" appear.
-4. Send a message, then `/new`: only the greeting is shown. `/sessions` lists both chats.
+4. Send a message, then `/new`: only the greeting is shown. `/sessions` lists the previous chat.
+   Close the picker and send a message in the new chat; `/sessions` now lists both chats.
+   A chat containing only its greeting is not saved.
 5. `/innkeeper`, send something, `/new`: the conversation is cleared.
 6. `/chat`, `/attach` and `/detach` are unknown commands.
 7. Open each overlay (`/characters`, `/sessions`, `/persona`, `/model`, `/apikey`, `/import`,

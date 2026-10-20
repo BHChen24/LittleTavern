@@ -161,3 +161,38 @@ Total platform-reported development tokens for this run: **unknown**.
 | R15 | exec_command | Check whitespace/change scope and read convergence skill | Passed; implementation ready for convergence review |
 | R16 | exec_command | Mark T009/T018/T019 complete and record resolved questions/usage | Completed Phase 9 tracking |
 | R17 | exec_command | Commit Phase 9 with normal hooks | Outcome recorded in the commit tool transcript |
+| R18 | write_stdin | Collect Phase 9 commit result | fe7d0b9 committed; gitleaks/lint hooks passed |
+| R19 | exec_command | Run convergence prerequisites, inspect updated spec/guide/tasks and final app/frame code | Owner decisions implemented; guide still described immediate listing of both chats |
+| R20 | exec_command | Inspect requirement touchpoints, tests, CI and current command documentation | No additional application gap identified |
+| R21 | exec_command | Append convergence T020 and check post-hooks | Appended only Phase 10; no hooks |
+| R22 | exec_command | Rerun external offline acceptance after the fixes | Started with temporary home and scoped external-result write permission |
+| R23 | write_stdin | Collect offline acceptance results | 19 passed, 0 failed; record v1-acceptance-20261020-161116.md |
+| R24 | exec_command | Correct quickstart step 4 and record resolved questions | Guide now matches message-based persistence |
+| R25 | exec_command | Rewrite final report and extend this invocation record | Report reflects completed owner-approved fixes and validation |
+| R26 | exec_command | Rerun convergence prerequisites, count intent items and inspect corrected guide/regressions | 11 FRs, 5 SCs, 25 acceptance scenarios and 9 edge cases; no remaining actionable gap |
+| R27 | exec_command | Check post-convergence hooks and verify task table unchanged | No hooks; SHA256 matched before implementation bookkeeping |
+| R28 | exec_command | Mark T016/T020 complete and record final convergence | All 20 task markers complete; converged outcome |
+
+Final convergence also checked decisions R1–R8, all original/corrective tasks and the seven
+constitution principles plus applicable workflow and technology constraints. All gap-type and
+severity counts are zero. No empty convergence phase was appended. The initial review's single
+guide finding was resolved by T020; the final review left tasks.md byte-for-byte unchanged until
+implementation resumed to mark completion.
+
+### Final checkpoint invocations
+
+| Invocation | Tool | Purpose | Outcome |
+|---|---|---|---|
+| R29 | exec_command | Run final build, lint and test checkpoint after documentation changes | Started full checkpoint |
+| R30 | exec_command | Run the exact obsolete-command quickstart grep | No matches; expected exit 1 |
+| R31 | exec_command | Check whitespace, worktree scope, post-implementation hooks and task markers | Passed; no hooks; 20 complete and none incomplete |
+| R32 | write_stdin | Collect final full checkpoint | Build/lint passed; 63 test files and 383 tests passed |
+| R33 | exec_command | Record final validation and prepare final commit | Usage record completed; whitespace check passed |
+| R34 | exec_command | Commit Phase 10 guide correction, final report and completion markers through normal hooks | Commit result and hook output recorded in the tool transcript |
+| R35 | exec_command | Verify final branch/worktree and task state | Final verification recorded in the tool transcript |
+
+The resumed run's final checkpoint passed all required checks. No automated test was deferred.
+Both implementation hook checks found no extensions.yml. The external acceptance suite passed
+19/19 against the completed fixes. All 20 tasks are complete, and owner visual acceptance and
+post-merge staged npm release remain the documented owner actions. Total development tokens:
+**unknown** (platform total unavailable).

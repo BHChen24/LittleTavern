@@ -2,39 +2,40 @@
 
 ## Summary
 
-The implemented commands use pickers instead of typed ids. `/show` searches all library items
-and prints the selected item's details. `/lorebooks` lists embedded, attached, unattached and
-missing books, toggles attachments, and imports and attaches lorebooks through the existing
-rooted file browser. `/chat`, `/attach` and `/detach` are removed from dispatch, completion and
-help. The shell subcommands keep their existing behavior.
+The in-app commands use pickers instead of typed ids. `/show` searches all library items and
+prints the selected item's details. `/lorebooks` lists embedded, attached, unattached and missing
+books, toggles attachments, and imports and attaches lorebooks through the existing rooted file
+browser. `/chat`, `/attach` and `/detach` are removed from dispatch, completion and help. Shell
+subcommands keep their existing behavior.
 
-`/new` follows the planned implementation: it starts a new chat with the current character,
-clears an innkeeper conversation, explains how to choose a mode, or refuses to act while a reply
-is streaming. Previous chats containing user messages remain saved and resumable. Greeting-only
-chat preservation is not complete; Q1 requires a design decision.
+`/new` starts a new chat with the current character, clears an innkeeper conversation, explains
+how to choose a mode, or refuses to act while a reply is streaming. Previous chats containing
+messages remain saved and resumable. Chats containing only their greeting are replaced without
+being saved, following the owner's Q1 decision and the updated specification.
 
-Every application `showOverlay` call now goes through `showPanel` and the shared Frame component.
-Frames use the editor's border style, handle wide characters and ANSI text, retain child focus
-and input handling, and remain visible without color. Tall help panels can still lose their
-bottom border after terminal composition; Q2 requires an overflow policy.
+All application overlay calls use the shared Frame component. Borders handle wide characters
+and ANSI text, retain child focus and input handling, and remain visible without color. Frame
+reads the terminal height at render time, clips overflowing content and shows an ellipsis while
+preserving both border rows. Help wraps its text with pi-tui, scrolls through TraceOverlay and
+closes through its onClose callback. The separate helpOpen Esc path is removed.
 
-README and the authorized 006 command contract match the new commands. CI runs on pull requests
-and pushes to `main`, avoiding duplicate branch-push runs. No dependency or data format changed.
+README and the authorized 006 command contract match the commands. CI runs on pull requests and
+pushes to `main`, avoiding duplicate branch-push runs. No dependency or stored data format changed.
 
 ## Tasks completed and not completed
 
-**The feature is partially implemented, not delivered as complete.**
+**T001–T020 are complete.** There is no remaining application task or unresolved behavior question.
+The resumed implementation follows the owner's decisions recorded in T018–T019:
 
-- Complete: T001–T008, T010–T015 and T017 (15 tasks).
-- Incomplete: T009, T016, T018 and T019 (4 tasks).
-- T009 follows its explicit code plan, but cannot meet FR-007's unconditional preservation
-  requirement with pi's current deferred persistence. It stays unchecked for Q1.
-- T016 ran convergence and appended T018–T019. It stays unchecked because its instruction also
-  requires completing those tasks, which depend on owner decisions.
-- T018 and T019 record the two remaining design-dependent gaps.
+- T009/T018: preserve conversations with messages; replace greeting-only chats without saving.
+  No engine storage change was needed. Tests cover both cases and immediate session listing.
+- T019: use scrollable help and height-limited frames. Tests cover clipping, the ellipsis,
+  complete borders, changing height limits, scrolling and Esc restoration at 60x24.
+- T020: align the manual quickstart with when each chat appears in `/sessions`.
+- T016: review the final implementation and corrective task chains through convergence.
 
-Completed phases were committed after build, lint and tests passed. The Phase 5 commit includes
-its tested implementation and explicitly leaves T009 open. Checklist markers were not changed.
+Phase checkpoints passed build, lint and tests before their commits. Owner visual acceptance and
+observing CI on GitHub remain manual follow-up work, as specified by the plan.
 
 ## Test results
 
@@ -44,7 +45,7 @@ The final source checkpoint passed:
 pnpm build && pnpm lint && pnpm test
 Checked 137 files. No fixes applied.
 Test Files  63 passed (63)
-     Tests  381 passed (381)
+     Tests  383 passed (383)
 ```
 
 | Area | Evidence |
@@ -60,7 +61,9 @@ Test Files  63 passed (63)
 | T-h | Picker attachment fires lore on the next faux-provider request; after `/new`, the request has the greeting and only the new user message |
 | T-i | Existing import and shared file-validation regression tests pass |
 | T-j | Parsed CI YAML with existing `yaml` dependency; asserted `push.branches` equals `["main"]` and `pull_request` is present |
-| Overlay integration | Help has a narrow-width frame before composition and Esc restores editor focus; existing picker, key, model and trace interactions pass through Frame |
+| T018 | Previous chat with messages is listed immediately after `/new` and can be resumed; greeting-only old and new chats are absent from the session picker |
+| T019 | Frame clipping retains top/bottom borders and an ellipsis, responds to height changes and handles a two-row limit; at 60x24, help fits, actual terminal writes contain both borders, paging/End/Home work and Esc restores editor focus |
+| T020 | Quickstart step 4 now matches the session-listing sequence exercised by the picker tests |
 | Command suggestions | Search of non-test TUI source, README and the active 006 command contract finds no obsolete in-app id command suggestions; the historical removal note is allowed |
 
 T-j command, run from `packages/data`:
@@ -77,61 +80,58 @@ T-j passed: push.branches = [main]; pull_request present
 
 ### External acceptance
 
-The required offline acceptance command passed **19 checks, 0 failures**:
+The required offline acceptance command passed **19 checks, 0 failures** against the completed
+application fixes:
 
 ```bash
 bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"
 ```
 
-Record: `../acceptance/results/v1-acceptance-20261020-155506.md`. External card/lorebook resources
-stayed outside the repository and were imported only into temporary data. This checks existing
-CLI import/list/show/dry-run behavior without a key or network; it does not resolve Q1 or Q2.
+Record: `../acceptance/results/v1-acceptance-20261020-161116.md`. External card/lorebook resources
+stayed outside the repository and were imported only into temporary data. The suite checks CLI
+import/list/show/dry-run behavior without a key or network.
 
 ## Deferred tests
 
-No planned automated unit or faux-provider test was deferred for complexity. Tests for the
-selected resolutions to Q1 and Q2 remain pending design, as T018–T019 specify. The existing
-symlink test is skipped on Windows because link creation requires additional privileges there.
+No planned automated unit or faux-provider test was deferred for complexity. The symlink test is
+skipped on Windows because link creation requires additional privileges there.
 
 Owner visual acceptance at normal width and about 60 columns, with and without NO_COLOR, remains
-pending. No real provider, local LLM, GPU or real editor was launched.
+pending. GitHub CI behavior is locally verified by the workflow check; observing actual runs is
+an owner follow-up. No real provider, local LLM, GPU or real editor was launched.
 
 ## Deviations from spec or plan
 
-- The planned call to `startChat(item)` does not preserve a greeting-only previous chat. Research
-  R6's claim that starting a chat immediately creates its session file is false for the pinned
-  pi version. Storage behavior was not redesigned; T009 remains incomplete.
-- Wrapping all child lines does not keep every border visible when the panel exceeds terminal
-  height. A 60x24 help check produced 32 rows and no bottom border in actual terminal writes.
-  No unplanned clipping or scrolling behavior was added.
-- Removed the unused command context and completion helpers after the final id-taking command
-  was removed. The character-creation hint now directs users to `/characters`.
+The two initial implementation gaps are resolved by the owner's updated design:
 
-The constitution, current spec, plan, research, data model, contract, quickstart and requirement
-checklist were not edited. The previous feature's command contract was updated by explicit T014.
-The historical `analysis.md` is preserved; this report describes the later implementation state.
+- Greeting-only chats follow pi's existing deferred persistence. The spec now explicitly limits
+  preservation to chats with messages. No storage policy was added.
+- Help reuses TraceOverlay after wrapping lines to its inner width; Frame clips other overflowing
+  panels with an ellipsis. This follows research R1, the frame contract and T019.
+- T020 corrects the manual validation guide to match the accepted greeting-only behavior.
+
+The unused command context and completion helpers were removed after the final id-taking
+command was removed. Character creation now directs users to `/characters`.
+
+This implementation did not edit the constitution, current spec, plan, research, data model,
+contract or requirement checklist. The owner updated design artifacts between implementation
+runs. The previous feature's contract changed under T014; quickstart changed under T020.
+Historical analysis and development records are retained; this report describes the final state.
 
 ## Open questions
 
-See [questions.md](./questions.md):
-
-- **Q1 / T018**: Should chats containing only their greeting be persisted? If so, specify the
-  engine storage change; otherwise qualify the preservation requirement.
-- **Q2 / T019**: How should panels taller than the terminal preserve their border and readable
-  content: scrolling, clipping or another specified policy?
-
-These are behavior decisions for the owner/design side. The implementer has completed the
-independent work and has not chosen those policies.
+None. [questions.md](./questions.md) retains the original observations, the owner's decisions and
+how T018–T020 implement them.
 
 ## Demo notes for the owner
 
-Use the temporary-home steps in [quickstart.md](./quickstart.md). Try `/show` with a name filter;
-select Alice through `/characters`; toggle Wonderland in `/lorebooks`; import a lorebook there;
-send a message, then use `/new` and resume the previous exchange through `/sessions`.
+Use a temporary home as described in [quickstart.md](./quickstart.md). Try `/show` with a name
+filter; select Alice through `/characters`; toggle Wonderland in `/lorebooks`; import a lorebook
+there; send a message, then use `/new`. The previous conversation is immediately available in
+`/sessions`. The new chat is listed after its first message; greeting-only chats are not saved.
 
-For Q1, select a character and immediately use `/new` before sending anything: the earlier
-greeting-only chat is absent from `/sessions`. For Q2, open `/help` in a 60x24 terminal and
-inspect the missing bottom border. These are known remaining gaps, not acceptance passes.
+Open `/help` in a 60x24 terminal, page through the text and use End/Home. The frame stays complete,
+and Esc returns to the editor. Tall non-scrollable panels show an ellipsis within their border.
 
 Release 0.1.1 is an owner action after merge, using staged npm publishing. This run did not push,
 open a pull request, tag or publish anything.
@@ -140,31 +140,29 @@ open a pull request, tag or publish anything.
 
 See [development-usage.md](./development-usage.md) and the conversation's individual tool-call
 records. Total platform-reported development token usage: **unknown**; no estimate is substituted.
-No `.env` or real user home/settings were read or used. All generated test data used temporary
-homes. The external acceptance run required a scoped sandbox escalation to write its result;
-phase commits required escalation because `.git` is read-only in the default sandbox. Normal
-hooks ran gitleaks and lint for every commit; no hook was bypassed.
+No `.env` or real user home/settings were read or used. Generated test data used temporary homes.
+The external acceptance run required a scoped sandbox escalation to write its result; commits
+required escalation because `.git` is read-only in the default sandbox. Normal gitleaks and lint
+hooks ran for each commit; no hook was bypassed.
 
 ## Convergence
 
-T016 assessed 11 functional requirements, 5 buildable success criteria, 23 user-story acceptance
-scenarios, 9 edge cases, decisions R1–R8, all 17 original tasks and all 7 constitution principles
-plus applicable technology/workflow/testing constraints.
+The resumed review checks 11 functional requirements, 5 buildable success criteria, 25 user-story
+acceptance scenarios, 9 edge cases, decisions R1–R8, all original and corrective tasks, and all
+7 constitution principles plus applicable technology/workflow/testing constraints.
 
-Outcome: **tasks_appended**, with two `partial` findings: F1 HIGH for greeting-only chat
-preservation (FR-007 / SC-003 / US3/AC1), and F2 MEDIUM for tall-panel border clipping
-(FR-008 / US4/AC1). No `missing`, `contradicts`, `unrequested` or constitution-violation findings
-were identified. Appended T018–T019 under Phase 9 without rewriting any original task.
+T018–T019 close the original HIGH and MEDIUM partial gaps under the owner's updated design. The
+next review found one MEDIUM partial validation-guide gap and appended T020 under Phase 10.
+After that correction, the final review has no remaining actionable findings. No empty
+convergence section is appended when the result is clean.
 
-Both tasks require owner decisions recorded in questions.md. There is no claim of convergence.
 No `.specify/extensions.yml` exists; implementation and convergence hooks are skipped.
 
 ## What the owner should check manually
 
-- Resolve Q1 and Q2 on the design side, then rerun implementation for the unchecked tasks.
 - Follow all seven manual quickstart steps using a temporary home.
 - Check each overlay's border, title, focus and Esc behavior at normal width and about 60 columns,
-  with and without NO_COLOR. Include long character names and narrow help.
-- Confirm search/details, lorebook states and import-and-attach messages, new chat greeting,
-  preserved/resumable conversations and innkeeper reset.
-- Observe CI on pull requests and `main` after pushing. Release 0.1.1 only after merge and review.
+  with and without NO_COLOR. Include long character names and help scrolling at 24 rows.
+- Confirm search/details, lorebook states and import-and-attach messages, fresh chat greeting,
+  preserved/resumable conversations, greeting-only replacement and innkeeper reset.
+- Observe CI on pull requests and `main` after pushing. Release 0.1.1 after merge and review.
