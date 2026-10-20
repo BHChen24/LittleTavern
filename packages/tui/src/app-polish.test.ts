@@ -205,3 +205,18 @@ it("keeps the draft and reports an editor failure", () => {
   expect(app.editor.getText()).toBe("Keep this draft.");
   expect(lines().join("\n")).toContain("Error: Could not run editor");
 });
+
+it("frames help at a narrow width and restores editor focus on Esc", async () => {
+  const { app, input } = fixture();
+  app.start();
+  app.enterChat();
+  await app.submit("/help");
+  const help = app.tui.getFocusedComponent();
+  const lines = help?.render(60) ?? [];
+  expect(stripVTControlCharacters(lines[0] ?? "").startsWith("┌")).toBe(true);
+  expect(stripVTControlCharacters(lines.at(-1) ?? "").endsWith("┘")).toBe(true);
+  expect(lines.every((line) => visibleWidth(line) === 60)).toBe(true);
+  input("\x1b");
+  expect(app.tui.hasOverlay()).toBe(false);
+  expect(app.tui.getFocusedComponent()).toBe(app.editor);
+});

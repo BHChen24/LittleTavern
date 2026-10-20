@@ -69,6 +69,7 @@ import {
 } from "@littletavern/engine";
 import { COMMANDS, helpText } from "./commands.ts";
 import { FileBrowser } from "./components/file-browser.ts";
+import { Frame } from "./components/frame.ts";
 import { HomeScreen } from "./components/home-screen.ts";
 import { InputBox } from "./components/input-box.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
@@ -208,7 +209,7 @@ export function createApp(options: AppOptions = {}) {
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
   function showPanel(component: Component, options?: OverlayOptions): void {
-    tui.showOverlay(component, options);
+    tui.showOverlay(new Frame(component), options);
   }
   function importSelected(selected: string): ImportReport | null {
     try {
@@ -955,7 +956,7 @@ export function createApp(options: AppOptions = {}) {
           },
           Math.max(40, Math.floor(width * 0.9) - 2),
         );
-        const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
+        const overlay = new TraceOverlay(lines, Math.max(3, tui.terminal.rows - 8));
         overlay.onClose = closeOverlay;
         showPanel(overlay, { width: "90%" });
         tui.requestRender();

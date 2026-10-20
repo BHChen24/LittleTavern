@@ -161,14 +161,14 @@ earlier history, and `/sessions` lists both chats.
 
 **Independent test**: render any overlay and see the box border; checked visually by the owner.
 
-- [ ] T012 [P] [US4] Export the editor's border style from `packages/tui/src/theme.ts` (for example `frameBorder`, the same `dim` used by `editorTheme.borderColor`). Create `packages/tui/src/components/frame.ts` with `Frame` per research R1 and the contract:
+- [X] T012 [P] [US4] Export the editor's border style from `packages/tui/src/theme.ts` (for example `frameBorder`, the same `dim` used by `editorTheme.borderColor`). Create `packages/tui/src/components/frame.ts` with `Frame` per research R1 and the contract:
   - it wraps one child;
   - it renders `┌`, `─` and `┐`, then `│ <line padded to width-4> │` for each child line rendered at `width - 4`, then `└`, `─` and `┘`;
   - it truncates lines with pi-tui `truncateToWidth` and measures them with `visibleWidth`;
   - it forwards `handleInput`, `invalidate` and the `focused` getter and setter.
 
   A long `ListPicker` title wraps inside the frame (pi-tui `Text` wraps it); do not add title truncation. Write T-a, including the long-title case, in `packages/tui/src/components/frame.test.ts`
-- [ ] T013 [US4] Make `showPanel` in `packages/tui/src/app.ts` wrap the component in a `Frame`. Check that the Esc and help-closing paths, the overlay focus and the trace overlay's height still work (the trace computes its height from the terminal rows; leave room for the two border rows). Adjust any app test that asserts exact overlay lines
+- [X] T013 [US4] Make `showPanel` in `packages/tui/src/app.ts` wrap the component in a `Frame`. Check that the Esc and help-closing paths, the overlay focus and the trace overlay's height still work (the trace computes its height from the terminal rows; leave room for the two border rows). Adjust any app test that asserts exact overlay lines
 
 **Checkpoint**: checks pass. Commit.
 

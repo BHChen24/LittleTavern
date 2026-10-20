@@ -80,3 +80,17 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
 - `exec_command`: build, lint and all 62 test files / 376 tests passed. T010–T011 are complete;
   T009 remains unchecked because Q1 prevents satisfying unconditional old-chat preservation.
   Committed the tested implementation and continued independent phases under the run rules.
+
+## Phase 6: Overlay Frames
+
+- `exec_command`: wrote Frame tests first; the initial run failed because Frame did not yet
+  exist. Implemented the shared wrapper, exported the editor's border style and routed all
+  app overlay calls through it. Reserved two additional rows for the trace border.
+- `exec_command`: verified the pinned pi component/focus interfaces, rendering behavior and
+  application Esc paths. Added a narrow-width help integration check using the existing terminal
+  harness. Frame checks cover widths 80/40, ANSI styles, CJK width, focus/input/invalidation,
+  wrapped long titles, truncated entries and NO_COLOR.
+- `exec_command` / `write_stdin`: build, lint (137 files), all 63 test files and 381 tests passed.
+  Marked T012–T013 complete and committed with normal hooks.
+- `exec_command`: read the convergence skill and documentation touchpoints in preparation for
+  the remaining task phases. No convergence writes have been made yet.
