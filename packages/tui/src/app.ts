@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import {
+  CombinedAutocompleteProvider,
   Container,
   Editor,
   Markdown,
@@ -38,6 +39,7 @@ import {
   type UsageRecord,
   writeSettings,
 } from "@littletavern/engine";
+import { COMMANDS, helpText } from "./commands.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
@@ -48,27 +50,6 @@ import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
-
-export const APP_HELP = `/characters     Choose a character and start a chat
-/chat <id>      Start a chat with a character
-/sessions       Resume a saved chat
-/regenerate     Regenerate the last reply (Ctrl+R)
-/attach <id>    Attach a lorebook to the current character
-/detach <id>    Detach a lorebook
-/lorebooks      List the active lorebooks
-/trace          Show why the last request looked the way it did
-/plain          Leave the character chat
-/import <path>  Import a card or lorebook
-/library        List the library
-/show <id>      Inspect an item
-/help        Show commands and key bindings
-/model       Choose a model
-/key         Replace the key
-/forget-key  Forget the saved key
-/quit        Quit
-Ctrl+C       Quit
-Esc          Interrupt generation; close help
-Enter        Send a message`;
 
 export interface AppOptions {
   terminal?: Terminal;
@@ -109,6 +90,8 @@ export function createApp(options: AppOptions = {}) {
   tui.setFocus(editor);
   let reply: Markdown | undefined;
   let chat: CharacterChat | null = null;
+  const commands = COMMANDS({ paths, getChat: () => chat });
+  editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
   let response = "";
   let running: Promise<unknown> | undefined;
   let closing: Promise<void> | undefined;
@@ -347,10 +330,6 @@ export function createApp(options: AppOptions = {}) {
     const text = value.trim();
     if (closing || session.isStreaming || !text) return;
     editor.setText("");
-    if (text === "/quit") {
-      await quit();
-      return;
-    }
     if (text === "/key") {
       promptForKey();
       return;
@@ -369,83 +348,7 @@ export function createApp(options: AppOptions = {}) {
       } else notice("Saved key forgotten; the environment key remains active.");
       return;
     }
-    if (text === "/import" || text.startsWith("/import ")) {
-      const file = text.slice("/import".length).trim();
-      notice(
-        file ? formatImportReport(importFile(paths, file)).join("\n") : "Usage: /import <path>",
-      );
-      return;
-    }
-    if (text === "/library") {
-      notice(formatLibraryList(listLibrary(paths)).join("\n"));
-      return;
-    }
-    if (text === "/show" || text.startsWith("/show ")) {
-      const id = text.slice("/show".length).trim();
-      if (!id) {
-        notice("Usage: /show <id>");
-        return;
-      }
-      const item = getItem(paths, id);
-      notice(
-        item === "ambiguous"
-          ? `Ambiguous item prefix: ${id}`
-          : item
-            ? formatItemDetails(item).join("\n")
-            : `Item not found: ${id}`,
-      );
-      return;
-    }
-    if (text === "/characters") {
-      openCharacterPicker();
-      return;
-    }
-    if (text === "/chat" || text.startsWith("/chat ")) {
-      const id = text.slice("/chat".length).trim();
-      const item = id ? getItem(paths, id) : null;
-      if (!id) notice("Usage: /chat <id>");
-      else if (item === "ambiguous") notice(`Ambiguous item prefix: ${id}`);
-      else if (item?.kind !== "character") notice(`Character not found: ${id}`);
-      else startChat(item);
-      return;
-    }
-    if (text === "/sessions") {
-      await openSessionPicker();
-      return;
-    }
-    if (text === "/trace") {
-      if (!chat) {
-        notice("The trace is available in character chats (/characters).");
-        return;
-      }
-      if (!chat.lastTrace) {
-        notice("No request yet — send a message, or use `littletavern dry-run`.");
-        return;
-      }
-      const width = tui.terminal.columns;
-      const lines = formatTraceReport(
-        chat.lastTrace,
-        {
-          characterName: chat.character.name,
-          modelId: session.modelId,
-          loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
-        },
-        Math.max(40, Math.floor(width * 0.9) - 2),
-      );
-      const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
-      overlay.onClose = closeOverlay;
-      tui.showOverlay(overlay, { width: "90%" });
-      tui.requestRender();
-      return;
-    }
-    if (text === "/plain") {
-      chat = null;
-      transcript.clear();
-      notice("Plain chat. Use /characters to start a character chat.");
-      updateStatus();
-      return;
-    }
-    if (text === "/lorebooks" || text.startsWith("/attach") || text.startsWith("/detach")) {
+    const changeLorebooks = () => {
       if (!chat) {
         notice("Start a character chat first (/characters).");
         return;
@@ -476,49 +379,145 @@ export function createApp(options: AppOptions = {}) {
         notice(error instanceof Error ? error.message : "Could not change lorebooks.");
       }
       return;
+    };
+    const handlers: Record<string, () => void | Promise<void>> = {
+      quit: async () => {
+        await quit();
+        return;
+      },
+      import: async () => {
+        const file = text.slice("/import".length).trim();
+        notice(
+          file ? formatImportReport(importFile(paths, file)).join("\n") : "Usage: /import <path>",
+        );
+        return;
+      },
+      library: async () => {
+        notice(formatLibraryList(listLibrary(paths)).join("\n"));
+        return;
+      },
+      show: async () => {
+        const id = text.slice("/show".length).trim();
+        if (!id) {
+          notice("Usage: /show <id>");
+          return;
+        }
+        const item = getItem(paths, id);
+        notice(
+          item === "ambiguous"
+            ? `Ambiguous item prefix: ${id}`
+            : item
+              ? formatItemDetails(item).join("\n")
+              : `Item not found: ${id}`,
+        );
+        return;
+      },
+      characters: async () => {
+        openCharacterPicker();
+        return;
+      },
+      chat: async () => {
+        const id = text.slice("/chat".length).trim();
+        const item = id ? getItem(paths, id) : null;
+        if (!id) notice("Usage: /chat <id>");
+        else if (item === "ambiguous") notice(`Ambiguous item prefix: ${id}`);
+        else if (item?.kind !== "character") notice(`Character not found: ${id}`);
+        else startChat(item);
+        return;
+      },
+      sessions: async () => {
+        await openSessionPicker();
+        return;
+      },
+      trace: async () => {
+        if (!chat) {
+          notice("The trace is available in character chats (/characters).");
+          return;
+        }
+        if (!chat.lastTrace) {
+          notice("No request yet — send a message, or use `littletavern dry-run`.");
+          return;
+        }
+        const width = tui.terminal.columns;
+        const lines = formatTraceReport(
+          chat.lastTrace,
+          {
+            characterName: chat.character.name,
+            modelId: session.modelId,
+            loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
+          },
+          Math.max(40, Math.floor(width * 0.9) - 2),
+        );
+        const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
+        overlay.onClose = closeOverlay;
+        tui.showOverlay(overlay, { width: "90%" });
+        tui.requestRender();
+        return;
+      },
+      plain: async () => {
+        chat = null;
+        transcript.clear();
+        notice("Plain chat. Use /characters to start a character chat.");
+        updateStatus();
+        return;
+      },
+      regenerate: async () => {
+        await regenerate();
+        return;
+      },
+      model: async () => {
+        const picker = new ModelPicker();
+        picker.onCancel = () => {
+          tui.hideOverlay();
+          tui.requestRender();
+        };
+        picker.onSelect = (model) => {
+          try {
+            session.setModel(model.id);
+            modelId = model.id;
+          } catch {
+            notice("Could not select that model.");
+            return;
+          }
+          try {
+            writeSettings(paths, { model: model.id });
+          } catch {
+            notice("Could not save the selected model; using it for this session only.");
+          }
+          tui.hideOverlay();
+          updateStatus();
+          tui.requestRender();
+        };
+        tui.showOverlay(picker, { width: "90%" });
+        return;
+      },
+      help: async () => {
+        const help = new Text(helpText());
+        tui.showOverlay(help);
+        helpOpen = true;
+        return;
+      },
+      apikey: promptForKey,
+      lorebooks: changeLorebooks,
+      attach: changeLorebooks,
+      detach: changeLorebooks,
+    };
+    if (text.startsWith("/")) {
+      const name = text.slice(1).split(" ", 1)[0];
+      const command = commands.find((entry) => entry.name === name);
+      if (!command || (!command.argumentHint && text !== `/${name}`)) {
+        notice("Unknown command. Use /help.");
+        return;
+      }
+      if (needsKey && ["regenerate", "model", "help"].includes(command.name)) {
+        promptForKey();
+        return;
+      }
+      await handlers[command.name]?.();
+      return;
     }
     if (needsKey) {
       promptForKey();
-      return;
-    }
-    if (text === "/regenerate") {
-      await regenerate();
-      return;
-    }
-    if (text === "/model") {
-      const picker = new ModelPicker();
-      picker.onCancel = () => {
-        tui.hideOverlay();
-        tui.requestRender();
-      };
-      picker.onSelect = (model) => {
-        try {
-          session.setModel(model.id);
-          modelId = model.id;
-        } catch {
-          notice("Could not select that model.");
-          return;
-        }
-        try {
-          writeSettings(paths, { model: model.id });
-        } catch {
-          notice("Could not save the selected model; using it for this session only.");
-        }
-        tui.hideOverlay();
-        updateStatus();
-        tui.requestRender();
-      };
-      tui.showOverlay(picker, { width: "90%" });
-      return;
-    }
-    if (text === "/help") {
-      const help = new Text(APP_HELP);
-      tui.showOverlay(help);
-      helpOpen = true;
-      return;
-    }
-    if (text.startsWith("/")) {
-      notice("Unknown command. Use /help.");
       return;
     }
     if (!activeKey) return;

@@ -17,3 +17,5 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Implement import paths and command catalog (T001–T003) | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Wait for Phase 1 checks (two calls) | functions.exec → write_stdin × 2 | Build, lint and 222 tests passed |
 | Commit Phase 1 and wire command suggestions and dispatch (T004) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Commit Phase 1 outside sandbox and wait for Phase 2 checks | functions.exec → exec_command (escalated Git), write_stdin | Committed ae68668; 223 tests, build and lint passed |
+| Mark Phase 2 complete and record commit metadata limitation | functions.exec → exec_command (including this recorder) | Exit 0 |

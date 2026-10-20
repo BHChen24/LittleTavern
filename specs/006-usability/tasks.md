@@ -71,13 +71,13 @@ quickstart.md
 
 ## Phase 2: User Story 1 - Commands suggest themselves (P1) 🎯
 
-- [ ] T004 [US1] In `app.ts`:
+- [X] T004 [US1] In `app.ts`:
   - attach `new CombinedAutocompleteProvider(COMMANDS(context), paths.importRoot)` to the editor
     with `editor.setAutocompleteProvider`;
   - replace `APP_HELP` with `helpText()`;
   - make command dispatch look up `COMMANDS` names. Keep the existing handlers and move them
     behind the table; behaviour must not change.
-- [ ] T005 [US1] Try T-j in `packages/tui/src/app-suggestions.test.ts` (typing `/` opens suggestions, Tab completes). Defer it if the harness needs more than about 60 lines
+- [X] T005 [US1] Try T-j in `packages/tui/src/app-suggestions.test.ts` (typing `/` opens suggestions, Tab completes). Defer it if the harness needs more than about 60 lines
 
 **Checkpoint**: checks pass. Commit.
 
