@@ -954,7 +954,8 @@ export function createApp(options: AppOptions = {}) {
             modelId: session.modelId,
             loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
           },
-          Math.max(40, Math.floor(width * 0.9) - 2),
+          // The panel is 90% wide; its frame takes two columns on each side.
+          Math.max(20, Math.floor(width * 0.9) - 4),
         );
         const overlay = new TraceOverlay(lines, Math.max(3, tui.terminal.rows - 8));
         overlay.onClose = closeOverlay;
