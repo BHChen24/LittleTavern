@@ -44,14 +44,14 @@ description: "Task list for 007-character-creator"
 
 ## Phase 1: Foundational
 
-- [ ] T001 [P] In `packages/data/src/cards/template.ts`, add:
+- [X] T001 [P] In `packages/data/src/cards/template.ts`, add:
   - `CHARACTER_TEMPLATE`, exactly the text in `contracts/template.md`;
   - `parseCharacterTemplate(text)`, following research R2.
 
   Write tests T-a in `template.test.ts`. They include CJK text and `{{user}}` inside sections,
   which is allowed as test data.
-- [ ] T002 [P] In the same file, add `buildV3Card(fields, entries, version)` following the mapping in `contracts/template.md`, and `safeCardFileName(name, existingNames)` following research R3. Write tests T-b and T-c
-- [ ] T003 [P] Create `openInEditor(filePath, command?)` in `packages/tui/src/editor-launch.ts`, following research R1. Write tests T-e in `editor-launch.test.ts`, using a temporary Node script as the fake `VISUAL`
+- [X] T002 [P] In the same file, add `buildV3Card(fields, entries, version)` following the mapping in `contracts/template.md`, and `safeCardFileName(name, existingNames)` following research R3. Write tests T-b and T-c
+- [X] T003 [P] Create `openInEditor(filePath, command?)` in `packages/tui/src/editor-launch.ts`, following research R1. Write tests T-e in `editor-launch.test.ts`, using a temporary Node script as the fake `VISUAL`
 
 **Checkpoint**: checks pass. Commit.
 
