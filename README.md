@@ -28,7 +28,8 @@ agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
 - Node.js 22.19 or newer (tested on 22, 24 and 26)
 - An [OpenRouter](https://openrouter.ai/) API key. Models from the OpenAI and Gemini families are
-  supported.
+  supported. For trying LittleTavern out, a Gemini model is recommended: it currently follows
+  character cards most reliably.
 
 ## Install
 
