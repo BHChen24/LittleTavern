@@ -9,6 +9,7 @@ export interface AssemblySettings {
   scanDepth: number;
   loreBudget: number;
   replyReserve: number;
+  replyTokens?: number;
 }
 
 export interface AssemblyInput {
@@ -74,7 +75,7 @@ export const DEFAULT_ASSEMBLY_SETTINGS: AssemblySettings = {
   loreBudget: 4000,
   replyReserve: 4000,
 };
-export const DEFAULT_USER_NAME = "User";
+export const DEFAULT_USER_NAME = "Traveler";
 export const DEFAULT_CONTEXT_WINDOW = 128000;
 export const DEFAULT_MAIN_INSTRUCTION =
   "Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}.";

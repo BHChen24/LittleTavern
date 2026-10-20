@@ -56,7 +56,9 @@ import {
   PERSONA_TEMPLATE,
   type PersonaItem,
   parsePersona,
+  type RequestOptions,
   readActivePersona,
+  readRequestSettings,
   readSavedKey,
   readSettings,
   resolveApiKey,
@@ -103,6 +105,22 @@ export function createApp(options: AppOptions = {}) {
   const env = options.env ?? process.env;
   const paths = options.paths ?? resolveAppPaths(env);
   const settings = readSettings(paths);
+  const requestSettings = readRequestSettings(paths);
+  const request: RequestOptions = {};
+  if (requestSettings.replyTokens > 0) request.maxTokens = requestSettings.replyTokens;
+  if (requestSettings.generation.temperature !== undefined)
+    request.temperature = requestSettings.generation.temperature;
+  const samplingParams: Record<string, number> = {};
+  for (const [setting, key] of [
+    ["topP", "top_p"],
+    ["topK", "top_k"],
+    ["minP", "min_p"],
+    ["repetitionPenalty", "repetition_penalty"],
+  ] as const) {
+    const value = requestSettings.generation[setting];
+    if (value !== undefined) samplingParams[key] = value;
+  }
+  if (Object.keys(samplingParams).length) request.samplingParams = samplingParams;
   const storedModel = findAllowedModel(settings.model);
   let modelId = storedModel?.id ?? DEFAULT_MODEL_ID;
   let modelSelected = Boolean(storedModel);
@@ -117,6 +135,7 @@ export function createApp(options: AppOptions = {}) {
   const session =
     options.session ??
     new ChatSession({
+      request,
       modelId,
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
       getApiKey: () => activeKey?.value,
@@ -326,7 +345,7 @@ export function createApp(options: AppOptions = {}) {
     updateSetupNotice();
     return true;
   }
-  const startupNotices = [...(options.startupNotices ?? [])];
+  const startupNotices = [...(options.startupNotices ?? []), ...requestSettings.warnings];
   const importNotice = ensureImportFolders(paths);
   if (importNotice) startupNotices.unshift(importNotice);
   if (startupNotices.length) notice(startupNotices.join("\n"));

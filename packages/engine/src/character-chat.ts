@@ -7,6 +7,7 @@ import {
   type LibraryItem,
   type Lorebook,
   readActivePersona,
+  readRequestSettings,
   readSettings,
   writeSettings,
 } from "@littletavern/data";
@@ -56,6 +57,7 @@ export function assembleForCharacter(options: {
   item: CharacterItem;
   history: HistoryMessage[];
   modelId: string;
+  replyTokens?: number;
 }): { prompt: AssembledPrompt; trace: AssemblyTrace; notices: string[] } {
   const settings = readSettings(options.paths);
   const notices: string[] = [];
@@ -69,6 +71,8 @@ export function assembleForCharacter(options: {
     else notices.push(`Attached lorebook ${id} is no longer in the library; skipped.`);
   }
   const assemblySettings: Partial<AssemblySettings> = {};
+  assemblySettings.replyTokens =
+    options.replyTokens ?? readRequestSettings(options.paths).replyTokens;
   if (settings.scanDepth !== undefined) assemblySettings.scanDepth = settings.scanDepth;
   if (settings.loreBudget !== undefined) assemblySettings.loreBudget = settings.loreBudget;
   if (settings.replyReserve !== undefined) assemblySettings.replyReserve = settings.replyReserve;
@@ -317,6 +321,7 @@ export class CharacterChat {
       item: this.item,
       history,
       modelId: this.session.modelId,
+      replyTokens: this.session.request.maxTokens ?? 0,
     });
     for (const notice of notices) {
       if (this.noticed.has(notice)) continue;

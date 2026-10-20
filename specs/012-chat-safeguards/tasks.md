@@ -65,7 +65,7 @@ data-model.md, contracts/messages.md, quickstart.md
 
 ## Phase 1: Foundational (settings and request plumbing)
 
-- [ ] T001 [P] In `packages/data/src/settings.ts`, add `readRequestSettings(paths)` returning `{ replyTokens, runSpendUsd, generation, warnings }` per research R9 and data-model.md. The ranges, verbatim:
+- [X] T001 [P] In `packages/data/src/settings.ts`, add `readRequestSettings(paths)` returning `{ replyTokens, runSpendUsd, generation, warnings }` per research R9 and data-model.md. The ranges, verbatim:
   - `limits.replyTokens`: "whole number ≥ 0", default 4096;
   - `limits.runSpendUsd`: "number ≥ 0", default 1;
   - `temperature`: "number 0–2";
@@ -75,7 +75,7 @@ data-model.md, contracts/messages.md, quickstart.md
   - `repetitionPenalty`: "number > 0".
 
   Each invalid value is dropped (a limit uses its default) and adds `Ignored <field> in settings.json: <rule>.` (contract). Export it through the data barrel, and through the engine re-exports if the TUI needs it. Write T-a in `packages/data/src/settings.test.ts`
-- [ ] T002 [P] In `packages/engine/src/chat-session.ts` (research R1, R2):
+- [X] T002 [P] In `packages/engine/src/chat-session.ts` (research R1, R2):
   - add `request?: { maxTokens?: number; temperature?: number; samplingParams?: Record<string, number> }` to `ChatSessionOptions`;
   - wrap `streamFn` so the options passed to pi are `{ ...options, ...request }`;
   - add `get request()`;
@@ -83,12 +83,12 @@ data-model.md, contracts/messages.md, quickstart.md
   - add an optional `simulated.onRequest?: (options) => void` hook, called from the faux response factory, which receives the options (`../pi/packages/ai/src/providers/faux.ts:109–114`).
 
   Write T-b and T-c in `packages/engine/src/chat-session.test.ts`. Add a way for the simulated provider to return a `stopReason: "length"` reply, for example a reply object `{ text, stopReason: "length" }`, mirroring the existing error reply
-- [ ] T003 In `packages/engine`:
+- [X] T003 In `packages/engine`:
   - set `DEFAULT_USER_NAME` to `"Traveler"` in `src/assembly/types.ts` (R8), and update tests that expected "User";
   - in assembly, reserve `max(replyReserve, replyTokens)` when `replyTokens > 0` (R10). Pass `replyTokens` from `CharacterChat` to assembly through its settings input (`readRequestSettings`).
 
   Write T-j next to the existing assembly tests
-- [ ] T004 In `packages/tui/src/app.ts` `createApp`, when it creates the `ChatSession` (no `options.session` given), pass `request` built from `readRequestSettings(paths)`:
+- [X] T004 In `packages/tui/src/app.ts` `createApp`, when it creates the `ChatSession` (no `options.session` given), pass `request` built from `readRequestSettings(paths)`:
   - `maxTokens` when `replyTokens > 0`;
   - `temperature` when set;
   - `samplingParams` with `top_p`, `top_k`, `min_p` and `repetition_penalty` for the set values (R1).

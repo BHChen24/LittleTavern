@@ -171,7 +171,7 @@ it.each(["missing", "invalid"])(
     writeSettings(paths, { persona: null });
     expect(greetingFor(paths, item)).toContain("Parker");
     writeFileSync(paths.settingsFile, "{}");
-    expect(greetingFor(paths, item)).toContain("User");
+    expect(greetingFor(paths, item)).toContain("Traveler");
   },
 );
 
@@ -208,7 +208,7 @@ it("sends an assembled request with the card and the triggered lore, and keeps t
     message: 2,
   });
   expect(chat.history().map((message) => message.text)).toEqual([
-    "Welcome, User. I am Mira.",
+    "Welcome, Traveler. I am Mira.",
     "Tell me about the lighthouse.",
     "The light still turns.",
   ]);
