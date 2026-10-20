@@ -10,8 +10,7 @@ it("shows the welcome content, missing-key hint and empty-library drop folders",
   });
   const text = home.render(100).join("\n");
   for (const content of [
-    "LittleTavern 0.1.0",
-    "Terminal roleplay with character cards and lorebooks",
+    "v0.1.0 · Terminal roleplay with character cards and lorebooks",
     "Press Enter to start",
     "Type / for commands",
     "No API key yet — use /apikey",
@@ -31,17 +30,34 @@ it("shows the key source and omits drop folders when the library has items", () 
   expect(home.render(100).join("\n")).not.toContain("/tmp/import");
 });
 
-it("centres original ASCII artwork when it fits and uses the plain title below the boundary", () => {
+it("left-aligns the exact logo when it fits and shows the product name once below the boundary", () => {
   const home = new HomeScreen({
     version: "0.1.0",
     keyStatus: "none",
     libraryEmpty: false,
     importDirs: [],
   });
-  const wide = home.render(80);
-  expect(wide.join("\n")).toContain(".------------------------------------------------------.");
-  expect(home.render(59).join("\n")).not.toContain(
-    ".------------------------------------------------------.",
-  );
-  expect(home.render(59).join("\n")).toContain("LittleTavern 0.1.0");
+  const logo = [
+    "  l i t t l e",
+    "▀▀█▀▀ ▄▀▀▀▄ █   █ █▀▀▀▀ █▀▀▀▄ █▄  █",
+    "  █   █▀▀▀█ ▀▄ ▄▀ █▀▀▀  █▀▀▀▄ █ ▀▄█",
+    "  ▀   ▀   ▀   ▀   ▀▀▀▀▀ ▀   ▀ ▀   ▀",
+  ];
+  const logoWidth = logo[1]?.length ?? 0;
+  expect(new Set(logo.slice(1).map((line) => line.length)).size).toBe(1);
+  for (const width of [80, logoWidth]) {
+    const lines = home.render(width).map(stripVTControlCharacters);
+    expect(lines.slice(0, 4)).toEqual(logo);
+    expect(lines.join("\n")).not.toContain("LittleTavern");
+    expect(lines.join("\n").match(/v0\.1\.0/g)).toHaveLength(1);
+  }
+  const narrow = home
+    .render(logoWidth - 1)
+    .map(stripVTControlCharacters)
+    .join("\n");
+  expect(narrow).not.toContain(logo[0]);
+  expect(narrow.match(/LittleTavern/g)).toHaveLength(1);
+  expect(narrow).toContain("v0.1.0 · Terminal roleplay");
 });
+
+import { stripVTControlCharacters } from "node:util";

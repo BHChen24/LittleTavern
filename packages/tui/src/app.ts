@@ -141,6 +141,7 @@ export function createApp(options: AppOptions = {}) {
     );
     tui.setFocus(editor);
     tui.requestRender();
+    openCharacterPicker();
   }
   let reply: MessageView | undefined;
   let chat: CharacterChat | null = null;
@@ -149,7 +150,7 @@ export function createApp(options: AppOptions = {}) {
       ? "Add your key with /apikey to start talking"
       : chat
         ? `Talk to ${display(chat.character.name)}… (/ for commands)`
-        : "Talk… (/ for commands)",
+        : "Talk to the innkeeper… (/ for commands)",
   );
   let waiting: Loader | undefined;
   function clearWaiting(): void {
@@ -283,7 +284,7 @@ export function createApp(options: AppOptions = {}) {
   updateStatus();
 
   function addMessage(role: "user" | "character", text: string): MessageView {
-    const label = role === "user" ? "You" : display(chat?.character.name ?? "Assistant");
+    const label = role === "user" ? "You" : display(chat?.character.name ?? "Innkeeper");
     const message = new MessageView(role, label, text);
     transcript.addChild(message);
     transcript.addChild(new Spacer(1));
@@ -320,20 +321,24 @@ export function createApp(options: AppOptions = {}) {
     const characters = listLibrary(paths).filter(
       (item): item is CharacterItem => item.kind === "character",
     );
-    const picker = new ListPicker(
+    const picker = new ListPicker<CharacterItem | "new">(
       "Choose a character (Enter starts a chat, Esc cancels)",
-      characters.map((item) => ({
-        value: item,
-        label: stripControls(item.name),
-        description: item.id,
-        search: `${item.name} ${item.id}`,
-      })),
+      [
+        { value: "new", label: "New character", search: "New character" },
+        ...characters.map((item) => ({
+          value: item,
+          label: stripControls(item.name),
+          description: item.id,
+          search: `${item.name} ${item.id}`,
+        })),
+      ],
       "Filter characters",
     );
     picker.onCancel = closeOverlay;
     picker.onSelect = (item) => {
       closeOverlay();
-      startChat(item);
+      if (item === "new") newCharacter();
+      else startChat(item);
     };
     tui.showOverlay(picker, { width: "90%" });
   }
@@ -545,7 +550,7 @@ export function createApp(options: AppOptions = {}) {
       tui,
       messageStyles.accent,
       messageStyles.muted,
-      `${display(chat?.character.name ?? "Assistant")} is writing…`,
+      `${display(chat?.character.name ?? "Innkeeper")} is writing…`,
     );
     transcript.addChild(waiting);
     reply = addMessage("character", "");
@@ -748,7 +753,6 @@ export function createApp(options: AppOptions = {}) {
         notice(formatLibraryList(listLibrary(paths)).join("\n"));
         return;
       },
-      "new-character": () => newCharacter(),
       persona: openPersonaPicker,
       show: async () => {
         const id = text.slice("/show".length).trim();
@@ -809,10 +813,10 @@ export function createApp(options: AppOptions = {}) {
         tui.requestRender();
         return;
       },
-      plain: async () => {
+      innkeeper: async () => {
         chat = null;
         transcript.clear();
-        notice("Plain chat. Use /characters to start a character chat.");
+        notice("You are talking to the innkeeper. Use /characters to start a character chat.");
         updateStatus();
         return;
       },

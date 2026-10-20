@@ -13,7 +13,7 @@ it("shows the state placeholder while preserving the editor border and cursor", 
   const tui = new TuiAltScreen(new ProcessTerminal());
   const editor = new Editor(tui, editorTheme);
   editor.focused = true;
-  let placeholder = "Talk… (/ for commands)";
+  let placeholder = "Talk to the innkeeper… (/ for commands)";
   const box = new InputBox(editor, () => placeholder);
   for (const text of [
     placeholder,

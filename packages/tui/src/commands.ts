@@ -100,7 +100,7 @@ export function COMMANDS(context?: CommandContext): SlashCommand[] {
         ),
     },
     { name: "lorebooks", description: "List the active lorebooks" },
-    { name: "plain", description: "Leave the character chat" },
+    { name: "innkeeper", description: "Talk to the innkeeper" },
     {
       name: "import",
       argumentHint: "[path]",
@@ -115,7 +115,6 @@ export function COMMANDS(context?: CommandContext): SlashCommand[] {
       description: "Inspect an item",
       getArgumentCompletions: library(),
     },
-    { name: "new-character", description: "Write a new character in your editor" },
     { name: "persona", description: "Choose who you are in the story" },
     { name: "model", description: "Choose a model" },
     { name: "apikey", description: "Add, replace or forget your OpenRouter API key" },

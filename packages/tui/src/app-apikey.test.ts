@@ -45,6 +45,7 @@ it("has no startup prompt and restores messages and regenerate commands without 
   expect(screen()).toContain("No API key yet — use /apikey");
   expect(app.tui.getFocusedComponent()).not.toBeUndefined();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   expect(app.tui.getFocusedComponent()).toBe(app.editor);
   app.editor.handleInput("hello");
   app.editor.handleInput("\r");
@@ -59,6 +60,7 @@ it("has no startup prompt and restores messages and regenerate commands without 
 it("offers only OpenRouter, masks the key and defaults to session only without writing credentials", async () => {
   const { app, paths, home, input, overlay, screen } = fixture();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("/apikey");
   expect(overlay()).toContain("OpenRouter");
   expect(overlay()).not.toContain("Enter a new key");
@@ -92,6 +94,7 @@ it("offers only OpenRouter, masks the key and defaults to session only without w
 it("writes a saved key only when explicitly selected, with mode 0600, and can forget it", async () => {
   const { app, paths, input, overlay, screen } = fixture();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("/apikey");
   input("\r");
   input("synthetic-saved-key");
@@ -122,6 +125,7 @@ it("keeps environment keys active when forgetting a saved key and explains repla
     "synthetic-old-saved-key",
   );
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("/apikey");
   expect(overlay()).toContain("environment");
   input("\r");
@@ -145,6 +149,7 @@ it("keeps environment keys active when forgetting a saved key and explains repla
 it("redirects old key commands and keeps key-free commands available", async () => {
   const { app, input, overlay, screen } = fixture();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   for (const command of ["/key", "/forget-key"]) {
     await app.submit(command);
     expect(screen()).toContain(`${command} was replaced by /apikey.`);
@@ -159,6 +164,7 @@ it("redirects old key commands and keeps key-free commands available", async () 
 it("cancels both the provider list and masked input without changing the active key", async () => {
   const { app, input, screen } = fixture("synthetic-env");
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("/apikey");
   input("\x1b");
   expect(app.tui.getFocusedComponent()).toBe(app.editor);

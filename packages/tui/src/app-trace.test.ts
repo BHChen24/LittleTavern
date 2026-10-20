@@ -59,6 +59,7 @@ it("explains /trace outside character chats and shows the last request's trace",
     }),
   });
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
   try {
     await app.submit("/trace");

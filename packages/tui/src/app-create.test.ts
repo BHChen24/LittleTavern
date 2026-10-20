@@ -14,7 +14,7 @@ import { listLibrary, resolveAppPaths } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
-it("creates from the focused no-key prompt through a fake VISUAL and continues a retained draft", async () => {
+it("creates from the character picker without a key through a fake VISUAL and continues a retained draft", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-create-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const script = join(home, "editor.cjs");
@@ -49,9 +49,12 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
   try {
     app.start();
     expect(existsSync(paths.credentialsFile)).toBe(false);
-    // 006 removed the startup key prompt: go from the home screen to chat, then create.
+    // Creation is available through /characters without a key.
     app.enterChat();
-    await app.submit("/new-character");
+    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+    await app.submit("/characters");
+    app.tui.getFocusedComponent()?.handleInput?.("New character");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     expect(terminal.stop).toHaveBeenCalled();
     expect(terminal.start).toHaveBeenCalledTimes(2);
     expect(app.tui.getFocusedComponent()).toBe(app.editor);
@@ -65,7 +68,9 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
     const draft = join(paths.importRoot, "drafts", "kept.md");
     mkdirSync(join(paths.importRoot, "drafts"), { recursive: true });
     writeFileSync(draft, "## Description\nKeep this\n");
-    await app.submit("/new-character");
+    await app.submit("/characters");
+    app.tui.getFocusedComponent()?.handleInput?.("New character");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     const picker = app.tui.getFocusedComponent();
     const choices = picker?.render(100).join("\n") ?? "";
     expect(choices).toContain("Continue kept.md");

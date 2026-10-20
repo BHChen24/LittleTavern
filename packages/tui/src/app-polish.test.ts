@@ -69,6 +69,7 @@ it("keeps the waiting indicator until text arrives and removes it on error", asy
   const gate = Promise.withResolvers<string>();
   const { app, lines } = fixture(async () => await gate.promise);
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   let sawText = false;
   app.session.onDelta(() => {
     sawText = true;
@@ -76,7 +77,7 @@ it("keeps the waiting indicator until text arrives and removes it on error", asy
   });
   const sending = app.submit("hi");
   try {
-    expect(lines().join("\n")).toContain("Assistant is writing…");
+    expect(lines().join("\n")).toContain("Innkeeper is writing…");
     gate.resolve("Hello there.");
     await sending;
     expect(sawText).toBe(true);
@@ -88,6 +89,7 @@ it("keeps the waiting indicator until text arrives and removes it on error", asy
   }
   const failed = fixture({ text: "", errorMessage: "Provider unavailable" });
   failed.app.enterChat();
+  failed.app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await failed.app.submit("hi");
   expect(failed.lines().join("\n")).not.toContain("is writing…");
   expect(failed.lines().join("\n")).toContain("Error:");
@@ -98,6 +100,7 @@ it("removes the indicator immediately on Esc before the delayed reply resolves",
   const { app, lines, input } = fixture(async () => await gate.promise);
   app.start();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const sending = app.submit("hi");
   try {
     expect(lines().join("\n")).toContain("is writing…");
@@ -112,7 +115,8 @@ it("removes the indicator immediately on Esc before the delayed reply resolves",
 it("shows all placeholders, follows persona changes, and hides invalid active personas", async () => {
   const { app, home, paths, lines } = fixture();
   app.enterChat();
-  expect(lines().join("\n")).toContain("Talk… (/ for commands)");
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  expect(lines().join("\n")).toContain("Talk to the innkeeper… (/ for commands)");
   const file = join(home, "card.json");
   writeFileSync(
     file,
@@ -129,10 +133,14 @@ it("shows all placeholders, follows persona changes, and hides invalid active pe
   app.tui.getFocusedComponent()?.handleInput?.("\r");
   expect(lines().join("\n")).toContain("Persona: Traveller");
   writeSettings(paths, { persona: "missing.md" });
-  await app.submit("/plain");
+  await app.submit("/innkeeper");
+  expect(app.chat).toBeNull();
+  expect(lines().join("\n")).toContain("Talk to the innkeeper… (/ for commands)");
+  expect(lines().join("\n")).not.toContain("Welcome.");
   expect(lines().join("\n")).not.toContain("Persona:");
   const noKey = fixture("Hello", false);
   noKey.app.enterChat();
+  noKey.app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   expect(noKey.lines().join("\n")).toContain("Add your key with /apikey to start talking");
   expect(noKey.lines().join("\n")).not.toContain(DEFAULT_MODEL_ID);
 });
@@ -146,12 +154,13 @@ it("renders home, messages and status within 30 columns at eight rows under NO_C
   expect(lines(30).every((line) => visibleWidth(line) <= 30)).toBe(true);
   app.start();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit('"Hello" *waves*');
   await app.submit("/unknown");
   const rendered = lines(30);
   expect(rendered.every((line) => visibleWidth(line) <= 30)).toBe(true);
   const plain = rendered.map(stripVTControlCharacters).join("\n");
-  for (const content of ["You:", "Assistant:", "│", "Error:", DEFAULT_MODEL_ID])
+  for (const content of ["You:", "Innkeeper:", "│", "Error:", DEFAULT_MODEL_ID])
     expect(plain).toContain(content);
   expect(rendered.join("\n")).toContain("\x1b[1m");
   expect(rendered.join("\n")).toContain("\x1b[3m");
@@ -172,6 +181,7 @@ it("composes the current draft through a fake VISUAL and restores the terminal a
   const stop = vi.spyOn(terminal, "stop");
   app.start();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   app.editor.setText("Keep this first line.");
   input("\x0f");
   expect(app.editor.getText()).toBe("Keep this first line.\nEdited second line.");
@@ -189,6 +199,7 @@ it("keeps the draft and reports an editor failure", () => {
   env.VISUAL = `${process.execPath} ${script}`;
   app.start();
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   app.editor.setText("Keep this draft.");
   input("\x0f");
   expect(app.editor.getText()).toBe("Keep this draft.");

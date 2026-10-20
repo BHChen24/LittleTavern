@@ -57,9 +57,17 @@ it("starts a character chat, regenerates the reply and records usage under the c
     }),
   });
   app.enterChat();
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const screen = () => app.tui.children.flatMap((component) => component.render(80)).join("\n");
   try {
-    await app.submit(`/chat ${report.item.id.slice(0, 6)}`);
+    await app.submit("/characters");
+    const picker = app.tui.getFocusedComponent();
+    const choices = picker?.render(100).join("\n") ?? "";
+    expect(choices.indexOf("New character")).toBeLessThan(choices.indexOf("Mira"));
+    picker?.handleInput?.("Mira");
+    picker?.handleInput?.("\r");
+    expect(app.tui.hasOverlay()).toBe(false);
+    expect(app.tui.getFocusedComponent()).toBe(app.editor);
     expect(screen()).toContain("Welcome to the lighthouse.");
     expect(screen()).toContain("Mira |");
     expect(screen()).toContain("Mira:");

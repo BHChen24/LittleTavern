@@ -144,3 +144,71 @@ No `.specify/extensions.yml` exists; implementation and convergence hooks were s
   terminal input settings must be restored.
 - Run with `NO_COLOR=1`: labels stay bold and actions italic; bars and error prefixes remain clear.
 - Try Ctrl+O with a real editor on the owner's OS and confirm input and terminal restoration.
+
+
+## Phase 7: Owner acceptance feedback
+
+T016, T017, T018, T020 and T019 are complete. The home screen now uses the exact four-line
+block-letter logo, left-aligned at widths of at least 35 columns. Below it, the version and
+tagline appear together without repeating the product name. Narrower terminals show the
+accent-styled `LittleTavern` title above the same version/tagline content.
+
+Enter opens the chat layout with the character picker focused. Esc dismisses it and restores
+the input. The picker's first entry is the searchable `New character` action, including when
+the library is empty. It opens the existing creation flow and preserves draft continuation.
+`/new-character` has been removed from dispatch, completion and help.
+
+`/innkeeper` replaces `/plain`, with the description `Talk to the innkeeper`. The no-character
+speaker label, waiting indicator, placeholder and switch notice use the innkeeper wording.
+The engine and its plain-chat system prompt are unchanged. The 006 command contract records
+both the creation action's move and the command rename.
+
+### Validation
+
+Updated tests first reproduced the missing changes: 11 failed, 293 passed. After implementation,
+the full gate passed twice; the second run includes stronger checks for leaving a character
+chat and rejecting the removed commands:
+
+```text
+pnpm build && pnpm lint && pnpm test
+Checked 121 files. No fixes applied.
+Test Files  55 passed (55)
+     Tests  304 passed (304)
+```
+
+Existing test cases were updated and extended rather than adding redundant suites. They cover
+the exact logo, equal-width letter rows, left alignment, fit boundary and narrow fallback;
+Enter opening the picker and Esc restoring input; creation without a key and draft continuation
+through `/characters`; selecting existing characters after the new first entry; persona draft
+separation; command/help changes; Innkeeper labels, placeholder and delayed waiting indicator;
+and rejection of the removed commands. Existing editor-focused app tests explicitly cancel
+the initial picker before continuing.
+
+External offline acceptance passed **19 checks, 0 failures** against this checkout's build:
+`../acceptance/results/v1-acceptance-20261020-052311.md`. The acceptance record names the
+pre-Phase-7 commit because the working-tree implementation was validated before committing.
+No secrets, live provider, local model, GPU or real editor were used. No dependencies changed.
+No automated tests were deferred.
+
+Convergence rechecked 14 functional requirements, 4 success criteria, 20 numbered user-story
+acceptance scenarios, 5 edge cases, research decisions R1–R7, all 20 tasks, and all 7 constitution
+principles. Later owner-feedback tasks define the resulting behavior where earlier descriptions
+are superseded. **Outcome: converged**, with zero findings of every gap type and severity;
+no tasks were appended. The existing optional light/dark deferral remains unchanged.
+No `.specify/extensions.yml` exists; implementation and convergence hooks were skipped.
+
+### Manual checks for the owner
+
+- At a wide width and at exactly 35 columns, verify the four-line logo is left-aligned and the
+  product name is not repeated below it. Below 35 columns, verify the single plain title and
+  wrapped version/tagline remain readable.
+- Press Enter on home: the character picker opens over chat, with `New character` first.
+  Repeat with an empty library and confirm it is the only entry.
+- Choose or search for `New character`, save a character through the real editor, and verify it
+  appears in the library. Repeat with a retained draft and confirm continuation is offered.
+- Cancel the initial picker with Esc, then use `/innkeeper`. Check the placeholder, notice,
+  waiting text and reply label. Start a character chat and use `/innkeeper` to return.
+- Verify `/characters` still selects existing characters, and `/plain` and `/new-character`
+  are absent from completion/help and return an unknown-command error.
+
+These owner checks remain pending; automated validation does not claim visual acceptance.

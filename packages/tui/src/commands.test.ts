@@ -19,11 +19,10 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     "attach",
     "detach",
     "lorebooks",
-    "plain",
+    "innkeeper",
     "import",
     "library",
     "show",
-    "new-character",
     "persona",
     "model",
     "apikey",
@@ -34,6 +33,9 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     expect(helpText()).toContain(`/${command.name}`);
     expect(helpText()).toContain(command.description);
   }
+  expect(helpText()).not.toContain("/new-character");
+  expect(helpText()).not.toContain("/plain");
+  expect(helpText()).toContain("/innkeeper  Talk to the innkeeper");
   expect(helpText()).not.toContain("/key");
   expect(helpText()).not.toContain("/forget-key");
   for (const key of ["Ctrl+C", "Ctrl+R", "Esc", "Enter"]) expect(helpText()).toContain(key);

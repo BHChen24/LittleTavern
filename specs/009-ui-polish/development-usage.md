@@ -135,3 +135,67 @@ Subsequent commits and verification invocations are recorded in the next phase's
 The next invocation verifies the documentation, unchanged design/checklist artifacts and task
 completion; the final invocation commits the validated Phase 6 documents and checks status.
 Their final outcomes are available in the session transcript and final commit history.
+
+
+## Phase 7: Owner acceptance feedback implementation
+
+Platform-reported total development tokens for this additional run: **unknown**. The platform
+exposes no run total. No estimate or zero count is substituted. This run used no sub-agents.
+`functions.exec` wrappers below are grouped by invocation; each nested tool call is listed
+separately, with its purpose and outcome. Full arguments and outputs are in the transcript.
+
+1. `exec_command`: inspect working directory, branch and worktree. Outcome: clean `009-ui-polish`.
+2. `exec_command`: read implement skill and constitution. Outcome: implementation constraints loaded.
+3. `exec_command`: check extension configuration and scoped instructions. Outcome: no hooks found.
+4. `exec_command`: run required prerequisites. Outcome: stale feature state resolved to 007.
+5. `exec_command`: locate repository instructions and 009 artifacts. Outcome: current branch artifacts found.
+6. `exec_command`: read repository instructions and prerequisite resolver. Outcome: explicit feature override identified.
+7. `exec_command`: read current tasks, plan and spec. Outcome: five Phase 7 tasks identified; output was truncated and reread below.
+8. `exec_command`: scan both checklist states and read existing usage/report. Outcome: 009 checklist 16/16 passed.
+9. `exec_command`: reread complete 009 task list. Outcome: scope and execution order T016/T017/T018/T020/T019 confirmed.
+10. `exec_command`: reread complete plan. Outcome: existing architecture and verification rules confirmed.
+11. `exec_command`: inspect feature state/resolver and unchecked tasks. Outcome: only 009 has unfinished tasks.
+12. `exec_command`: run prerequisites with absolute 009 override and check 008 ancestry; read spec.
+    Outcome: prerequisites and ancestry passed; FR-011–FR-014 loaded without persisting feature state.
+13. `exec_command`: read research, quickstart, notes, ignore/package setup and convergence skill.
+    Outcome: constraints loaded; truncated sections reread in later calls.
+14. `exec_command`: inspect home, commands and app touch points. Outcome: integration points found;
+    attempted home test path did not exist, and the actual path was located.
+15. `exec_command`: read app layout, picker, creation and dispatch paths plus ListPicker.
+    Outcome: existing creation flow can be reused with a picker action.
+16. `exec_command`: read home, command, creation and persona tests. Outcome: test expectations identified.
+17. `exec_command`: search affected app tests and inspect ignores, package setup and command contract.
+    Outcome: no ignore additions or publishing ignore required for this private workspace.
+18. `exec_command`: reread complete home/command/app tests and ListPicker. Outcome: focus and cancellation coverage located.
+19. `exec_command`: read complete quickstart/notes, relevant research, key and polish tests.
+    Outcome: remaining context and waiting/editor regression expectations confirmed.
+20. `exec_command`: inspect character/suggestion/creation tests, persona picker, external acceptance script,
+    pinned pi overlay implementation and test config. Outcome: pi focus behavior verified; test config
+    disables env-file loading; optional setup-file search found no additional technology.
+21. `exec_command`: update regression tests before implementation. Outcome: picker/creation/Innkeeper expectations added.
+22. `apply_patch`: replace home-screen test expectations with exact logo and fit-boundary checks. Outcome: applied.
+23. `exec_command`: run red regression suite. Outcome: execution started; command ran the full suite.
+24. `write_stdin`: collect red-suite result. Outcome: 11 failed, 293 passed, as expected before implementation.
+25. `exec_command`: review test diff, pinned pi overlay focus implementation and convergence rules.
+    Outcome: implementation approach confirmed.
+26. `apply_patch`: implement T016/T017/T018/T020 and update the explicitly requested 006 command contract.
+    Outcome: exact logo, startup picker, creation entry and innkeeper presentation implemented.
+27. `exec_command`: format changed implementation and run full gate. Outcome: formatting applied; gate started.
+28. `write_stdin`: collect gate result. Outcome: build/lint passed; 55 files, 304 tests passed.
+29. `exec_command`: review implementation/test diff and remaining old labels, language guard and status.
+    Outcome: scope correct; generic InputBox fixture and assertion strength identified for final adjustment.
+30. `exec_command`: update InputBox fixture, strengthen removed-command and chat-switch assertions,
+    initialize convergence for 009, check hooks and rerun full gate. Outcome: convergence context valid; gate started.
+31. `exec_command` (escalated): run task-required external offline acceptance with temporary home.
+    Outcome: suite started; escalation permits its report under `../acceptance/results`.
+32. `write_stdin`: collect strengthened full gate. Outcome: build/lint passed; 55 files, 304 tests passed.
+33. `write_stdin`: collect external acceptance. Outcome: 19 passed, 0 failed; report `v1-acceptance-20261020-052311.md`.
+34. `exec_command`: inspect complete scoped rendering/theme/clipboard/settings and app lifecycle paths.
+    Outcome: convergence found no actionable gap; later owner-feedback tasks supersede earlier presentation wording.
+35. `exec_command`: mark Phase 7 tasks, record implementation details, report evidence/manual checks and this usage log.
+    Outcome: Phase 7 documentation prepared for final verification and commit.
+36. `exec_command`: audit branch, all 20 task markers, unchanged design/checklist/constitution/feature state,
+    post-execution hooks and final diff; lint final documents. Outcome: audit passed; lint result is in the transcript.
+37. `exec_command` (escalated): stage the reviewed Phase 7 files, commit with an English conventional message,
+    and check final worktree status. Outcome: commit/status are recorded in the session transcript and final response;
+    the commit identifier is unavailable inside the document being committed.

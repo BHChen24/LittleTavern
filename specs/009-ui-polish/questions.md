@@ -35,6 +35,15 @@
 - Phase 5: T012's explicitly permitted deferral is recorded in the report; no palette-detection
   policy or asynchronous theme state was introduced.
 
+- Phase 7: the later owner-feedback requirements FR-011–FR-014 and tasks T016–T020
+  supersede the older centred-logo, plain-chat naming and startup descriptions in the
+  original plan/research. The explicit logo fits at 35 columns. The picker uses
+  `CharacterItem | "new"`, following the existing persona picker convention.
+- Phase 7 setup: `.specify/feature.json` still points at 007. Prerequisites and convergence
+  were run with an explicit absolute `SPECIFY_FEATURE_DIRECTORY` for 009 and persistence
+  disabled; branch and stored feature state were left unchanged. Existing ignore rules
+  already cover this private TypeScript workspace and its build/editor artifacts.
+
 ## Open behaviour questions
 
 None.

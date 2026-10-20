@@ -15,16 +15,18 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/attach <id>` | lorebooks | Attach a lorebook to the current character |
 | `/detach <id>` | attached lorebooks | Detach a lorebook |
 | `/lorebooks` | — | List the active lorebooks |
-| `/plain` | — | Leave the character chat |
+| `/innkeeper` | — | Talk to the innkeeper |
 | `/import [path]` | file paths | Import a card or lorebook; without a path, browse the import folders |
 | `/library` | — | List the library |
 | `/show <id>` | library items | Inspect an item |
-| `/new-character` | — | Write a new character in your editor (added by 007) |
 | `/persona` | — | Choose who you are in the story (added by 008) |
 | `/model` | — | Choose a model |
 | `/apikey` | — | Add, replace or forget your OpenRouter API key |
 | `/help` | — | Show commands and key bindings |
 | `/quit` | — | Quit |
+
+`/new-character`: moved into `/characters` by 009.
+`/plain`: renamed by 009 to `/innkeeper`.
 
 **Removed**: `/key` and `/forget-key` now answer "replaced by /apikey".
 
