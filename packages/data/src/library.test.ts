@@ -33,6 +33,45 @@ function keyPaths(value: unknown, prefix = ""): string[] {
   });
 }
 
+it.each([
+  ["Character card V3 (JSON)", "v3", "json"],
+  ["Character card V2 (JSON)", "v2", "json"],
+  ["Character card V3 (PNG)", "v3", "both"],
+  ["Character card V2 (PNG)", "v2", "png"],
+] as const)(
+  "imports %s with the correct name and embedded entry count",
+  (format, version, container) => {
+    const v2 = makeV2Card({
+      name: "V2 角色",
+      character_book: { entries: [{ keys: ["two"], content: "V2 entry" }] },
+    });
+    const v3 = makeV3Card({
+      name: "V3 角色",
+      character_book: {
+        entries: [
+          { keys: ["three"], content: "V3 entry" },
+          { keys: ["extra"], content: "Second V3 entry" },
+        ],
+      },
+    });
+    const card = version === "v3" ? v3 : v2;
+    const bytes =
+      container === "json"
+        ? Buffer.from(JSON.stringify(card))
+        : makePng(
+            container === "both"
+              ? { ccv3: JSON.stringify(v3), chara: JSON.stringify(v2) }
+              : { chara: JSON.stringify(v2) },
+          );
+    const item = imported(source("card", bytes));
+    expect(item.format).toBe(format);
+    expect(item.name).toBe(version === "v3" ? "V3 角色" : "V2 角色");
+    if (item.kind !== "character") throw new Error("Expected character");
+    expect(item.character.name).toBe(item.name);
+    expect(item.character.lorebook?.entries).toHaveLength(version === "v3" ? 2 : 1);
+  },
+);
+
 it.each([makeV2Card, makeV3Card])(
   "keeps original bytes and every source field including unknown nested values",
   (makeCard) => {

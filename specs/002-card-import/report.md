@@ -15,9 +15,10 @@ prompt without providing credentials; chatting still requires a key.
 
 ## Tasks completed and not completed
 
-T001–T018 are complete and checked. All nine external samples passed. The owner's
+T001–T020 are complete and checked. All nine external samples passed. The owner's
 clarification of detection priority is implemented, documented and covered by regressions.
-The final checkpoint includes this report and the validated implementation.
+The convergence checkpoint completes the four-format synthetic import assertions and
+records the representative SC-005 measurement below.
 
 ## Test results
 
@@ -26,7 +27,7 @@ Commands (the pnpm option uses existing dependencies without automatic installat
 ```sh
 pnpm --config.verify-deps-before-run=false build
 pnpm --config.verify-deps-before-run=false lint
-pnpm --config.verify-deps-before-run=false test
+LITTLETAVERN_TEST_CARDS=/home/dev0/projects/LittleTavernProject/test-cards pnpm --config.verify-deps-before-run=false test
 ```
 
 Final output tail:
@@ -34,10 +35,10 @@ Final output tail:
 ```text
 $ tsc -b
 $ biome check .
-Checked 63 files in 31ms. No fixes applied.
+Checked 63 files in 30ms. No fixes applied.
 $ vitest run
 Test Files  21 passed (21)
-     Tests  114 passed (114)
+     Tests  118 passed (118)
 ```
 
 Nine of those tests use local external samples; all matched the format labels, names
@@ -60,6 +61,27 @@ portable performance guarantee). An initial subprocess smoke harness was blocked
 EPERM and was replaced with in-process invocation, as the test plan recommends.
 
 No coverage percentage threshold is defined by this feature.
+
+### Convergence verification (T019–T020)
+
+Four parameterized synthetic import tests now assert the exact format label, item name,
+normalized character name and embedded entry count for V3 JSON, V2 JSON, dual-chunk PNG
+and V2-only PNG. The V2 payload has a distinct name and one entry; V3 has another name and
+two entries, so choosing the wrong payload in a dual-chunk PNG fails the assertions.
+The targeted library suite passed all 24 tests; the full suite passed all 118 tests above.
+
+SC-005 was checked with a generated V3 JSON card of **782,360 bytes**, containing all shared
+character fields, an extension and **200 embedded lorebook entries**. Its description repeats
+`Synthetic scene {{user}}. ` 25,000 times; each entry repeats
+`Synthetic lore {{char}} and {{user}}. ` 15 times. The source was written before timing.
+One fresh `importFile` into a temporary library under `/tmp` took **18.427 ms**, below
+the **1,000 ms** criterion. Timing includes the source read, detection, normalization,
+hashing, original/item writes and final rename; fixture construction and cleanup are excluded.
+The result was checked for a fresh successful import and all 200 normalized entries.
+
+Runtime: **Node v26.7.0, Linux x64, WSL2 kernel
+6.18.33.2-microsoft-standard-WSL2**. This is a local measurement on that runtime and temporary
+filesystem. No benchmark framework, dependency or permanent timing regression test was added.
 
 ## Deferred tests
 
@@ -86,6 +108,11 @@ readability remain owner checks. No real-provider test was run or needed.
   fields with V1 cards, so the old priority misclassified valid FR-002 inputs. Both entries
   shapes now take precedence over V1 detection after explicit spec handling. R2 records this
   reason, and detection/import regressions cover both shapes and explicit-spec priority.
+- The convergence implementation used the existing `002-card-import` branch in the isolated
+  worktree `/tmp/littletavern-002-convergence-20261019`, because the original worktree was
+  already on `003-prompt-assembly`. No branch switch, merge or rebase was performed. Existing
+  dependencies were linked for local checks without installation; the local-sample directory
+  was passed explicitly through `LITTLETAVERN_TEST_CARDS`.
 
 ## Open questions
 

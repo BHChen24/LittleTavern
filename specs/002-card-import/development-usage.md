@@ -80,3 +80,24 @@ printed LittleTavern 0.1.0. `exec_command` finalized report.md, marked T017/T018
 and checked the working tree before the checkpoint commit. No hooks file was present.
 Platform-reported total development tokens remain unknown; per-invocation records are in
 this conversation's tool transcript, including the final review and git commit commands.
+
+Phase 8 (Convergence): `exec_command` checked the explicitly selected 002 prerequisites,
+the 16/16 completed checklist items, ignore rules, feature artifacts and branch/worktree
+state. The original worktree was on 003, so `git worktree add` opened the existing 002
+branch in `/tmp/littletavern-002-convergence-20261019` without switching any branch. The
+two appended tasks were copied there; existing dependencies were linked without installing.
+`apply_patch` added four parameterized library-import cases for format, item/character name
+and embedded entry count, including distinct V2/V3 PNG payloads. Biome formatted the test;
+the targeted library suite passed all 24 tests.
+
+`exec_command` ran a one-off SC-005 measurement with generated data only: 782,360-byte V3
+JSON, 200 entries, fresh temporary library, 18.427 ms elapsed inside importFile on Node
+v26.7.0 / Linux x64 / WSL2. Temporary inputs and outputs were removed afterwards. Build,
+lint (63 files) and all 118 tests in 21 files passed; the test command pointed explicitly
+at the external local-sample directory and included its nine passing cases. No .env,
+live-provider or GPU operation was used, and no dependency was added. `apply_patch` and
+`exec_command` recorded the measurement and completion state; one documentation patch
+failed context validation without changing files, then was corrected. The remaining
+tool invocations review the diff, verify hooks and commit this completed phase on 002.
+Platform-reported total development tokens: **unknown**. Individual tool names, purposes
+and outcomes remain in this conversation's tool transcript.

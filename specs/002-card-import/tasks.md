@@ -169,3 +169,8 @@ edit `library.ts` and its test, so do not run the stories in parallel.
 2. **US2 and US3** complete the format coverage.
 3. **US4** makes the result visible to the owner, in the CLI and the app.
 4. **Polish**: the real-sample check and the report.
+
+## Phase 8: Convergence
+
+- [X] T019 [US1] Complete the committed synthetic import tests in `packages/data/src/library.test.ts` for V3 JSON, V2 JSON, PNG with both chunks, and PNG with only V2. For each form, assert successful import, the exact format label, the normalized character name and the embedded lorebook entry count. Use distinct V2/V3 payloads in the dual-chunk case to verify V3 wins. Reuse the existing fixture builders; the current V2-only PNG detector assertion does not cover the complete import result. Per FR-001, US1/AC1–AC4 and spec: Acceptance Testing (partial; F1).
+- [X] T020 Verify SC-005 with a representative synthetic character card under 1 MB using `importFile` and a temporary library. Record the input byte size, elapsed import time and runtime environment in `specs/002-card-import/report.md`, and compare the measurement with the one-second criterion. The existing approximately 1.6 ms small-card smoke measurement omits the input size. Keep this a lightweight verification using existing dependencies, with no benchmark framework or permanent timing regression test required; if the criterion fails, investigate and fix the importer within the planned scope. Per SC-005 and plan: Performance Goals (partial; F2).
