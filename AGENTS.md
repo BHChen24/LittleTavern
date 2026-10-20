@@ -85,9 +85,10 @@ provides the `littletavern` binary). The dependency rules between them are in th
 
 ## Commits
 
-- **Never commit to `main`.** Each feature lives on its own branch named after its spec
-  directory (`001-tui-chat`, `002-card-import`, ...). Branches are stacked linearly: each
-  feature branch starts from the previous feature's branch, so the newest branch contains
-  everything. Work on the branch you were started on; do not switch, merge or rebase branches.
+- **Never commit to or push `main`.** Each feature lives on its own branch named after its spec
+  directory (`011-...`), started from the current `main`. It reaches `main` through a pull
+  request that passes CI; the owner merges it with a merge commit. Branches 001–010 were stacked
+  under an earlier rule. Work on the branch you were started on; do not switch, merge or rebase
+  branches, and do not open, merge or close pull requests unless the owner asks.
 - **Commit messages are always in English**, whatever language the conversation uses.
 - Use a conventional prefix: `feat:`, `fix:`, `docs:`, `build:`, `chore:`, `test:`, `refactor:`.
