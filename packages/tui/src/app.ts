@@ -73,6 +73,7 @@ import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
 
 export interface AppOptions {
+  startupNotices?: string[];
   terminal?: Terminal;
   env?: Readonly<Record<string, string | undefined>>;
   paths?: AppPaths;
@@ -293,6 +294,7 @@ export function createApp(options: AppOptions = {}) {
   }
   const importNotice = ensureImportFolders(paths);
   if (importNotice) notice(importNotice);
+  for (const message of options.startupNotices ?? []) notice(message);
   if (settings.model && !storedModel)
     notice(`Saved model ${settings.model} is unavailable. Choose a model with /model.`);
   if (saved.warning)
@@ -937,8 +939,8 @@ export function createApp(options: AppOptions = {}) {
   };
 }
 
-export async function startApp(): Promise<void> {
-  const app = createApp();
+export async function startApp(options: AppOptions = {}): Promise<void> {
+  const app = createApp(options);
   try {
     app.start();
     await app.done;

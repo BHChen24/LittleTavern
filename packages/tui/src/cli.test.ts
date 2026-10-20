@@ -1,7 +1,13 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { importFile, listLibrary, resolveAppPaths, writeSettings } from "@littletavern/engine";
+import {
+  importFile,
+  listLibrary,
+  readSettings,
+  resolveAppPaths,
+  writeSettings,
+} from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
 import { runCli } from "./cli.ts";
 import { formatItemDetails, formatLibraryList } from "./library-format.ts";
@@ -179,3 +185,19 @@ it("creates from Markdown, prints warnings and preserves the owner's source, inc
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it.each(["list", "show", "import", "dry-run", "create"])(
+  "%s never adds first-start examples in a fresh selected home",
+  async (command) => {
+    const home = mkdtempSync(join(tmpdir(), "lt-cli-no-examples-"));
+    vi.stubEnv("LITTLETAVERN_HOME", home);
+    try {
+      await runCli([command], () => {});
+      expect(readSettings(resolveAppPaths()).examplesAdded).toBeUndefined();
+      expect(listLibrary(resolveAppPaths())).toEqual([]);
+      expect(existsSync(resolveAppPaths().importRoot)).toBe(false);
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  },
+);

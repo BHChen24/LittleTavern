@@ -1,5 +1,6 @@
 export {
   type AppPaths,
+  addExamplesOnce,
   appendUsageRecord,
   CHARACTER_TEMPLATE,
   type Character,

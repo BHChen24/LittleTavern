@@ -60,3 +60,24 @@ in the session transcript. No environment file or real credentials are read or u
 34. `write_stdin`: collect phase gate. Outcome: passed.
 35. `exec_command`: inspect app/command regressions, chat setup and tool configuration. Outcome: integration paths identified; no other ignore files required.
 36. `exec_command`: mark T002 and update usage. Outcome: foundational phase ready to commit.
+
+## First-start examples
+
+37. `exec_command` (escalated): commit foundational marker. Outcome: 6a96de8; hooks passed.
+38. `write_stdin`: collect foundational commit. Outcome: committed.
+39. `exec_command`: add generated-fixture unit tests, locator test, shipped-content faux happy
+    path and parameterised subcommand regression. Outcome: tests started before implementation.
+40. `write_stdin`: collect new tests. Outcome: expected missing-module/export failures.
+41. `exec_command`: implement examples helper, locator, exports and interactive startup notice
+    integration; format and run gate. Outcome: build/lint passed, 330 tests passed; one lint warning.
+42. `write_stdin`: collect first examples gate progress. Outcome: tests running.
+43. `write_stdin`: collect first examples gate. Outcome: 330 passed.
+44. `exec_command`: fix optional-chain warning and test CLI startup/notice forwarding with a
+    mocked terminal launch. Outcome: full gate started; 332 tests passed.
+45. `write_stdin`: collect gate. Outcome: build/lint and 332 tests passed.
+46. `exec_command`: use generated content in the CLI startup test, keeping shipped-content
+    exception limited to T-g; run gate. Outcome: build/lint and 332 tests passed.
+47. `write_stdin`: collect generated-content gate. Outcome: passed.
+48. `exec_command`: inspect import handlers, regressions and pinned pi faux/native references.
+    Outcome: migration points confirmed; brace-expanded optional search included nonexistent paths.
+49. `exec_command`: mark T003-T005 and update usage. Outcome: examples phase ready to commit.

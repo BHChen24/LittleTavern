@@ -2,6 +2,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
+  addExamplesOnce,
   createCharacterFromDraft,
   DEFAULT_ASSEMBLY_SETTINGS,
   dryRun,
@@ -11,6 +12,7 @@ import {
   readSettings,
   resolveAppPaths,
 } from "@littletavern/engine";
+import { examplesDir } from "./examples-dir.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
 import { formatAssembledPrompt, formatTraceReport } from "./trace-format.ts";
@@ -103,7 +105,8 @@ export async function runCli(
   }
   if (argv[0] === "dry-run") return runDryRun(argv.slice(1), out);
   const { startApp } = await import("./app.ts");
-  await startApp();
+  const examples = addExamplesOnce(resolveAppPaths(), examplesDir());
+  await startApp({ startupNotices: examples.notice ? [examples.notice] : [] });
   return 0;
 }
 
