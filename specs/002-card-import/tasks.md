@@ -39,14 +39,14 @@ to T-h). Keep them lightweight.
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `packages/data/src/cards/types.ts` with the types from data-model.md, copied verbatim:
+- [X] T001 Create `packages/data/src/cards/types.ts` with the types from data-model.md, copied verbatim:
   - `FormatLabel`, the six exact strings;
   - `Character`;
   - `Lorebook`;
   - `LorebookEntry`, where `source` is the entry object verbatim;
   - `LibraryItem` with `v: 1`;
   - `ImportReport`, the ok/failed union.
-- [ ] T002 Create `packages/data/src/cards/fixtures.ts` with the test-only builders below. Tests import them; nothing else does.
+- [X] T002 Create `packages/data/src/cards/fixtures.ts` with the test-only builders below. Tests import them; nothing else does.
   - `makeV3Card(overrides)` and `makeV2Card(overrides)` return JSON objects.
   - `makePng(chunks: Record<string,string>)` returns bytes: the signature, a minimal `IHDR`, one `tEXt` chunk per entry with a base64 value, and `IEND`, with CRCs from `zlib.crc32`.
   - `makeWorldInfo(entries)` builds a SillyTavern world-info object.

@@ -123,7 +123,10 @@ Rationale: code that cannot be explained by its owner is a liability, however we
   (Codex) that has no access to design conversations.
 - Specs state what and why; technology choices belong in the plan. The plan's Constitution Check
   MUST cite the principles above and justify any exception.
-- Development happens on `main`. Every commit MUST pass `pnpm build`, `pnpm lint` and `pnpm test`.
+- Development MUST happen on the feature branch named after its spec directory. Feature branches
+  are stacked linearly: each starts from the previous feature branch. Agents MUST stay on the
+  branch they were started on and MUST NOT switch, merge or rebase branches during feature work.
+  Agents MUST NOT commit to `main`. Every commit MUST pass `pnpm build`, `pnpm lint` and `pnpm test`.
 - **Testing policy.** Tests are lightweight and target our own code:
   - Do not re-test what pi already tests (streaming, provider adapters, pricing, TUI components).
   - Our own functions get unit tests.
@@ -149,4 +152,4 @@ for clarifications. Each amendment updates the Sync Impact Report and the dates 
 and review checks compliance; an exception is allowed only when the plan records why it is needed
 and why the simpler compliant option was rejected.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 3.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
