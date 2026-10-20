@@ -80,3 +80,12 @@ export function formatItemDetails(item: LibraryItem): string[] {
     lines.push("Warnings:", ...item.warnings.map((warning) => `  ${warning}`));
   return lines;
 }
+export function formatLimits(
+  replyTokens: number,
+  runSpendUsd: number,
+  settingsFile: string,
+): string {
+  const reply = replyTokens > 0 ? `replies up to ${replyTokens} tokens` : "replies not capped";
+  const spend = runSpendUsd > 0 ? `$${runSpendUsd.toFixed(2)} per run` : "spending not capped";
+  return `Limits: ${reply}, ${spend}. Change them in ${settingsFile}.`;
+}

@@ -12,6 +12,16 @@
   already covers dependencies, build output, logs, secrets, and editor files. No other
   detected tool requires an ignore file.
 
+- pi's faux helper leaves costs at zero even for a priced model. The app harness therefore injects a
+  synthetic reported cost in a session finish callback registered before the app listener, so
+  spend-cap tests exercise nonzero costs without adding production fixture APIs.
+- Esc on the spend picker follows its normal cancellation behavior and chooses Stop.
+
+- The phase 2 checkpoint passed, but its commit was blocked by the reported secret-scan false
+  positive. Phases 2 and 3 will share a commit after the approved fixture fix and both validations.
+
 ## Open behavior questions
 
-None at this checkpoint.
+None. The phase 2 gitleaks false positive was reported to the owner, who authorized replacing
+its generated test literal with the existing `synthetic-key` placeholder and rerunning the scan.
+The ignore rules and hooks remain unchanged.

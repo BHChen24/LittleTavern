@@ -30,4 +30,45 @@ see conversation output for completion of the final refresh.
 | 21 | exec_command | Verify remaining project setup and reporting context | exit 0 |
 | 22 | write_stdin | Collect phase-one validation result | exit 0 |
 | 23 | apply_patch | Record routine implementation choices and setup verification | completed; see conversation output |
+| 24 | apply_patch | Create per-invocation development usage journal | completed; see conversation output |
+| 25 | exec_command | Mark T001-T004 complete and commit validated phase one | completed; see conversation output |
+| 26 | exec_command | Inspect rendering, overlay, and input test helpers | exit 0 |
+| 27 | write_stdin | Collect phase-one commit result | exit 0 |
+| 28 | exec_command | Write failure-notice tests before phase-two implementation | completed; see conversation output |
+| 29 | apply_patch | Implement contracted failure notices, partial markers, retry counts, and diagnostics | completed; see conversation output |
+| 30 | exec_command | Format and run phase-two validation | completed; see conversation output |
+| 31 | write_stdin | Collect expected phase-two test failures before implementation | exit 0 |
+| 32 | write_stdin | Collect phase-two validation | completed; see conversation output |
+| 33 | exec_command | Inspect validation results and prepare limit tests | exit 0 |
+| 34 | exec_command | Inspect outdated provider-error expectation | exit 0 |
+| 35 | exec_command | Update the obsolete error-text expectation and rerun phase-two checks | completed; see conversation output |
+| 36 | exec_command | Correct the actual legacy assertion and validate phase two | completed; see conversation output |
+| 37 | write_stdin | Collect phase-two final check result | completed; see conversation output |
+| 38 | exec_command | Confirm phase-two test totals and staged scope | exit 0 |
+| 39 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 40 | write_stdin | Collect completed phase-two validation | exit 0 |
+| 41 | exec_command | Confirm phase-two checks passed | exit 0 |
+| 42 | exec_command | Commit validated phase two | exit 1 |
+| 43 | exec_command | Add spending and limit acceptance tests before implementation | completed; see conversation output |
+| 44 | exec_command | Inspect the required secret-scan rejection with redacted output | exit 1 |
+| 45 | apply_patch | Record gitleaks blocker and implement spending confirmation and limit notices | completed; see conversation output |
+| 46 | exec_command | Format and validate phase-three implementation | completed; see conversation output |
+| 47 | write_stdin | Collect phase-three validation | exit 1 |
+| 48 | exec_command | Inspect limit test result and remaining command tests | exit 0 |
+| 49 | exec_command | Diagnose spending tests and synchronous input regression | exit 0 |
+| 50 | exec_command | Verify how faux provider reports usage and cost | exit 0 |
+| 51 | exec_command | Inspect patch context after formatted-line mismatch | exit 0 |
+| 52 | apply_patch | Provide faux cost fixtures and preserve synchronous request startup | completed; see conversation output |
+| 53 | exec_command | Apply approved fixture replacement, test nonzero cost and unknown prices, and validate phase three | completed; see conversation output |
+| 54 | write_stdin | Collect phase-three check result | exit 1 |
+| 55 | exec_command | Read limit validation results and engine test helpers | exit 0 |
+| 56 | exec_command | Trace reported faux cost through normalization and the spend check | exit 0 |
+| 57 | exec_command | Check whether faux usage estimation can be disabled | exit 0 |
+| 58 | exec_command | Keep cost injection in the test harness and validate spending behavior | completed; see conversation output |
+| 59 | exec_command | Add direct limit formatting coverage and exact allowance assertion | completed; see conversation output |
+| 60 | write_stdin | Collect phase-three full validation | exit 0 |
+| 61 | write_stdin | Collect targeted limit tests | exit 0 |
+| 62 | exec_command | Run final phase-two and phase-three commit checks | completed; see conversation output |
+| 63 | request_user_input_async | Ask owner how to resolve gitleaks false positive as tasks require | owner approved replacing generated literal with synthetic-key |
+| 64 | apply_patch | Attempt faux-cost and synchronous-startup patch | failed context verification; no files changed; corrected in subsequent call |
 

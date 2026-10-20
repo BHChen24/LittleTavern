@@ -107,7 +107,7 @@ count.
 **Independent test**: a faux failure mid-reply shows the marker and the `other` notice with
 `Retries so far: 0` and the log path; a failed Ctrl+R shows 1; a success resets it.
 
-- [ ] T005 [US1] In `packages/tui/src/app.ts` `onFinish` and `regenerate` (research R5, contract "Failure notices"):
+- [X] T005 [US1] In `packages/tui/src/app.ts` `onFinish` and `regenerate` (research R5, contract "Failure notices"):
   - replace the current error notice with the contract text for each `describeProviderError` kind, ending with `Details: <paths.logFile>`. Keep the existing key-rejected behaviour of clearing the active key;
   - set the reply text to `<partial> (incomplete, not saved)`;
   - track `retries` as in data-model.md: a regenerate whose target is `"user"` right after a failure counts as a retry;
@@ -128,13 +128,13 @@ count.
 **Independent test**: with `runSpendUsd` tiny and a priced faux model, the second send asks;
 `Stop` keeps the text; `Continue` sends.
 
-- [ ] T006 [US2] Add `formatLimits(replyTokens, runSpendUsd, settingsFile)` in `packages/tui/src/library-format.ts` (or a new small module next to it), producing the contract's reminder line. Show it:
+- [X] T006 [US2] Add `formatLimits(replyTokens, runSpendUsd, settingsFile)` in `packages/tui/src/library-format.ts` (or a new small module next to it), producing the contract's reminder line. Show it:
   - on the home screen, under the key status (`HomeScreen` option, research R11);
   - appended to the pre-chat setup notice while `!chat && !innkeeperSelected`.
-- [ ] T007 [US2] In `packages/tui/src/app.ts`, before a character-chat send, a regenerate (including Ctrl+R) and an innkeeper send, check `runSpendUsd > 0 && sumUsage(records).cost >= allowedSpend` (research R3, R4). If so, open a `ListPicker` with the contract title and the `Continue` and `Stop` entries:
+- [X] T007 [US2] In `packages/tui/src/app.ts`, before a character-chat send, a regenerate (including Ctrl+R) and an innkeeper send, check `runSpendUsd > 0 && sumUsage(records).cost >= allowedSpend` (research R3, R4). If so, open a `ListPicker` with the contract title and the `Continue` and `Stop` entries:
   - `Continue` adds `runSpendUsd` to `allowedSpend` and proceeds;
   - `Stop` restores the editor text and shows the contract message.
-- [ ] T008 [US2] In `onFinish`:
+- [X] T008 [US2] In `onFinish`:
   - after a turn with `cutOff`, show the cut-off note once per run;
   - before the first send with a model whose `findAllowedModel(model)?.price` is null or zero, show the unknown-price note once per run (research R3).
 

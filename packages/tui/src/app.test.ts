@@ -214,7 +214,7 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
     await app.submit("/model");
     app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("hello");
-    expect(screen()).toMatch(/Error: .*Provider/);
+    expect(screen()).toContain("Error: The reply failed.");
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

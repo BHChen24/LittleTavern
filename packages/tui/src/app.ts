@@ -87,6 +87,7 @@ import {
   formatImportReport,
   formatItemDetails,
   formatLibraryList,
+  formatLimits,
 } from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
@@ -106,6 +107,14 @@ export function createApp(options: AppOptions = {}) {
   const paths = options.paths ?? resolveAppPaths(env);
   const settings = readSettings(paths);
   const requestSettings = readRequestSettings(paths);
+  let allowedSpend = requestSettings.runSpendUsd;
+  let cutOffNoteShown = false;
+  let unknownPriceNoteShown = false;
+  const limitsLine = formatLimits(
+    requestSettings.replyTokens,
+    requestSettings.runSpendUsd,
+    paths.settingsFile,
+  );
   const request: RequestOptions = {};
   if (requestSettings.replyTokens > 0) request.maxTokens = requestSettings.replyTokens;
   if (requestSettings.generation.temperature !== undefined)
@@ -150,6 +159,7 @@ export function createApp(options: AppOptions = {}) {
   const editor = new Editor(tui, editorTheme);
   const status = new StatusBar({ model: storedModel?.id, keySource: activeKey?.source ?? "none" });
   const homeScreen = new HomeScreen({
+    limits: limitsLine,
     version: VERSION,
     keyStatus: activeKey?.source ?? "none",
     libraryEmpty: listLibrary(paths).length === 0,
@@ -209,6 +219,7 @@ export function createApp(options: AppOptions = {}) {
   const commands = COMMANDS();
   editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
   let response = "";
+  let retries: number | null = null;
   let running: Promise<unknown> | undefined;
   let closing: Promise<void> | undefined;
   let resolveDone: () => void = () => {};
@@ -333,7 +344,11 @@ export function createApp(options: AppOptions = {}) {
     const steps = setupSteps();
     if (steps.length) {
       const text = display(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
-      setupNotice.setText(messageStyles.notice(`· ${text}`));
+      setupNotice.setText(
+        messageStyles.notice(
+          `· ${text}${!chat && !innkeeperSelected ? `\n${display(limitsLine)}` : ""}`,
+        ),
+      );
       transcript.addChild(setupNotice);
     }
     tui.requestRender();
@@ -384,6 +399,7 @@ export function createApp(options: AppOptions = {}) {
   }
   function setCharacterChat(next: CharacterChat): void {
     chat = next;
+    retries = null;
     innkeeperSelected = false;
     chat.onNotice = notice;
     renderHistory(chat.history());
@@ -626,11 +642,23 @@ export function createApp(options: AppOptions = {}) {
       errorNotice("Nothing to regenerate yet: send a message first.");
       return;
     }
+    const allowance = allowSpend(value);
+    if (allowance !== true && !(await allowance)) return;
     const history = chat.history();
+    if (target === "user" && retries !== null) retries += 1;
+    else retries = null;
     renderHistory(target === "reply" ? history.slice(0, -1) : history);
     await stream(() => (chat ? chat.regenerate() : Promise.resolve(null)));
   }
   async function stream(run: () => Promise<unknown>): Promise<void> {
+    const price = findAllowedModel(modelId)?.price;
+    if (
+      !unknownPriceNoteShown &&
+      (!price || (price.inputPerMTok === 0 && price.outputPerMTok === 0))
+    ) {
+      unknownPriceNoteShown = true;
+      notice(`Prices for ${modelId} are unknown, so the spending limit cannot be checked for it.`);
+    }
     waiting = new Loader(
       tui,
       messageStyles.accent,
@@ -683,18 +711,75 @@ export function createApp(options: AppOptions = {}) {
     response = turn.text;
     reply?.setText(display(response) + (turn.outcome === "interrupted" ? " [interrupted]" : ""));
     if (turn.outcome === "error") {
+      if (chat) retries ??= 0;
+      reply?.setText(`${display(response)}${response ? " " : ""}(incomplete, not saved)`);
       const error = describeProviderError(
         scrubSecrets(turn.errorMessage ?? "Unknown error", secrets),
       );
       if (error.kind === "key-rejected") {
         activeKey = null;
         updateStatus();
-        errorNotice("OpenRouter rejected the key. Type /apikey to replace it.");
-      } else errorNotice(error.text);
-      logger.error({ error: turn.errorMessage }, "Provider request failed");
+      }
+      let text: string;
+      if (error.kind === "key-rejected")
+        text = "OpenRouter rejected the key. Type /apikey to replace it.";
+      else if (error.kind === "no-credit")
+        text = "OpenRouter reports insufficient credit. Add credit on openrouter.ai, then retry.";
+      else if (error.kind === "model-unavailable")
+        text = "The selected model is unavailable. Choose another with /model.";
+      else {
+        const reason =
+          error.kind === "rate-limited"
+            ? ": rate limit reached"
+            : error.kind === "network"
+              ? ": network error"
+              : "";
+        text = `The reply failed${reason}. ${chat ? `Press Ctrl+R or use /regenerate to retry. Retries so far: ${retries}.` : "Send your message again to retry."}`;
+      }
+      errorNotice(`${text} Details: ${paths.logFile}`);
+      logger.error(
+        { error: turn.errorMessage, model: turn.model, kind: error.kind },
+        "Provider request failed",
+      );
+    } else retries = null;
+    if (turn.cutOff && requestSettings.replyTokens > 0 && !cutOffNoteShown) {
+      cutOffNoteShown = true;
+      notice(
+        `The reply reached the limit of ${requestSettings.replyTokens} tokens and was cut off. Change limits.replyTokens in ${paths.settingsFile}.`,
+      );
     }
     tui.requestRender();
   });
+
+  function allowSpend(value: string): true | Promise<boolean> {
+    const spent = sumUsage(records).cost;
+    if (requestSettings.runSpendUsd === 0 || spent < allowedSpend) return true;
+    return new Promise((resolve) => {
+      const picker = new ListPicker<boolean>(
+        `This run has spent $${spent.toFixed(2)} of $${allowedSpend.toFixed(2)}. Send anyway?`,
+        [
+          {
+            value: true,
+            label: `Continue (allow another $${requestSettings.runSpendUsd.toFixed(2)})`,
+            search: "Continue",
+          },
+          { value: false, label: "Stop", search: "Stop" },
+        ],
+      );
+      const choose = (proceed: boolean) => {
+        closeOverlay();
+        if (proceed) allowedSpend += requestSettings.runSpendUsd;
+        else {
+          editor.setText(value);
+          notice("Not sent. Your message is still in the input.");
+        }
+        resolve(proceed);
+      };
+      picker.onSelect = choose;
+      picker.onCancel = () => choose(false);
+      showPanel(picker);
+    });
+  }
 
   function quit(): Promise<void> {
     if (closing) return closing;
@@ -984,6 +1069,7 @@ export function createApp(options: AppOptions = {}) {
       },
       innkeeper: async () => {
         chat = null;
+        retries = null;
         innkeeperSelected = true;
         transcript.clear();
         notice("You are talking to the innkeeper. Use /characters to start a character chat.");
@@ -1025,6 +1111,9 @@ export function createApp(options: AppOptions = {}) {
       return;
     }
     if (interceptIncompleteSetup(value)) return;
+    const allowance = allowSpend(value);
+    if (allowance !== true && !(await allowance)) return;
+    retries = null;
     addMessage("user", display(value));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));
