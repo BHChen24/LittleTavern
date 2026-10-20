@@ -1,0 +1,126 @@
+{
+  "name": "Wonderland",
+  "description": "Based on Lewis Carroll's Alice's Adventures in Wonderland (1865) and Through the Looking-Glass (1871), which are in the public domain. Written for LittleTavern and released under CC0 1.0. Not affiliated with any film, game or other adaptation. Companion lorebook for the Alice example card.",
+  "entries": {
+    "0": {
+      "uid": 0,
+      "key": [],
+      "keysecondary": [],
+      "comment": "World rules",
+      "content": "Wonderland runs on nonsense that its inhabitants treat as perfectly sensible. Creatures argue, recite and take offence; time, size and manners do not behave. Treat Alice's logic as the only logic around, and let the world keep surprising her.",
+      "constant": true,
+      "selective": false,
+      "order": 10,
+      "position": 0,
+      "disable": false
+    },
+    "1": {
+      "uid": 1,
+      "key": ["White Rabbit", "rabbit", "pocket-watch"],
+      "keysecondary": [],
+      "comment": "The White Rabbit",
+      "content": "The White Rabbit has pink eyes, a waistcoat, a pocket-watch and white kid gloves. He is always late, always muttering \"Oh my ears and whiskers!\", and works as the Queen's herald. He mistakes Alice for his housemaid, Mary Ann.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "2": {
+      "uid": 2,
+      "key": ["Cheshire", "cat", "grin"],
+      "keysecondary": [],
+      "comment": "The Cheshire Cat",
+      "content": "The Cheshire Cat lives at the Duchess's house and appears wherever it likes, vanishing slowly until only its grin is left. It says everyone in Wonderland is mad: \"We're all mad here. I'm mad. You're mad.\" The Queen cannot behead it, because there is no body to cut the head from.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "3": {
+      "uid": 3,
+      "key": ["Hatter", "March Hare", "Dormouse", "tea party", "tea-party"],
+      "keysecondary": [],
+      "comment": "The Mad Tea-Party",
+      "content": "The Hatter, the March Hare and the Dormouse keep a tea-party going for ever: the Hatter quarrelled with Time, and it is always six o'clock, so there is never time to wash the cups. They move round the table instead. The Hatter asks riddles with no answers, the March Hare offers wine that isn't there, and the Dormouse sleeps, waking only to tell a story about three sisters who lived at the bottom of a treacle-well.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "4": {
+      "uid": 4,
+      "key": ["Queen", "Queen of Hearts", "croquet", "King of Hearts", "head"],
+      "keysecondary": [],
+      "comment": "The Queen of Hearts",
+      "content": "The Queen of Hearts settles every difficulty, great or small, with \"Off with his head!\" Her croquet uses live flamingoes for mallets, hedgehogs for balls and card-soldiers bent double for hoops. The mild King of Hearts quietly pardons the condemned, so nobody is actually executed.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "5": {
+      "uid": 5,
+      "key": ["Caterpillar", "mushroom"],
+      "keysecondary": [],
+      "comment": "The Caterpillar",
+      "content": "A large blue Caterpillar sits on top of a mushroom, smoking and asking \"Who are YOU?\" in a sleepy, contemptuous voice. One side of the mushroom makes you grow taller, the other side makes you grow shorter.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "6": {
+      "uid": 6,
+      "key": ["Drink Me", "Eat Me", "bottle", "cake", "shrink", "grow"],
+      "keysecondary": [],
+      "comment": "Drink Me and Eat Me",
+      "content": "The bottle labelled DRINK ME shrinks whoever drinks it; the little cake marked EAT ME in currants makes them grow. The effects are sudden, and Alice has cried a pool of tears while nine feet tall, then nearly drowned in it once she was small again.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "7": {
+      "uid": 7,
+      "key": ["Duchess", "pepper", "baby"],
+      "keysecondary": [],
+      "comment": "The Duchess",
+      "content": "The Duchess lives in a kitchen so full of pepper that everyone sneezes, except the Cook and the Cheshire Cat. She nurses a howling baby that turns into a pig. Later she becomes alarmingly friendly, and finds a moral in everything.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "8": {
+      "uid": 8,
+      "key": ["Mock Turtle", "Gryphon", "Lobster Quadrille"],
+      "keysecondary": [],
+      "comment": "The Mock Turtle and the Gryphon",
+      "content": "The Gryphon takes Alice to the Mock Turtle, who sobs constantly about the days when he was a real turtle and went to school in the sea, learning Reeling and Writhing. Together they perform the Lobster Quadrille.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": false
+    },
+    "9": {
+      "uid": 9,
+      "key": ["Jabberwock", "vorpal"],
+      "keysecondary": [],
+      "comment": "The Jabberwock (sequel)",
+      "content": "\"Beware the Jabberwock, my son! The jaws that bite, the claws that catch!\" A monster from the looking-glass poem, slain with a vorpal sword. Enable this entry to mix in the sequel.",
+      "constant": false,
+      "selective": false,
+      "order": 100,
+      "position": 1,
+      "disable": true
+    }
+  }
+}
