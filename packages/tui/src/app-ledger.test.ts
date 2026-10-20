@@ -45,6 +45,7 @@ it("records a rejected key, preserves the transcript, and returns to the key pro
     simulated: { replies: [{ text: "", errorMessage: `401 ${key}` }] },
   });
   const app = createApp({ terminal: terminal(), paths, env: { OPENROUTER_API_KEY: key }, session });
+  app.enterChat();
   try {
     await app.submit("hello");
     const rendered = app.tui.render(80).join("\n");
@@ -81,6 +82,7 @@ it("waits for the interrupted ledger record before quitting and shows ledger tot
     env: { OPENROUTER_API_KEY: "synthetic-key" },
     session,
   });
+  app.enterChat();
   let quitting: Promise<void> | undefined;
   session.onDelta(() => {
     quitting ??= app.quit();

@@ -7,6 +7,7 @@ import { createApp } from "./app.ts";
 it("shows slash suggestions, accepts Tab and leaves middle-of-message slashes alone", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-suggestions-"));
   const app = createApp({ env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" } });
+  app.enterChat();
   try {
     app.editor.handleInput("/");
     await vi.waitFor(() =>

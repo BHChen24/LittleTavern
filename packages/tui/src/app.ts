@@ -42,6 +42,7 @@ import {
 } from "@littletavern/engine";
 import { COMMANDS, helpText } from "./commands.ts";
 import { FileBrowser } from "./components/file-browser.ts";
+import { HomeScreen } from "./components/home-screen.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
@@ -85,11 +86,28 @@ export function createApp(options: AppOptions = {}) {
   const transcript = new Container();
   const editor = new Editor(tui, editorTheme);
   const status = new StatusBar(modelId, activeKey?.source ?? "none");
-  tui.addChild(new Text(`LittleTavern ${VERSION}`));
-  tui.addChild(transcript);
-  tui.addChild(editor);
-  tui.addChild(status);
-  tui.setFocus(editor);
+  const homeScreen = new HomeScreen({
+    version: VERSION,
+    keyStatus: activeKey?.source ?? "none",
+    libraryEmpty: listLibrary(paths).length === 0,
+    importDirs: [paths.importCharactersDir, paths.importLorebooksDir],
+  });
+  let inChat = false;
+  homeScreen.onEnter = enterChat;
+  tui.addChild(homeScreen);
+  tui.setFocus(homeScreen);
+  function enterChat(): void {
+    if (inChat) return;
+    inChat = true;
+    tui.clear();
+    tui.addChild(new Text(`LittleTavern ${VERSION}`));
+    tui.addChild(transcript);
+    tui.addChild(editor);
+    tui.addChild(status);
+    tui.setFocus(editor);
+    if (needsKey) promptForKey();
+    tui.requestRender();
+  }
   let reply: Markdown | undefined;
   let chat: CharacterChat | null = null;
   const commands = COMMANDS({ paths, getChat: () => chat });
@@ -153,7 +171,6 @@ export function createApp(options: AppOptions = {}) {
   if (saved.warning)
     notice("Saved credentials permissions allow access by other users; expected 0600.");
   if (saved.error) notice(saved.error);
-  if (needsKey) promptForKey();
 
   function updateStatus(): void {
     const totals = sumUsage(records);
@@ -174,7 +191,7 @@ export function createApp(options: AppOptions = {}) {
     }
     tui.requestRender();
   }
-  function enterChat(next: CharacterChat): void {
+  function setCharacterChat(next: CharacterChat): void {
     chat = next;
     chat.onNotice = notice;
     renderHistory(chat.history());
@@ -187,7 +204,7 @@ export function createApp(options: AppOptions = {}) {
   }
   function startChat(item: CharacterItem): void {
     try {
-      enterChat(CharacterChat.start({ paths, session, item }));
+      setCharacterChat(CharacterChat.start({ paths, session, item }));
     } catch (error) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat start failed");
       notice("Could not start the chat. See the diagnostic log.");
@@ -230,7 +247,7 @@ export function createApp(options: AppOptions = {}) {
     picker.onSelect = (path) => {
       closeOverlay();
       try {
-        enterChat(CharacterChat.resume({ paths, session, sessionPath: path }));
+        setCharacterChat(CharacterChat.resume({ paths, session, sessionPath: path }));
       } catch (error) {
         notice(error instanceof Error ? error.message : "Could not resume the chat.");
       }
@@ -566,6 +583,7 @@ export function createApp(options: AppOptions = {}) {
       return chat;
     },
     submit,
+    enterChat,
     quit,
     done,
     start() {

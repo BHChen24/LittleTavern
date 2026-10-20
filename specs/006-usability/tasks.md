@@ -98,8 +98,8 @@ quickstart.md
 
 ## Phase 4: User Story 3 - A home screen to start from (P1)
 
-- [ ] T008 [P] [US3] Create `HomeScreen` in `packages/tui/src/components/home-screen.ts` per research R3. Its constructor takes `{ version, keyStatus, libraryEmpty, importDirs }`. Write the content part of T-e in `home-screen.test.ts`
-- [ ] T009 [US3] In `app.ts`:
+- [X] T008 [P] [US3] Create `HomeScreen` in `packages/tui/src/components/home-screen.ts` per research R3. Its constructor takes `{ version, keyStatus, libraryEmpty, importDirs }`. Write the content part of T-e in `home-screen.test.ts`
+- [X] T009 [US3] In `app.ts`:
   - start with only `HomeScreen` as a child;
   - on Enter, show the chat layout and focus the editor;
   - expose `enterChat()` for tests;

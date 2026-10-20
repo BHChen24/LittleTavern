@@ -42,6 +42,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   });
   try {
     expect(app.tui.render(80).join("\n")).toContain("LittleTavern 0.1.0");
+    app.enterChat();
     const prompt = app.tui.getFocusedComponent();
     prompt?.handleInput?.(key);
     prompt?.handleInput?.("\r");
@@ -50,6 +51,44 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
     app.editor.handleInput("hi");
     app.editor.handleInput("\r");
     await vi.waitFor(() => expect(app.tui.render(80).join("\n")).toContain("Hello there."));
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("starts on the home screen and Enter opens the chat with the editor focused", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-home-"));
+  const app = createApp({
+    terminal: stubTerminal(),
+    env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" },
+  });
+  try {
+    expect(app.tui.children).toHaveLength(1);
+    expect(app.tui.render(100).join("\n")).toContain("Press Enter to start");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
+    expect(app.tui.getFocusedComponent()).toBe(app.editor);
+    expect(app.tui.render(100).join("\n")).not.toContain("Press Enter to start");
+    app.enterChat();
+    expect(app.tui.children).toHaveLength(4);
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("quits from the home screen on Ctrl+C", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-home-quit-"));
+  const terminal = stubTerminal();
+  let input: ((data: string) => void) | undefined;
+  terminal.start = (onInput) => {
+    input = onInput;
+  };
+  const app = createApp({ terminal, env: { LITTLETAVERN_HOME: home } });
+  try {
+    app.start();
+    input?.("\x03");
+    await app.done;
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

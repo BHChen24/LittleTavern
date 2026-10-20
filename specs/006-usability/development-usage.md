@@ -25,3 +25,11 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Implement browser and import startup wiring (T006–T007) | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Wait for Phase 3 validation | functions.exec → write_stdin | Build, lint and 227 tests passed |
 | Mark Phase 3 complete and prepare home screen tests (T008) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Add home content and app navigation tests before implementation (T008–T009) | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Commit Phase 3 | functions.exec → exec_command (escalated Git) | Committed 69647f9 |
+| Wait for home test baseline | functions.exec → write_stdin | Expected missing HomeScreen / enterChat failures |
+| Implement home screen, chat entry and update existing harnesses (T008–T009) | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Wait for Phase 4 checkpoint | functions.exec → write_stdin | Lint caught a misplaced harness call; corrected before commit |
+| Fix chat-entry test placement and validate Phase 4 | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for corrected Phase 4 checkpoint | functions.exec → write_stdin | Build, lint and 231 tests passed |
+| Mark Phase 4 complete and inspect key/error interfaces for Phase 5 | functions.exec → exec_command (including this recorder) | Exit 0 |

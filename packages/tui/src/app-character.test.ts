@@ -56,6 +56,7 @@ it("starts a character chat, regenerates the reply and records usage under the c
       simulated: { replies: ["First reply.", "Second reply."] },
     }),
   });
+  app.enterChat();
   const screen = () => app.tui.render(80).join("\n");
   try {
     await app.submit(`/chat ${report.item.id.slice(0, 6)}`);
