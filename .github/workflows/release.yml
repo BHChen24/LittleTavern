@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.19.0, 24, 26]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - run: pnpm build
+      - run: pnpm lint
+      - run: pnpm test
+
+  secret-scan:
+    name: Full-history secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+      - name: Install checksum-verified gitleaks
+        shell: bash
+        run: |
+          gitleaks_dir=$(mktemp -d)
+          gitleaks_archive=gitleaks_8.30.1_linux_x64.tar.gz
+          gitleaks_url=https://github.com/gitleaks/gitleaks/releases/download/v8.30.1
+          curl -fsSL "$gitleaks_url/$gitleaks_archive" -o "$gitleaks_dir/$gitleaks_archive"
+          curl -fsSL "$gitleaks_url/gitleaks_8.30.1_checksums.txt" -o "$gitleaks_dir/checksums.txt"
+          cd "$gitleaks_dir"
+          sha256sum --check --ignore-missing checksums.txt
+          tar -xzf "$gitleaks_archive" gitleaks
+          install -m 755 gitleaks "$RUNNER_TEMP/gitleaks"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - run: gitleaks git --redact --no-banner .
+
+  publish:
+    name: Verify and publish release
+    permissions:
+      contents: write
+      id-token: write
+    runs-on: ubuntu-latest
+    needs: [checks, secret-scan]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 26
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+        env:
+          HUSKY: '0'
+      - name: Install checksum-verified gitleaks
+        shell: bash
+        run: |
+          gitleaks_dir=$(mktemp -d)
+          gitleaks_archive=gitleaks_8.30.1_linux_x64.tar.gz
+          gitleaks_url=https://github.com/gitleaks/gitleaks/releases/download/v8.30.1
+          curl -fsSL "$gitleaks_url/$gitleaks_archive" -o "$gitleaks_dir/$gitleaks_archive"
+          curl -fsSL "$gitleaks_url/gitleaks_8.30.1_checksums.txt" -o "$gitleaks_dir/checksums.txt"
+          cd "$gitleaks_dir"
+          sha256sum --check --ignore-missing checksums.txt
+          tar -xzf "$gitleaks_archive" gitleaks
+          install -m 755 gitleaks "$RUNNER_TEMP/gitleaks"
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      - run: pnpm release:check --tag "$GITHUB_REF_NAME"
+      - name: Install smoke test
+        shell: bash
+        run: |
+          smoke_dir=$(mktemp -d)
+          npm install --global --prefix "$smoke_dir/prefix" ./release/littletavern-*.tgz
+          export LITTLETAVERN_HOME="$smoke_dir/home"
+          "$smoke_dir/prefix/bin/littletavern" --version
+          "$smoke_dir/prefix/bin/littletavern" import "$smoke_dir/prefix/lib/node_modules/littletavern/examples/characters/alice.json"
+          "$smoke_dir/prefix/bin/littletavern" list
+      - name: Publish to npm
+        run: npm publish ./release/littletavern-*.tgz --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" release/*.tgz --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

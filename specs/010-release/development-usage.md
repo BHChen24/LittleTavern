@@ -136,3 +136,21 @@ in the session transcript. No environment file or real credentials are read or u
     no content returned, follow-up will use approved network access.
 82. `exec_command`: record package/smoke evidence, mark T009-T011 and update usage. Outcome:
     packaging phase ready to commit.
+
+## CI and release workflows
+
+83. `exec_command` (escalated): commit packaging phase. Outcome: d9b2c15; hooks passed.
+84. `write_stdin`: collect package commit. Outcome: committed.
+85. `exec_command` (escalated): read gitleaks release asset names from the official GitHub API.
+    Outcome: Linux x64 archive and checksum names verified.
+86. `exec_command`: generate CI/tag-release workflows and parse YAML with existing yaml dependency;
+    check matrix and publication dependencies; run gate. Outcome: valid workflows; build/lint and
+    342 tests passed.
+87. `write_stdin`: collect workflow gate. Outcome: passed.
+88. `exec_command`: extract the checksum installer for temporary verification and scan full history.
+    Outcome: 116 commits scanned, no leaks found.
+89. `exec_command` (escalated): run the workflow's actual download/checksum/install step in /tmp.
+    Outcome: archive checksum verified, installed gitleaks reports 8.30.1.
+90. `write_stdin`: collect temporary installer verification. Outcome: succeeded.
+91. `exec_command`: mark T012-T013 and update usage. Outcome: workflows ready to commit;
+    live GitHub execution remains an owner check, no push/tag/publication performed.
