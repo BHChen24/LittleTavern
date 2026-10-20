@@ -17,6 +17,10 @@
 - T003: attachments and the marker are saved together in one settings patch. A failed settings
   write leaves library imports available and retries the same idempotent operations next start.
 
+- T020: startup copies the provided setup notices, prepends any import-folder failure, and
+  renders the collected text once. Combining the existing messages retains both reasons without
+  changing the data helper's marker/retry behavior or other startup warnings.
+
 ## Open behavior questions
 
 None. All behavior follows the revised feature artifacts and their explicit clarifications.

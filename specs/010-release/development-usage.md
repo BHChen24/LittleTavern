@@ -200,3 +200,43 @@ in the session transcript. No environment file or real credentials are read or u
 112. `exec_command` (escalated): commit the validated final report, convergence correction and
      task closure with normal hooks, then verify branch/status. Outcome is recorded by the final
      commit and verification output in the session transcript; no push, tag or publication.
+
+## Phase 10: Combined startup failure (T020)
+
+Platform-reported total tokens for this follow-up implementation: **unknown**. No run total is
+exposed. The preceding convergence pass recorded its invocations in the session transcript;
+its only repository write appended T020. `functions.exec` wrappers batch the invocations below.
+
+113. `exec_command`: read implement skill, check hooks/prerequisites and branch/status. Outcome:
+     correct feature branch; only the previously appended T020 was uncommitted; no hooks.
+114. `exec_command`: read constitution, tasks and plan. Outcome: T020 is the only unchecked task;
+     phase checkpoint and usage rules apply.
+115. `exec_command`: read supporting artifacts/AGENTS and scan checklists. Outcome: 16/16 checked,
+     marker retry and single-notice requirements confirmed.
+116. `exec_command`: inspect startup/helper/tests and existing report/usage. Outcome: exact notice
+     coordination point and lightweight existing test harness identified.
+117. `exec_command`: verify git/ignore setup, spec edge cases and pinned pi component APIs.
+     Outcome: ignore coverage sufficient; generated package uses its files allowlist; optional
+     guessed container source path absent, with the actual Container found in tui.ts.
+118. `exec_command`: add generated-fixture folder-only/settings-only/combined startup regression
+     and run before implementation. Outcome: combined case failed with two notices; both isolated
+     failure cases passed.
+119. `write_stdin`: collect targeted regression result. Outcome: expected 1 failure, 2 passes.
+120. `exec_command`: verify pinned pi Text/Container source and review pending task/test changes.
+     Outcome: existing multiline Text supports a single combined notice; scope unchanged.
+121. `exec_command`: combine startup setup messages into one notice, update usage, format and
+     run full gate. Outcome: collected by the following entry.
+122. `write_stdin`: collect phase gate progress. Outcome: build/lint passed, tests running.
+123. `exec_command`: review app/test diff, whitespace and post-hook configuration. Outcome:
+     change is limited to startup notice grouping and three regression cases; hooks absent.
+124. `write_stdin`: collect full gate completion. Outcome: 345 tests passed in 61 files.
+125. `exec_command` (escalated): rebuild and check the tagged release package. Outcome: same
+     eight allowed files, version match and no package secret findings.
+126. `write_stdin`: collect package check. Outcome: gitleaks scanned 166863 bytes; check passed.
+127. `exec_command`: verify diff/status, remaining task and hooks. Outcome: T020 alone remained
+     unchecked; intended files only; no extension hooks.
+128. `exec_command`: mark T020, update report/implementation notes/usage and verify final metadata.
+     Outcome: all 20 tasks checked; report records 345 passing tests and rebuilt package evidence.
+129. `exec_command` (escalated): commit the validated T020 fix and report with normal hooks and
+     verify branch/status. Outcome is recorded in the final commit/verification output in the
+     session transcript; no push, tag or publication.

@@ -31,7 +31,7 @@ Node policy, and moves source installation into Development. AGENTS documents re
 
 ## Tasks completed and not completed
 
-**T001-T019 are complete.** T019 was appended by convergence to fix the quickstart's local tarball
+**T001-T020 are complete.** T019 was appended by convergence to fix the quickstart's local tarball
 path. All original phases were completed and committed after their required checks. This report
 and the final markers form the final checkpoint commit. No application task remains unchecked.
 
@@ -47,7 +47,7 @@ Final validation passed after the convergence correction:
 pnpm build && pnpm lint && pnpm test
 Checked 134 files. No fixes applied.
 Test Files  61 passed (61)
-     Tests  342 passed (342)
+     Tests  345 passed (345)
 ```
 
 | Area | Evidence |
@@ -83,12 +83,12 @@ package/package.json
 package/examples/lorebooks/wonderland.json
 package/examples/README.md
 package/README.md
-gitleaks: scanned 166794 bytes; no leaks found
+gitleaks: scanned 166863 bytes; no leaks found
 Release package v0.1.0 passed contents and secret checks.
 ```
 
 The tarball is `release/littletavern-0.1.0.tgz`, with eight files, about 45.5 kB packed and
-166.8 kB unpacked. The generated `release/` directory is ignored by git.
+166.9 kB unpacked. The generated `release/` directory is ignored by git.
 
 The negative tag check also passed: `node scripts/check-release.mjs --tag v9.9.9` exited 1 with
 `Tag v9.9.9 does not match app version v0.1.0`.
@@ -213,3 +213,29 @@ These actions remain outside implementation and were not executed:
 6. Push the version tag matching the app, currently `v0.1.0`. Observe package verification,
    npm publication with provenance and the GitHub release attachment.
 7. On a clean machine, install with `npm install -g littletavern` and follow the README.
+
+
+## Phase 10: Combined startup failure (T020)
+
+The follow-up convergence pass found that simultaneous import-folder and marker-write failures
+produced two setup notices. T020 is complete: app startup now collects the folder notice and
+example-setup notices, joins them as multiline text, and displays one notice. Both failure
+reasons remain visible. Other startup warnings and normal notices keep their existing paths.
+The data helper and marker persistence/retry semantics are unchanged.
+
+Three generated-fixture temporary-home regressions cover folder-only, settings-only and combined
+failures. They verify one visible setup notice, the applicable reasons, usable offline commands,
+marker state and behavior after repair. A failed settings write retries and imports the examples;
+a saved marker continues to prevent reseeding after folder repair. The initial red run reproduced
+one combined-case failure while both isolated cases passed.
+
+Final validation passed: `pnpm build`, `pnpm lint`, and all **345 tests across 61 files**.
+`pnpm release:check --tag v0.1.0` rebuilt the package and verified the same eight-file allowlist;
+gitleaks scanned 166863 bytes and found no leaks. No automated test was deferred. The previous
+external CLI acceptance and install smoke results remain recorded above; they were not repeated
+for this TUI notice correction. Owner/GitHub publication checks remain pending as before.
+
+Scoped completion review of FR-004 and T020 found no remaining notice-coordination gap. The
+checklist still passes 16/16; all 20 tasks are checked. No extension configuration exists, so
+implementation hooks were skipped. No design artifact, dependency, environment file, real key,
+provider, editor, model/GPU or real user data changed or was used.

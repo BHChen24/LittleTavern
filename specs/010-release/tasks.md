@@ -180,3 +180,8 @@ delivered.
 ## Phase 9: Convergence
 
 - [X] T019 Correct the local tarball argument in `specs/010-release/quickstart.md` to `./release/littletavern-*.tgz` per T011/T018's reproducible install validation guide (partial). The actual install smoke test showed that npm interprets the unprefixed `release/...tgz` as GitHub shorthand; the workflows already use the explicit local path.
+
+
+## Phase 10: Convergence
+
+- [X] T020 Ensure first interactive startup emits one setup-failure notice when both import-folder creation and saving `examplesAdded` fail, per FR-004 and the first-start folder/settings failure edge cases (partial). The current `packages/data/src/examples.ts` returns a settings-write notice while `packages/tui/src/app.ts` also displays its import-folder notice, producing two notices. Coordinate these startup notices while preserving the failure reasons, normal app startup and the retry behavior when the marker cannot be saved. Add a lightweight temporary-home regression covering both failures together; the isolated convergence check reproduced one folder notice plus one marker notice. Keep the existing single-failure cases passing.

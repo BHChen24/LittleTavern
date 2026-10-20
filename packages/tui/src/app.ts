@@ -300,9 +300,10 @@ export function createApp(options: AppOptions = {}) {
     updateSetupNotice();
     return true;
   }
+  const startupNotices = [...(options.startupNotices ?? [])];
   const importNotice = ensureImportFolders(paths);
-  if (importNotice) notice(importNotice);
-  for (const message of options.startupNotices ?? []) notice(message);
+  if (importNotice) startupNotices.unshift(importNotice);
+  if (startupNotices.length) notice(startupNotices.join("\n"));
   if (settings.model && !storedModel)
     notice(`Saved model ${settings.model} is unavailable. Choose a model with /model.`);
   if (saved.warning)

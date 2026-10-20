@@ -1,13 +1,23 @@
-import { existsSync, mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  truncateSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
 import {
+  addExamplesOnce,
   ChatSession,
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
   importFile,
   listLibrary,
+  readSettings,
   resolveAppPaths,
 } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
@@ -271,3 +281,51 @@ it("imports a regular card from the browser and refuses an oversized selection",
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it.each(["folders", "settings", "both"])(
+  "shows one startup failure notice when %s fail and keeps marker retries available",
+  async (failure) => {
+    const home = mkdtempSync(join(tmpdir(), "lt-startup-failures-"));
+    const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+    const examples = join(home, "examples");
+    mkdirSync(join(examples, "characters"), { recursive: true });
+    mkdirSync(join(examples, "lorebooks"), { recursive: true });
+    writeFileSync(
+      join(examples, "characters/alice.json"),
+      JSON.stringify({ spec: "chara_card_v3", data: { name: "Alice" } }),
+    );
+    writeFileSync(
+      join(examples, "lorebooks/wonderland.json"),
+      JSON.stringify({ name: "Wonderland", entries: {} }),
+    );
+    const foldersFail = failure !== "settings";
+    const settingsFail = failure !== "folders";
+    if (foldersFail) writeFileSync(paths.importRoot, "not a directory");
+    if (settingsFail) mkdirSync(paths.settingsFile, { recursive: true });
+    const result = addExamplesOnce(paths, examples);
+    const app = createApp({
+      terminal: stubTerminal(),
+      paths,
+      env: { LITTLETAVERN_HOME: home },
+      startupNotices: result.notice ? [result.notice] : [],
+    });
+    try {
+      app.enterChat();
+      const output = app.tui.children.flatMap((component) => component.render(180)).join("\n");
+      expect(output.match(/· Could not/g)).toHaveLength(1);
+      if (foldersFail) expect(output).toContain("Could not create import folders");
+      if (settingsFail) expect(output).toContain("could not save settings");
+      expect(readSettings(paths).examplesAdded).toBe(settingsFail ? undefined : true);
+      await app.submit("/help");
+      expect(app.tui.hasOverlay()).toBe(true);
+      if (foldersFail) rmSync(paths.importRoot);
+      if (settingsFail) rmSync(paths.settingsFile, { recursive: true });
+      expect(addExamplesOnce(paths, examples)).toEqual({});
+      expect(readSettings(paths).examplesAdded).toBe(true);
+      expect(listLibrary(paths)).toHaveLength(settingsFail ? 2 : 0);
+    } finally {
+      await app.quit();
+      rmSync(home, { recursive: true, force: true });
+    }
+  },
+);
