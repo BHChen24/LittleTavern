@@ -40,7 +40,7 @@ quickstart.md
 
 ## Phase 1: Setup
 
-- [ ] T001 [P] Extend `Settings` in `packages/data/src/settings.ts` with optional `userName` (non-empty string), `loreBudget` (number > 0), `scanDepth` (integer ≥ 0), `replyReserve` (number ≥ 0) and `lorebookAttachments` (record of string → string[]). Validate each field independently; an invalid field is dropped and the rest are kept. Change `writeSettings(paths, patch)` to merge `patch` into the existing file and keep unknown fields. Update 001's callers if the signature changes. Tests T-a in `settings.test.ts`
+- [X] T001 [P] Extend `Settings` in `packages/data/src/settings.ts` with optional `userName` (non-empty string), `loreBudget` (number > 0), `scanDepth` (integer ≥ 0), `replyReserve` (number ≥ 0) and `lorebookAttachments` (record of string → string[]). Validate each field independently; an invalid field is dropped and the rest are kept. Change `writeSettings(paths, patch)` to merge `patch` into the existing file and keep unknown fields. Update 001's callers if the signature changes. Tests T-a in `settings.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 
