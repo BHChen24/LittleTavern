@@ -106,9 +106,9 @@ description: "Task list for 008-persona"
 
 ## Phase 5: Polish
 
-- [ ] T009 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that the acceptance run uses **this checkout's built CLI** and not an installed command. Check that the record it writes names this branch and commit. Fix any failures
-- [ ] T010 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T011 Write `specs/008-persona/report.md` with the same sections as the earlier reports. Commit
+- [X] T009 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that the acceptance run uses **this checkout's built CLI** and not an installed command. Check that the record it writes names this branch and commit. Fix any failures
+- [X] T010 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T011 Write `specs/008-persona/report.md` with the same sections as the earlier reports. Commit
 
 ## Dependencies & Execution Order
 
