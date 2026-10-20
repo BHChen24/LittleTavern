@@ -130,3 +130,34 @@ Final checkpoint: build and lint passed (137 files); all 63 test files and 381 t
 The exact quickstart grep printed nothing (expected grep exit 1 for no matches). Whitespace
 checks passed. No implementation post-hooks are registered. Only reporting/task files remained
 to commit; the four design-dependent task markers stay unchecked.
+
+## Resumed Implementation: Owner Decisions for Q1 and Q2
+
+The owner updated the spec, research, contract and T018–T019 before this run. This implementation
+uses those decisions without changing design artifacts. The requirements checklist again passed
+16/16. The working tree started clean on `011-tui-pickers`; no hooks are installed. Existing
+ignore files and the release allowlist remain sufficient.
+
+Individual invocations for the resumed run are listed below. Each runs through `functions.exec`
+or is its nested tool call; the conversation transcript retains exact arguments and outputs.
+Total platform-reported development tokens for this run: **unknown**.
+
+| Invocation | Tool | Purpose | Outcome |
+|---|---|---|---|
+| R01 | exec_command | Check state/hooks, run prerequisites and read implementation skill | Passed; correct branch, clean tree, no hooks |
+| R02 | exec_command | Read updated tasks/questions and scan checklists | Owner decisions available; checklist 16/16 |
+| R03 | exec_command | Read plan, research and contract | Loaded current design including height policy |
+| R04 | exec_command | Read data model, quickstart, constitution, spec and Frame/tests | Loaded governing requirements and implementation context |
+| R05 | exec_command | Inspect contract, validation guide and app/trace/test touchpoints | Confirmed required scrolling and clipping changes |
+| R06 | exec_command | Verify pinned pi, exports/persistence, ignores and prior usage | pi v1.3.0; existing setup sufficient |
+| R07 | exec_command | Add T018 regressions and run picker tests | Started focused run |
+| R08 | write_stdin | Collect picker test results | 29 tests passed; no engine change needed |
+| R09 | exec_command | Inspect pi wrapping/layout and test fixture | Verified wrapping; an unnecessary src/tsconfig.json lookup did not exist |
+| R10 | exec_command | Add T019 clipping/scrolling regressions before code and run them | Started focused run |
+| R11 | write_stdin | Collect pre-implementation regression results | Expected failures: help 32 rows, Frame ignored height |
+| R12 | apply_patch | Implement Frame maximum height and scrollable help; remove helpOpen path | Applied successfully |
+| R13 | exec_command | Format edited files and run build/lint/tests | Started complete checkpoint |
+| R14 | write_stdin | Collect complete checkpoint | Build/lint passed; 63 files and 383 tests passed |
+| R15 | exec_command | Check whitespace/change scope and read convergence skill | Passed; implementation ready for convergence review |
+| R16 | exec_command | Mark T009/T018/T019 complete and record resolved questions/usage | Completed Phase 9 tracking |
+| R17 | exec_command | Commit Phase 9 with normal hooks | Outcome recorded in the commit tool transcript |

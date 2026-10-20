@@ -305,6 +305,10 @@ it("starts a fresh character session and leaves the old chat resumable", async (
   expect(screen()).not.toContain("Earlier message.");
   expect(screen()).not.toContain("Earlier reply.");
   expect(existsSync(old?.path ?? "")).toBe(true);
+  expect((await listChats(paths)).map((entry) => entry.sessionId)).toEqual([oldId]);
+  await app.submit("/sessions");
+  expect(overlay()).toContain("Mira");
+  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("New message.");
   const chats = await listChats(paths);
   expect(chats).toHaveLength(2);
@@ -315,6 +319,21 @@ it("starts a fresh character session and leaves the old chat resumable", async (
   pick("");
   expect(app.chat?.sessionId).toBe(oldId);
   expect(screen()).toContain("Earlier reply.");
+});
+
+it("replaces a greeting-only chat without saving it in sessions", async () => {
+  character();
+  openApp();
+  await chooseCharacter();
+  const oldId = app.chat?.sessionId;
+  expect(await listChats(paths)).toEqual([]);
+  await app.submit("/new");
+  expect(app.chat?.sessionId).not.toBe(oldId);
+  expect(app.chat?.history()).toEqual([{ role: "character", text: "Welcome to the lighthouse." }]);
+  expect(await listChats(paths)).toEqual([]);
+  await app.submit("/sessions");
+  expect(overlay()).toContain("(nothing here yet)");
+  expect(overlay()).not.toContain("Mira");
 });
 
 it("uses the resumed chat's character for new rather than the last character started", async () => {

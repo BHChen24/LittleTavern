@@ -25,6 +25,7 @@ import {
   Text,
   TuiAltScreen,
   VStack,
+  wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
 import {
   type AppPaths,
@@ -196,7 +197,6 @@ export function createApp(options: AppOptions = {}) {
     resolveDone = resolve;
   });
   let started = false;
-  let helpOpen = false;
   /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
   const display = (text: string) => stripControls(scrubSecrets(text, secrets));
   const notice = (text: string, options: { kind?: "notice" | "error" } = {}) => {
@@ -209,7 +209,7 @@ export function createApp(options: AppOptions = {}) {
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
   function showPanel(component: Component, options?: OverlayOptions): void {
-    tui.showOverlay(new Frame(component), options);
+    tui.showOverlay(new Frame(component, () => tui.terminal.rows), options);
   }
   function importSelected(selected: string): ImportReport | null {
     try {
@@ -976,9 +976,13 @@ export function createApp(options: AppOptions = {}) {
       },
       model: openModelPicker,
       help: async () => {
-        const help = new Text(helpText());
+        const innerWidth = Math.max(1, Math.min(80, tui.terminal.columns) - 4);
+        const help = new TraceOverlay(
+          wrapTextWithAnsi(helpText(), innerWidth),
+          Math.max(3, tui.terminal.rows - 8),
+        );
+        help.onClose = closeOverlay;
         showPanel(help);
-        helpOpen = true;
         return;
       },
       apikey: openApiKeyPicker,
@@ -1024,11 +1028,6 @@ export function createApp(options: AppOptions = {}) {
     if (matchesKey(data, "escape") && session.isStreaming) {
       clearWaiting();
       session.abort();
-      return { consume: true };
-    }
-    if (matchesKey(data, "escape") && helpOpen) {
-      tui.hideOverlay();
-      helpOpen = false;
       return { consume: true };
     }
     return undefined;

@@ -59,3 +59,32 @@ it("keeps a wrapping picker title and long entry inside the frame without color"
   expect(plain[0]).toContain("┌");
   expect(plain.at(-1)).toContain("┘");
 });
+
+it("clips overflow with an ellipsis inside a complete border and follows the height limit", () => {
+  const child: Component = {
+    render: () => Array.from({ length: 6 }, (_, index) => `line ${index + 1}`),
+    invalidate() {},
+  };
+  let height = 5;
+  const frame = new Frame(child, () => height);
+  const clipped = frame.render(40).map(stripVTControlCharacters);
+  expect(clipped).toHaveLength(5);
+  expect(clipped[0]?.startsWith("┌")).toBe(true);
+  expect(clipped.at(-1)?.endsWith("┘")).toBe(true);
+  expect(clipped[1]).toContain("line 1");
+  expect(clipped.at(-2)?.slice(2, -2).trim()).toBe("…");
+  expect(clipped.join("\n")).not.toContain("line 3");
+  expect(clipped.every((line) => visibleWidth(line) === 40)).toBe(true);
+  height = 8;
+  const expanded = frame.render(40).map(stripVTControlCharacters);
+  expect(expanded).toHaveLength(8);
+  expect(expanded.join("\n")).toContain("line 6");
+  expect(expanded.join("\n")).not.toContain("…");
+  height = 3;
+  expect(frame.render(40).map(stripVTControlCharacters)[1]?.slice(2, -2).trim()).toBe("…");
+  height = 2;
+  expect(frame.render(40).map(stripVTControlCharacters)).toEqual([
+    `┌${"─".repeat(38)}┐`,
+    `└${"─".repeat(38)}┘`,
+  ]);
+});
