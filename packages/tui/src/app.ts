@@ -17,6 +17,7 @@ import {
   type ChatHistoryItem,
   ChatSession,
   createLogger,
+  DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
@@ -41,8 +42,10 @@ import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
+import { TraceOverlay } from "./components/trace-overlay.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
+import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
 
 export const APP_HELP = `/characters     Choose a character and start a chat
@@ -52,6 +55,7 @@ export const APP_HELP = `/characters     Choose a character and start a chat
 /attach <id>    Attach a lorebook to the current character
 /detach <id>    Detach a lorebook
 /lorebooks      List the active lorebooks
+/trace          Show why the last request looked the way it did
 /plain          Leave the character chat
 /import <path>  Import a card or lorebook
 /library        List the library
@@ -406,6 +410,31 @@ export function createApp(options: AppOptions = {}) {
     }
     if (text === "/sessions") {
       await openSessionPicker();
+      return;
+    }
+    if (text === "/trace") {
+      if (!chat) {
+        notice("The trace is available in character chats (/characters).");
+        return;
+      }
+      if (!chat.lastTrace) {
+        notice("No request yet — send a message, or use `littletavern dry-run`.");
+        return;
+      }
+      const width = tui.terminal.columns;
+      const lines = formatTraceReport(
+        chat.lastTrace,
+        {
+          characterName: chat.character.name,
+          modelId: session.modelId,
+          loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
+        },
+        Math.max(40, Math.floor(width * 0.9) - 2),
+      );
+      const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
+      overlay.onClose = closeOverlay;
+      tui.showOverlay(overlay, { width: "90%" });
+      tui.requestRender();
       return;
     }
     if (text === "/plain") {

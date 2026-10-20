@@ -70,14 +70,14 @@ layout, R5 the overlay and R6 the CLI syntax), plus 004's `character-chat.ts` an
 
 ## Phase 3: User Story 2 - See why the last reply knew what it knew (P1)
 
-- [ ] T005 [P] [US2] Implement `TraceOverlay` in `packages/tui/src/components/trace-overlay.ts` per research R5. It holds the lines, `offset` and `height`; renders the window plus the footer `lines a–b of n · Esc to close`; handles Up/Down/PgUp/PgDn/Home/End within bounds; and calls `onClose` on Esc. Write tests T-h in `trace-overlay.test.ts`
-- [ ] T006 [US2] In `packages/tui/src/app.ts`, add `/trace`:
+- [X] T005 [P] [US2] Implement `TraceOverlay` in `packages/tui/src/components/trace-overlay.ts` per research R5. It holds the lines, `offset` and `height`; renders the window plus the footer `lines a–b of n · Esc to close`; handles Up/Down/PgUp/PgDn/Home/End within bounds; and calls `onClose` on Esc. Write tests T-h in `trace-overlay.test.ts`
+- [X] T006 [US2] In `packages/tui/src/app.ts`, add `/trace`:
   - no character chat: notice "The trace is available in character chats (/characters).";
   - no request yet: notice "No request yet — send a message, or use `littletavern dry-run`.";
   - otherwise: show `TraceOverlay` with `formatTraceReport(chat.lastTrace, meta)`, close it on Esc, and refocus the editor.
 
   Add `/trace` to `APP_HELP`.
-- [ ] T007 [US2] Try T-i in `packages/tui/src/app-trace.test.ts` with the existing app test harness. If it needs more than about 60 lines, delete it and record it as deferred
+- [X] T007 [US2] Try T-i in `packages/tui/src/app-trace.test.ts` with the existing app test harness. If it needs more than about 60 lines, delete it and record it as deferred
 
 **Checkpoint**: checks pass. Commit.
 
@@ -88,7 +88,7 @@ layout, R5 the overlay and R6 the CLI syntax), plus 004's `character-chat.ts` an
 Most of this story is already covered by T002's layout. This phase checks it with a realistic
 volume of entries.
 
-- [ ] T008 [US3] Extend `trace-format.test.ts` with a synthetic trace of 30 entries (3 fired, 20 no-match, 4 budget, 3 disabled):
+- [X] T008 [US3] Extend `trace-format.test.ts` with a synthetic trace of 30 entries (3 fired, 20 no-match, 4 budget, 3 disabled):
   - the first 3 + `fired` lines contain the summary and every fired entry;
   - each not-fired group is one header line with its count, and its names are cut to the width;
   - token figures carry the `~` estimate marker, and the summary says "(estimate)".
@@ -99,7 +99,7 @@ volume of entries.
 
 ## Phase 5: Polish
 
-- [ ] T009 Run `pnpm build && pnpm lint && pnpm test`, plus the automated quickstart checks. Fix any failures
+- [X] T009 Run `pnpm build && pnpm lint && pnpm test`, plus the automated quickstart checks. Fix any failures
 - [ ] T010 Write `specs/005-lore-inspector/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
 
 ---
