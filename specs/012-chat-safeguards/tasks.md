@@ -151,13 +151,13 @@ count.
 **Independent test**: A, regenerate to B, `/prev` shows A, the next request has A, and `/prev`
 again shows B.
 
-- [ ] T009 [US3] In `packages/engine/src/character-chat.ts`, add `replaced` and `prev(): "restored" | "nothing-to-restore"` exactly as research R6 describes:
+- [X] T009 [US3] In `packages/engine/src/character-chat.ts`, add `replaced` and `prev(): "restored" | "nothing-to-restore"` exactly as research R6 describes:
   - clear it in `send()` and at the start of `regenerate()`;
   - set it to the replaced reply only when that regenerate completes or is interrupted; a failed regenerate leaves it cleared (spec FR-010);
   - `prev()` branches from the leaf's parent and appends a copy of `replaced`, then keeps the swapped-out reply as `replaced`.
 
   Write T-d in `packages/engine/src/character-chat.test.ts` with every case in plan.md, including the failed regenerate and reopening the session file
-- [ ] T010 [US3] Add `prev` to `COMMANDS()` in `packages/tui/src/commands.ts` with the contract description, and a handler in `packages/tui/src/app.ts`:
+- [X] T010 [US3] Add `prev` to `COMMANDS()` in `packages/tui/src/commands.ts` with the contract description, and a handler in `packages/tui/src/app.ts`:
   - not in a character chat: the contract message;
   - `"nothing-to-restore"`: the contract message;
   - `"restored"`: re-render the history.

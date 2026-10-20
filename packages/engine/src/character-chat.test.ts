@@ -340,3 +340,73 @@ it("writes session files only inside the app's own data directory", async () => 
   expect(existsSync(sessionsDir(paths))).toBe(true);
   expect(readdirSync(sessionsDir(paths))).toHaveLength(1);
 });
+
+it("swaps only the latest regenerated pair, persists the shown reply and clears the slot on send or reopen", async () => {
+  const seen: Seen[] = [];
+  const item = importCharacter();
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated(["A", "B", "C", recorder(seen, "Next reply")]),
+    item,
+  });
+  expect(chat.prev()).toBe("nothing-to-restore");
+  await chat.send("hello");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("A");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("B");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("B");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("C");
+  chat.prev();
+  const [saved] = await listChats(paths);
+  const reopened = CharacterChat.resume({
+    paths,
+    session: simulated([]),
+    sessionPath: saved?.path ?? "",
+  });
+  expect(reopened.history().at(-1)?.text).toBe("B");
+  expect(reopened.prev()).toBe("nothing-to-restore");
+  await chat.send("next");
+  expect(seen[0]?.map((message) => message.text)).toContain("B");
+  expect(seen[0]?.map((message) => message.text)).not.toContain("C");
+  expect(chat.prev()).toBe("nothing-to-restore");
+});
+
+it("clears the previous slot on a failed regenerate and saves length-limited replies normally", async () => {
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated([
+      "A",
+      { text: "B", stopReason: "length" },
+      { text: "broken", errorMessage: "failure" },
+    ]),
+    item: importCharacter(),
+  });
+  await chat.send("hello");
+  const length = await chat.regenerate();
+  expect(length).toMatchObject({ outcome: "completed", cutOff: true });
+  expect(chat.history().at(-1)?.text).toBe("B");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("nothing-to-restore");
+  const [saved] = await listChats(paths);
+  expect(readFileSync(saved?.path ?? "", "utf8")).toContain('"text":"B"');
+  expect(readFileSync(saved?.path ?? "", "utf8")).not.toContain('"text":"broken"');
+});
+
+it("keeps an interrupted regenerate as the current reply and allows restoring its predecessor", async () => {
+  const session = simulated(["A", "A longer replacement response".repeat(10)]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("hello");
+  const remove = session.onDelta(() => session.abort());
+  expect(await chat.regenerate()).toMatchObject({ outcome: "interrupted" });
+  remove();
+  expect(chat.history().at(-1)?.interrupted).toBe(true);
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("A");
+  chat.prev();
+  expect(chat.history().at(-1)?.interrupted).toBe(true);
+});

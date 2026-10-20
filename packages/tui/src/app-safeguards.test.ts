@@ -319,3 +319,55 @@ it("warns once before sending with unknown prices and still requests the reply c
   expect(f.screen().match(/spending limit cannot be checked/g)).toHaveLength(1);
   expect(f.session.request.maxTokens).toBe(4096);
 });
+
+it("swaps the last pair on screen and clears it when switching chats", async () => {
+  const f = fixture(["Original", "Regenerated"]);
+  f.app.enterChat();
+  await f.character();
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("There is no previous reply to bring back.");
+  await f.app.submit("hello");
+  await f.app.submit("/regenerate");
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("Original");
+  expect(f.screen()).not.toContain("Regenerated");
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("Regenerated");
+  expect(f.screen()).not.toContain("Original");
+  await f.character();
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("There is no previous reply to bring back.");
+  await f.app.submit("/innkeeper");
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("/prev works in character chats.");
+});
+
+it.each(["/prev", "/new"])(
+  "handles real Enter for %s during streaming without losing the draft",
+  async (command) => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const f = fixture([
+      async () => {
+        await gate;
+        return "Finished";
+      },
+    ]);
+    f.app.start();
+    f.app.enterChat();
+    await f.character();
+    const pending = f.app.submit("hello");
+    try {
+      await vi.waitFor(() => expect(f.session.isStreaming).toBe(true));
+      f.app.editor.setText(command);
+      f.terminalInput("\r");
+      expect(f.screen()).toContain("Wait for the reply, or press Esc to stop it.");
+      expect(f.app.editor.getText()).toBe(command);
+    } finally {
+      release();
+      await pending;
+    }
+  },
+);

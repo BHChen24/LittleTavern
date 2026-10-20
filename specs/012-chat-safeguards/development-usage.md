@@ -71,4 +71,15 @@ see conversation output for completion of the final refresh.
 | 62 | exec_command | Run final phase-two and phase-three commit checks | completed; see conversation output |
 | 63 | request_user_input_async | Ask owner how to resolve gitleaks false positive as tasks require | owner approved replacing generated literal with synthetic-key |
 | 64 | apply_patch | Attempt faux-cost and synchronous-startup patch | failed context verification; no files changed; corrected in subsequent call |
+| 65 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 66 | write_stdin | Collect combined phase checkpoint | exit 0 |
+| 67 | exec_command | Confirm combined checkpoint test totals | exit 0 |
+| 68 | exec_command | Commit validated phases two and three after approved gitleaks fix | completed; see conversation output |
+| 69 | exec_command | Add previous-reply and real-input streaming tests before implementation | completed; see conversation output |
+| 70 | apply_patch | Implement reversible persisted reply swapping and streaming command refusals | completed; see conversation output |
+| 71 | exec_command | Format and validate previous-reply phase | completed; see conversation output |
+| 72 | write_stdin | Collect phases-two-and-three commit result | exit 0 |
+| 73 | write_stdin | Collect expected pre-implementation previous-reply failures | exit 0 |
+| 74 | exec_command | Assess name-prompt integration and legacy app harness setup | exit 0 |
+| 75 | write_stdin | Collect phase-four validation | exit 0 |
 

@@ -183,6 +183,7 @@ export class CharacterChat {
   private readonly session: ChatSession;
   private readonly manager: SessionManager;
   private readonly noticed = new Set<string>();
+  private replaced?: AssistantMessage;
 
   private constructor(
     paths: AppPaths,
@@ -241,6 +242,7 @@ export class CharacterChat {
 
   async send(text: string): Promise<TurnResult | null> {
     if (this.isStreaming || !text.trim()) return null;
+    this.replaced = undefined;
     this.manager.appendMessage({ role: "user", content: text, timestamp: Date.now() });
     return this.generate();
   }
@@ -251,14 +253,40 @@ export class CharacterChat {
    */
   async regenerate(): Promise<TurnResult | null | "nothing-to-regenerate"> {
     if (this.isStreaming) return null;
+    this.replaced = undefined;
     const target = this.regenerateTarget();
     const leaf = this.manager.getLeafEntry();
     if (target === "reply" && leaf?.parentId) {
       this.manager.branch(leaf.parentId);
-      return this.generate();
+      const turn = await this.generate();
+      if (
+        turn &&
+        turn.outcome !== "error" &&
+        leaf.type === "message" &&
+        leaf.message.role === "assistant"
+      )
+        this.replaced = leaf.message;
+      return turn;
     }
     if (target === "user") return this.generate();
     return "nothing-to-regenerate";
+  }
+
+  /** Append the chosen sibling so reopening the file preserves the displayed reply. */
+  prev(): "restored" | "nothing-to-restore" {
+    const leaf = this.manager.getLeafEntry();
+    if (
+      !this.replaced ||
+      this.isStreaming ||
+      leaf?.type !== "message" ||
+      leaf.message.role !== "assistant" ||
+      !leaf.parentId
+    )
+      return "nothing-to-restore";
+    this.manager.branch(leaf.parentId);
+    this.manager.appendMessage(this.replaced);
+    this.replaced = leaf.message;
+    return "restored";
   }
 
   /** What regenerate() would act on: the last reply, a reply-less user message, or nothing. */

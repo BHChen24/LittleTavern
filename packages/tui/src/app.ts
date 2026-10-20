@@ -866,7 +866,8 @@ export function createApp(options: AppOptions = {}) {
     const text = value.trim();
     if (closing || !text) return;
     if (session.isStreaming) {
-      if (text === "/new") notice("Wait for the reply, or press Esc to stop it.");
+      if (text === "/new" || text === "/prev")
+        notice("Wait for the reply, or press Esc to stop it.");
       return;
     }
     editor.setText("");
@@ -1080,6 +1081,12 @@ export function createApp(options: AppOptions = {}) {
         await regenerate(value);
         return;
       },
+      prev: () => {
+        if (!chat) notice("/prev works in character chats.");
+        else if (chat.prev() === "nothing-to-restore")
+          notice("There is no previous reply to bring back. /prev works right after a regenerate.");
+        else renderHistory(chat.history());
+      },
       model: openModelPicker,
       help: async () => {
         const innerWidth = Math.max(1, Math.min(80, tui.terminal.columns) - 4);
@@ -1122,6 +1129,15 @@ export function createApp(options: AppOptions = {}) {
     void submit(value);
   };
   tui.addInputListener((data) => {
+    if (
+      session.isStreaming &&
+      tui.getFocusedComponent() === editor &&
+      matchesKey(data, "enter") &&
+      ["/new", "/prev"].includes(editor.getText().trim())
+    ) {
+      notice("Wait for the reply, or press Esc to stop it.");
+      return { consume: true };
+    }
     if (matchesKey(data, "ctrl+c")) {
       void quit();
       return { consume: true };

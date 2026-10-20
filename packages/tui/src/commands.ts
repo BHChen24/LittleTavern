@@ -7,6 +7,7 @@ export function COMMANDS(): SlashCommand[] {
     { name: "new", description: "Start a new chat with the current character" },
     { name: "sessions", description: "Resume a saved chat" },
     { name: "regenerate", description: "Regenerate the last reply (Ctrl+R)" },
+    { name: "prev", description: "Bring back the reply that the last regenerate replaced" },
     { name: "trace", description: "Show why the last request looked the way it did" },
     { name: "lorebooks", description: "Choose or import lorebooks for the current character" },
     { name: "innkeeper", description: "Talk to the innkeeper" },
