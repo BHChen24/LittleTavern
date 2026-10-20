@@ -22,6 +22,8 @@ function stubTerminal(): Terminal {
     clearScreen() {},
     setTitle() {},
     async drainInput() {},
+    setProgress() {},
+    setProgramStatus() {},
   };
 }
 

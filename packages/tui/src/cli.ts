@@ -11,6 +11,7 @@ import {
   resolveAppPaths,
 } from "@littletavern/engine";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
+import { stripControls } from "./sanitize.ts";
 import { formatAssembledPrompt, formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
 
@@ -31,8 +32,10 @@ Environment:
 
 export async function runCli(
   argv: string[],
-  out: (text: string) => void = console.log,
+  print: (text: string) => void = console.log,
 ): Promise<number> {
+  // Card and lore text is untrusted: never let it reach the terminal with escape sequences.
+  const out = (text: string) => print(stripControls(text));
   if (argv.includes("--version")) {
     out(`LittleTavern ${VERSION}`);
     return 0;

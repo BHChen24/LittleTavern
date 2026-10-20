@@ -44,6 +44,7 @@ import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
+import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
@@ -119,8 +120,10 @@ export function createApp(options: AppOptions = {}) {
   let helpOpen = false;
   let needsKey = !activeKey;
   let keyPrompt: KeyPrompt | undefined;
+  /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
+  const display = (text: string) => stripControls(scrubSecrets(text, secrets));
   const notice = (text: string) => {
-    transcript.addChild(new Text(scrubSecrets(text, secrets)));
+    transcript.addChild(new Text(display(text)));
     tui.requestRender();
   };
   function promptForKey(): void {
@@ -179,7 +182,7 @@ export function createApp(options: AppOptions = {}) {
   function renderHistory(items: ChatHistoryItem[]): void {
     transcript.clear();
     for (const item of items) {
-      const text = scrubSecrets(item.text, secrets) + (item.interrupted ? " [interrupted]" : "");
+      const text = display(item.text) + (item.interrupted ? " [interrupted]" : "");
       transcript.addChild(new Markdown(text, 1, 1, markdownTheme));
     }
     tui.requestRender();
@@ -211,7 +214,7 @@ export function createApp(options: AppOptions = {}) {
       "Choose a character (Enter starts a chat, Esc cancels)",
       characters.map((item) => ({
         value: item,
-        label: item.name,
+        label: stripControls(item.name),
         description: item.id,
         search: `${item.name} ${item.id}`,
       })),
@@ -230,7 +233,7 @@ export function createApp(options: AppOptions = {}) {
       "Resume a chat (Enter resumes, Esc cancels)",
       chats.map((entry) => ({
         value: entry.path,
-        label: entry.characterName,
+        label: stripControls(entry.characterName),
         description: `started ${entry.created.toLocaleString()} · last ${entry.modified.toLocaleString()} · ${entry.messageCount} messages`,
         search: entry.characterName,
       })),
@@ -280,7 +283,7 @@ export function createApp(options: AppOptions = {}) {
   }
   const onDelta = session.onDelta((delta) => {
     response += delta;
-    reply?.setText(scrubSecrets(response, secrets));
+    reply?.setText(display(response));
     tui.requestRender();
   });
   const onFinish = session.onFinish((turn) => {
@@ -301,9 +304,7 @@ export function createApp(options: AppOptions = {}) {
       notice("Could not write usage to the ledger. Session totals include only saved records.");
     }
     response = turn.text;
-    reply?.setText(
-      scrubSecrets(response, secrets) + (turn.outcome === "interrupted" ? " [interrupted]" : ""),
-    );
+    reply?.setText(display(response) + (turn.outcome === "interrupted" ? " [interrupted]" : ""));
     if (turn.outcome === "error") {
       notice(
         describeProviderError(scrubSecrets(turn.errorMessage ?? "Unknown error", secrets)).text,
@@ -521,7 +522,7 @@ export function createApp(options: AppOptions = {}) {
       return;
     }
     if (!activeKey) return;
-    transcript.addChild(new Markdown(scrubSecrets(value, secrets), 1, 1, markdownTheme));
+    transcript.addChild(new Markdown(display(value), 1, 1, markdownTheme));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));
   }

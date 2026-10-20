@@ -28,6 +28,8 @@ const terminal: Terminal = {
   clearScreen() {},
   setTitle() {},
   async drainInput() {},
+  setProgress() {},
+  setProgramStatus() {},
 };
 
 it("starts a character chat, regenerates the reply and records usage under the chat's session", async () => {

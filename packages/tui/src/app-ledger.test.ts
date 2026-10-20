@@ -29,6 +29,8 @@ function terminal(): Terminal {
     clearScreen() {},
     setTitle() {},
     async drainInput() {},
+    setProgress() {},
+    setProgramStatus() {},
   };
 }
 

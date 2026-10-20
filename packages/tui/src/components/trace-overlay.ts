@@ -1,4 +1,5 @@
 import { type Component, matchesKey, truncateToWidth } from "@earendil-works/pi-tui";
+import { stripControls } from "../sanitize.ts";
 
 /**
  * A fixed-height window over the trace report. Scrolling is plain offset arithmetic:
@@ -11,7 +12,7 @@ export class TraceOverlay implements Component {
   onClose?: () => void;
 
   constructor(lines: string[], height: number) {
-    this.lines = lines;
+    this.lines = lines.map(stripControls);
     this.height = Math.max(1, height);
   }
 

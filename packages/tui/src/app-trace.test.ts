@@ -27,6 +27,8 @@ const terminal: Terminal = {
   clearScreen() {},
   setTitle() {},
   async drainInput() {},
+  setProgress() {},
+  setProgramStatus() {},
 };
 
 it("explains /trace outside character chats and shows the last request's trace", async () => {
