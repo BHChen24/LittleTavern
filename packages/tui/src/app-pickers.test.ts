@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
@@ -9,13 +9,14 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   ensureImportFolders,
   importFile,
+  listChats,
   listLibrary,
   readSettings,
   resolveAppPaths,
   type SimulatedReply,
   writeSettings,
 } from "@littletavern/engine";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 import { formatItemDetails } from "./library-format.ts";
 
@@ -288,3 +289,167 @@ it.skipIf(process.platform === "win32")(
     expect(listLibrary(paths).filter((item) => item.kind === "lorebook")).toEqual([]);
   },
 );
+
+it("starts a fresh character session and leaves the old chat resumable", async () => {
+  character();
+  openApp(["Earlier reply.", "New reply."]);
+  await chooseCharacter();
+  await app.submit("Earlier message.");
+  const oldId = app.chat?.sessionId;
+  const old = (await listChats(paths)).find((entry) => entry.sessionId === oldId);
+  expect(old).toBeDefined();
+  await app.submit("/new");
+  expect(app.chat?.sessionId).not.toBe(oldId);
+  expect(app.chat?.history()).toEqual([{ role: "character", text: "Welcome to the lighthouse." }]);
+  expect(screen()).toContain("Started a new chat with Mira. Earlier chats are in /sessions.");
+  expect(screen()).not.toContain("Earlier message.");
+  expect(screen()).not.toContain("Earlier reply.");
+  expect(existsSync(old?.path ?? "")).toBe(true);
+  await app.submit("New message.");
+  const chats = await listChats(paths);
+  expect(chats).toHaveLength(2);
+  await app.submit("/sessions");
+  expect(overlay().match(/Mira/g)).toHaveLength(2);
+  const index = chats.findIndex((entry) => entry.sessionId === oldId);
+  for (let i = 0; i < index; i++) app.tui.getFocusedComponent()?.handleInput?.("\x1b[B");
+  pick("");
+  expect(app.chat?.sessionId).toBe(oldId);
+  expect(screen()).toContain("Earlier reply.");
+});
+
+it("uses the resumed chat's character for new rather than the last character started", async () => {
+  const mira = character();
+  importJson("vera.json", {
+    spec: "chara_card_v3",
+    data: { name: "Vera", first_mes: "Hello from Vera." },
+  });
+  openApp(["Mira reply.", "Vera reply.", "Fresh reply."]);
+  await chooseCharacter();
+  await app.submit("Hello Mira.");
+  const oldId = app.chat?.sessionId;
+  await chooseCharacter("Vera");
+  await app.submit("Hello Vera.");
+  await app.submit("/sessions");
+  pick("Mira");
+  expect(app.chat?.sessionId).toBe(oldId);
+  await app.submit("/new");
+  expect(app.chat?.libraryId).toBe(mira.id);
+  expect(app.chat?.sessionId).not.toBe(oldId);
+  expect(app.chat?.history()).toEqual([{ role: "character", text: "Welcome to the lighthouse." }]);
+  await app.submit("New message.");
+  expect(await listChats(paths)).toHaveLength(3);
+});
+
+it("reports a deleted current character without changing the chat", async () => {
+  const card = character();
+  openApp();
+  await chooseCharacter();
+  const previous = app.chat;
+  rmSync(join(paths.dataDir, "library", "characters", card.id), { recursive: true });
+  await app.submit("/new");
+  expect(app.chat).toBe(previous);
+  expect(screen()).toContain(
+    "Mira is no longer in the library. Choose a character with /characters.",
+  );
+});
+
+it("clears innkeeper history and stays in innkeeper mode", async () => {
+  const seen: { role: string; text: string }[][] = [];
+  openApp([
+    "Earlier reply.",
+    (history) => {
+      seen.push(history);
+      return "Fresh reply.";
+    },
+  ]);
+  await app.submit("/innkeeper");
+  await app.submit("Earlier message.");
+  await app.submit("/new");
+  expect(screen()).toContain("Started a new conversation with the innkeeper.");
+  expect(screen()).not.toContain("Earlier reply.");
+  expect(screen()).toContain("Talk to the innkeeper");
+  await app.submit("New message.");
+  expect(seen).toEqual([[{ role: "user", text: "New message." }]]);
+  expect(screen()).toContain("Fresh reply.");
+  expect(app.chat).toBeNull();
+});
+
+it("explains new when neither a character nor innkeeper mode is selected", async () => {
+  openApp();
+  await app.submit("/new");
+  expect(screen()).toContain("Choose a character with /characters, or use /innkeeper.");
+  expect(app.chat).toBeNull();
+});
+
+it.each(["character", "innkeeper"])(
+  "refuses new while %s is streaming without clearing the editor",
+  async (mode) => {
+    character();
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    openApp([
+      async () => {
+        await gate;
+        return "Finished reply.";
+      },
+    ]);
+    if (mode === "character") await chooseCharacter();
+    else await app.submit("/innkeeper");
+    const pending = app.submit("Earlier message.");
+    try {
+      await vi.waitFor(() => expect(screen()).toContain("Earlier message."));
+      const current = app.chat;
+      const before = current?.history();
+      app.editor.setText(" /new ");
+      await app.submit(" /new ");
+      expect(screen()).toContain("Wait for the reply, or press Esc to stop it.");
+      expect(app.editor.getText()).toBe(" /new ");
+      expect(app.chat).toBe(current);
+      expect(app.chat?.history()).toEqual(before);
+    } finally {
+      release();
+      await pending;
+    }
+  },
+);
+
+it.each(["/chat", "/chat x", "/attach", "/attach x", "/detach", "/detach x"])(
+  "treats removed command %s as unknown",
+  async (command) => {
+    openApp();
+    await app.submit(command);
+    expect(screen()).toContain("Unknown command. Use /help.");
+    expect(app.tui.hasOverlay()).toBe(false);
+  },
+);
+
+it("uses a picker attachment on the next request and sends fresh history after new", async () => {
+  character();
+  lorebook();
+  const seen: { role: string; text: string }[][] = [];
+  openApp([
+    (history) => {
+      seen.push(history);
+      return "Earlier reply.";
+    },
+    (history) => {
+      seen.push(history);
+      return "Fresh reply.";
+    },
+  ]);
+  await chooseCharacter();
+  await chooseLorebook("World");
+  await app.submit("Tell me about eldoria.");
+  expect(seen[0]?.[0]?.text).toContain("Eldoria is a forest.");
+  expect(app.chat?.lastTrace?.lore.some((entry) => entry.included)).toBe(true);
+  await app.submit("/new");
+  await app.submit("A fresh question.");
+  expect(seen[1]?.filter((message) => message.role !== "system")).toEqual([
+    { role: "assistant", text: "Welcome to the lighthouse." },
+    { role: "user", text: "A fresh question." },
+  ]);
+  expect(JSON.stringify(seen[1])).not.toContain("Earlier reply.");
+  expect(await listChats(paths)).toHaveLength(2);
+});

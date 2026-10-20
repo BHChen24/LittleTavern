@@ -143,8 +143,8 @@ earlier history, and `/sessions` lists both chats.
   - in innkeeper mode, call `session.clearConversation()`, clear the transcript, and show `Started a new conversation with the innkeeper.`;
   - otherwise show `Choose a character with /characters, or use /innkeeper.`;
   - in `submit()`, before the early return for `session.isStreaming`: if the trimmed text is `/new`, show `Wait for the reply, or press Esc to stop it.` and leave the editor text as it is. Other input keeps today's behaviour.
-- [ ] T010 [US3] Remove `chat` from `COMMANDS()` and its handler. Write tests T-f with every case listed in plan.md (including `/new` in a resumed chat) and T-g (`/chat x`, `/attach x` and `/detach x` give `Unknown command. Use /help.`), and update existing tests that used `/chat <id>` to use the character picker or `startChat`
-- [ ] T011 [US3] Write the happy path T-h in `packages/tui/src/app-pickers.test.ts`, using the faux provider and code-generated synthetic cards and lorebooks, as the existing app tests do:
+- [X] T010 [US3] Remove `chat` from `COMMANDS()` and its handler. Write tests T-f with every case listed in plan.md (including `/new` in a resumed chat) and T-g (`/chat x`, `/attach x` and `/detach x` give `Unknown command. Use /help.`), and update existing tests that used `/chat <id>` to use the character picker or `startChat`
+- [X] T011 [US3] Write the happy path T-h in `packages/tui/src/app-pickers.test.ts`, using the faux provider and code-generated synthetic cards and lorebooks, as the existing app tests do:
   1. start a chat;
   2. attach the lorebook through the `/lorebooks` picker;
   3. send a message whose keyword fires an entry, and check that `lastTrace` includes it;

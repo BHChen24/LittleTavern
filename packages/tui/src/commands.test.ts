@@ -1,18 +1,11 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { importFile, resolveAppPaths } from "@littletavern/engine";
-import { afterEach, expect, it } from "vitest";
+import { expect, it } from "vitest";
 import { COMMANDS, helpText } from "./commands.ts";
 
-const home = mkdtempSync(join(tmpdir(), "lt-commands-"));
-const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
-afterEach(() => rmSync(home, { recursive: true, force: true }));
 it("generates help for exactly the contracted commands and key bindings", () => {
-  const commands = COMMANDS({ paths, getChat: () => null });
+  const commands = COMMANDS();
   expect(commands.map((command) => command.name)).toEqual([
     "characters",
-    "chat",
+    "new",
     "sessions",
     "regenerate",
     "trace",
@@ -38,37 +31,16 @@ it("generates help for exactly the contracted commands and key bindings", () => 
   expect(helpText()).not.toContain("/forget-key");
   for (const key of ["Ctrl+C", "Ctrl+R", "Esc", "Enter"]) expect(helpText()).toContain(key);
 });
-it("reads fresh library items, filters by name or id and offers only attached books for detach", async () => {
-  mkdirSync(home, { recursive: true });
-  const commands = COMMANDS({
-    paths,
-    getChat: () => null,
-  });
-  const complete = (name: string, prefix = "") =>
-    commands.find((c) => c.name === name)?.getArgumentCompletions?.(prefix);
-  expect(await complete("chat")).toEqual([]);
-  const card = join(home, "card.json");
-  const book = join(home, "book.json");
-  writeFileSync(card, JSON.stringify({ spec: "chara_card_v3", data: { name: "Mira" } }));
-  writeFileSync(book, JSON.stringify({ name: "Harbor", entries: [] }));
-  const character = importFile(paths, card);
-  const lorebook = importFile(paths, book);
-  if (!character.ok || !lorebook.ok) throw new Error("Fixture import failed");
-  expect(await complete("chat", "IRA")).toEqual([
-    expect.objectContaining({ value: character.item.id, label: "Mira" }),
-  ]);
-  expect(await complete("chat", character.item.id.slice(0, 6))).toHaveLength(1);
-  expect(await complete("attach")).toBeUndefined();
-  expect(await complete("show")).toBeUndefined();
-  expect(await complete("detach")).toBeUndefined();
-  expect(
-    await COMMANDS({ paths, getChat: () => null })
-      .find((c) => c.name === "detach")
-      ?.getArgumentCompletions?.(""),
-  ).toBeUndefined();
+it("offers no id arguments or completions for the picker commands", () => {
+  for (const name of ["characters", "show", "lorebooks", "new"]) {
+    const command = COMMANDS().find((item) => item.name === name);
+    expect(command).toBeDefined();
+    expect(command?.argumentHint).toBeUndefined();
+    expect(command?.getArgumentCompletions).toBeUndefined();
+  }
 });
 it("offers import without a path hint or file completion", () => {
-  const command = COMMANDS({ paths, getChat: () => null }).find((item) => item.name === "import");
+  const command = COMMANDS().find((item) => item.name === "import");
   expect(command?.argumentHint).toBeUndefined();
   expect(command?.getArgumentCompletions).toBeUndefined();
   expect(command?.description).toBe("Import a card or lorebook from the import folders");

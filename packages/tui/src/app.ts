@@ -185,7 +185,7 @@ export function createApp(options: AppOptions = {}) {
     waiting = undefined;
     tui.requestRender();
   }
-  const commands = COMMANDS({ paths, getChat: () => chat });
+  const commands = COMMANDS();
   editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
   let response = "";
   let running: Promise<unknown> | undefined;
@@ -434,7 +434,7 @@ export function createApp(options: AppOptions = {}) {
         notice(formatImportReport(result).join("\n"));
         notice(`Created with LittleTavern ${VERSION}.`);
         for (const warning of result.warnings) notice(`Warning: ${warning}`);
-        notice(`Start chatting with /chat ${result.item.id}`);
+        notice("Choose the character with /characters to start chatting.");
       }
     } catch (error) {
       errorNotice(
@@ -759,7 +759,11 @@ export function createApp(options: AppOptions = {}) {
 
   async function submit(value: string): Promise<void> {
     const text = value.trim();
-    if (closing || session.isStreaming || !text) return;
+    if (closing || !text) return;
+    if (session.isStreaming) {
+      if (text === "/new") notice("Wait for the reply, or press Esc to stop it.");
+      return;
+    }
     editor.setText("");
     if (text === "/key" || text === "/forget-key") {
       notice(`${text} was replaced by /apikey.`);
@@ -907,14 +911,26 @@ export function createApp(options: AppOptions = {}) {
         openCharacterPicker();
         return;
       },
-      chat: async () => {
-        const id = text.slice("/chat".length).trim();
-        const item = id ? getItem(paths, id) : null;
-        if (!id) errorNotice("Usage: /chat <id>");
-        else if (item === "ambiguous") errorNotice(`Ambiguous item prefix: ${id}`);
-        else if (item?.kind !== "character") errorNotice(`Character not found: ${id}`);
-        else startChat(item);
-        return;
+      new: () => {
+        if (chat) {
+          const item = getItem(paths, chat.libraryId);
+          if (!item || item === "ambiguous" || item.kind !== "character") {
+            notice(
+              `${stripControls(chat.character.name)} is no longer in the library. Choose a character with /characters.`,
+            );
+          } else {
+            startChat(item);
+            notice(
+              `Started a new chat with ${stripControls(item.character.name)}. Earlier chats are in /sessions.`,
+            );
+          }
+        } else if (innkeeperSelected) {
+          session.clearConversation();
+          transcript.clear();
+          notice("Started a new conversation with the innkeeper.");
+        } else {
+          notice("Choose a character with /characters, or use /innkeeper.");
+        }
       },
       sessions: async () => {
         await openSessionPicker();

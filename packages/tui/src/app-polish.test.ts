@@ -125,7 +125,9 @@ it("shows all placeholders, follows persona changes, and hides invalid active pe
   );
   const result = importFile(paths, file);
   if (!result.ok) throw new Error(result.reason);
-  await app.submit(`/chat ${result.item.id}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${result.item.id}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   expect(lines().join("\n")).toContain("Talk to Mira… (/ for commands)");
   mkdirSync(paths.importPersonasDir, { recursive: true });
   writeFileSync(join(paths.importPersonasDir, "traveller.md"), "## Name\nTraveller\n");

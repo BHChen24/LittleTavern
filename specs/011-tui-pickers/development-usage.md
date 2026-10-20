@@ -64,3 +64,19 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
 - `exec_command`: inspected remaining id-command tests, report structure and external offline
   acceptance script. Marked T006–T008 complete, recorded implementation details and committed
   the phase with normal hooks.
+
+## Phase 5: New Chat and Removed Commands
+
+- `exec_command`: read session-listing, app readiness and pinned pi persistence APIs; added
+  T-f/T-g/T-h tests before implementation. The focused run failed as expected against the old
+  commands and missing new handler.
+- `exec_command`: implemented the explicitly planned new handler and streaming guard; removed
+  chat, unused command-context/completion helpers and the creation hint suggesting an id.
+  Existing app tests now select characters through the picker.
+- `exec_command`: the first full run found that greeting-only sessions are not persisted by pi.
+  Verified `_hasConversation`/`_persist` in pinned source and recorded behavior gap Q1 rather than
+  inventing a storage change. Planned resumability tests use chats with user messages; both old
+  and new chats are listed after the next exchange as the spec's independent test describes.
+- `exec_command`: build, lint and all 62 test files / 376 tests passed. T010–T011 are complete;
+  T009 remains unchecked because Q1 prevents satisfying unconditional old-chat preservation.
+  Committed the tested implementation and continued independent phases under the run rules.

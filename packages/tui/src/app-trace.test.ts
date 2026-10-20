@@ -65,7 +65,9 @@ it("explains /trace outside character chats and shows the last request's trace",
     app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("/trace");
     expect(screen()).toContain("The trace is available in character chats");
-    await app.submit(`/chat ${report.item.id}`);
+    await app.submit("/characters");
+    app.tui.getFocusedComponent()?.handleInput?.(`${report.item.id}`);
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("/trace");
     expect(screen()).toContain("No request yet");
     await app.submit("Is the lighthouse haunted?");

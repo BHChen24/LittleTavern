@@ -1,40 +1,10 @@
-import type { AutocompleteItem, SlashCommand } from "@earendil-works/pi-tui";
-import { type AppPaths, type CharacterChat, listLibrary } from "@littletavern/engine";
-import { stripControls } from "./sanitize.ts";
-
-export interface CommandContext {
-  paths: AppPaths;
-  getChat: () => Pick<CharacterChat, "activeLorebooks"> | null;
-}
-
-function matching(items: AutocompleteItem[], prefix: string): AutocompleteItem[] {
-  const lower = prefix.toLowerCase();
-  return items.filter((item) => `${item.label} ${item.value}`.toLowerCase().includes(lower));
-}
+import type { SlashCommand } from "@earendil-works/pi-tui";
 
 /** The single command definition used by completion, dispatch and help. */
-export function COMMANDS(context?: CommandContext): SlashCommand[] {
-  const library = (kind?: "character" | "lorebook") => (prefix: string) =>
-    matching(
-      context
-        ? listLibrary(context.paths)
-            .filter((item) => !kind || item.kind === kind)
-            .map((item) => ({
-              value: item.id,
-              label: stripControls(item.name),
-              description: kind ? item.id : `${item.kind} · ${item.format}`,
-            }))
-        : [],
-      prefix,
-    );
+export function COMMANDS(): SlashCommand[] {
   return [
     { name: "characters", description: "Choose a character and start a chat" },
-    {
-      name: "chat",
-      argumentHint: "<id>",
-      description: "Start a chat with a character",
-      getArgumentCompletions: library("character"),
-    },
+    { name: "new", description: "Start a new chat with the current character" },
     { name: "sessions", description: "Resume a saved chat" },
     { name: "regenerate", description: "Regenerate the last reply (Ctrl+R)" },
     { name: "trace", description: "Show why the last request looked the way it did" },
