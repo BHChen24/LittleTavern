@@ -52,3 +52,11 @@ in the session transcript. No environment file or real credentials are read or u
     fields identified; an optional guessed test filename did not exist.
 27. `write_stdin`: collect setup gate completion. Outcome: all 313 tests passed.
 28. `exec_command`: mark T001, update usage and commit setup. Outcome: hook result in transcript.
+29. `exec_command` (escalated): commit setup with hooks. Outcome: e8a74aa; secret scan/lint passed.
+30. `write_stdin`: collect setup commit. Outcome: committed.
+31. `exec_command`: add marker test and run it before implementation. Outcome: expected missing-field failure.
+32. `exec_command`: implement optional validated boolean and run full phase gate. Outcome: all 314 tests passed; build/lint passed.
+33. `write_stdin`: close expected failing test session. Outcome: exit 1 as expected before implementation.
+34. `write_stdin`: collect phase gate. Outcome: passed.
+35. `exec_command`: inspect app/command regressions, chat setup and tool configuration. Outcome: integration paths identified; no other ignore files required.
+36. `exec_command`: mark T002 and update usage. Outcome: foundational phase ready to commit.

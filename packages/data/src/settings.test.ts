@@ -102,3 +102,21 @@ it("validates mouse capture independently and defaults missing values to on at u
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("round-trips the examples marker and drops non-boolean markers independently", () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-settings-examples-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  try {
+    expect(readSettings(paths).examplesAdded).toBeUndefined();
+    for (const examplesAdded of [false, true]) {
+      writeSettings(paths, { examplesAdded, userName: "Parker" });
+      expect(readSettings(paths)).toEqual({ examplesAdded, userName: "Parker" });
+    }
+    for (const examplesAdded of ["true", 1, null, []]) {
+      writeFileSync(paths.settingsFile, JSON.stringify({ examplesAdded, userName: "Parker" }));
+      expect(readSettings(paths)).toEqual({ userName: "Parker" });
+    }
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

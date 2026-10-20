@@ -3,6 +3,7 @@ import type { AppPaths } from "./paths.ts";
 
 export interface Settings {
   mouse?: boolean;
+  examplesAdded?: boolean;
   model?: string;
   userName?: string;
   persona?: string | null;
@@ -34,6 +35,7 @@ function isAttachments(value: unknown): value is Record<string, string[]> {
 export function readSettings(paths: AppPaths): Settings {
   const raw = readFile(paths);
   const settings: Settings = {};
+  if (typeof raw.examplesAdded === "boolean") settings.examplesAdded = raw.examplesAdded;
   if (typeof raw.mouse === "boolean") settings.mouse = raw.mouse;
   if (typeof raw.model === "string") settings.model = raw.model;
   if (typeof raw.userName === "string" && raw.userName.trim()) settings.userName = raw.userName;

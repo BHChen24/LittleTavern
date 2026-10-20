@@ -65,7 +65,7 @@ quickstart.md
 
 ## Phase 2: Foundational
 
-- [ ] T002 Add `examplesAdded?: boolean` to `Settings` in `packages/data/src/settings.ts`, "validated as a boolean like `mouse`" (data-model.md). Extend `packages/data/src/settings.test.ts`
+- [X] T002 Add `examplesAdded?: boolean` to `Settings` in `packages/data/src/settings.ts`, "validated as a boolean like `mouse`" (data-model.md). Extend `packages/data/src/settings.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 
