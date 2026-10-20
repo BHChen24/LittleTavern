@@ -74,8 +74,11 @@ packages/tui/src/app.ts                    # persona picker, New/Edit via openIn
 | T-c | `listPersonas`: sorted, invalid files reported, same-name files both listed | low | **write** |
 | T-d | `readActivePersona`: none, valid, missing file → notice, invalid → notice | low | **write** |
 | T-e | Assembly: the persona part sits between `lore-before` and `description`; `{{user}}` is the persona name; an empty description adds no part; without a persona the output deep-equals the old output (SC-003) | low | **write** |
+| T-e2 | Lore: a key written as `{{user}}` matches the persona name in history, and entry content resolves `{{user}}` to the persona name | low | **write** |
 | T-f | `assembleForCharacter` and `greetingFor` use the active persona; a dry run shows the `persona` part | low | **write** |
 | T-g | `/persona` picker with a fake `VISUAL`: New creates a file, selecting it saves the setting, Edit reopens the file, "No persona" clears it | medium | **try**; defer if the harness needs more than about 60 lines |
+| T-h | **Happy path** (constitution testing policy): a simulated `CharacterChat` with an active persona sends a message. The simulated model receives the persona description in position and `{{user}}` resolved, and `lastTrace` has a `persona` part | low–medium | **write** |
+| T-i | Persona drafts live in `drafts/personas/`; `/new-character` does not list them | low | **write** |
 
 ## Complexity Tracking
 

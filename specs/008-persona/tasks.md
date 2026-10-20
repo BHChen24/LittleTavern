@@ -21,8 +21,12 @@ description: "Task list for 008-persona"
 
 - **Stay on branch `008-persona`.** Never commit to `main`, and never switch, merge or rebase
   branches.
-- **Do not stop to ask.** If something is unclear, write it to `specs/008-persona/questions.md`,
-  take the most conservative option, and continue.
+- **Do not stop to ask, but do not invent behaviour.** Two kinds of question:
+  - an *implementation detail* (naming, structure, which pi call to use): choose the simplest
+    option that satisfies the spec, and note it in `specs/008-persona/questions.md`;
+  - *behaviour the spec, plan or contracts do not define*: do not decide it. Leave the affected
+    task unchecked, record the question in `questions.md` for the owner, and continue with the
+    other tasks.
 - **Tests that are too complex**: record them under "Deferred tests" in the report.
 - **Never**:
   - read, print or use `.env`;
@@ -42,7 +46,7 @@ description: "Task list for 008-persona"
 
 ## Phase 1: Foundational
 
-- [ ] T001 Extract `parseMarkdownSections(text)` from `parseCharacterTemplate` in `packages/data/src/cards/template.ts` per research R3. Export it, make `parseCharacterTemplate` use it, and add one direct test. All 007 tests must stay green (T-a)
+- [ ] T001 Extract `parseMarkdownSections(text)` from `parseCharacterTemplate` in `packages/data/src/cards/template.ts` per research R3. It returns an **ordered list** `{ title, key, body }[]`, where `title` is the original heading text, `key` is lowercased and trimmed, and duplicates are kept, so that 007's duplicate and unknown-section messages keep the original spelling. Export it, make `parseCharacterTemplate` use it, and add one direct test. All 007 tests must stay green, unchanged (T-a)
 - [ ] T002 [P] Add `importPersonasDir` to `AppPaths` in `packages/data/src/paths.ts`, and make `ensureImportFolders` create it. Extend `paths.test.ts`
 - [ ] T003 [P] Add `persona?: string | null` to `Settings` in `packages/data/src/settings.ts`. It is validated as a non-empty string, and a merging write can clear it with `null`. Extend `settings.test.ts`
 
@@ -69,15 +73,15 @@ description: "Task list for 008-persona"
 
 ## Phase 3: User Story 3 - The persona in the assembly and the trace (P2, done before US2 because US2 depends on it)
 
-- [ ] T005 [US3] In `packages/engine/src/assembly/types.ts` and `assemble.ts`, apply research R1 and R2:
+- [ ] T005 [US3] In `packages/engine/src/assembly/types.ts`, `assemble.ts` **and `lore.ts`**, apply research R1 and R2:
   - `AssemblyInput.persona?`;
   - the `"persona"` TracePart source;
   - the part placed between `lore-before` and `description`, with macros replaced;
-  - `{{user}}` is the persona name.
+  - `{{user}}` is the persona name **everywhere**: compute the names once (a shared helper) and use them in `assemble.ts` and in `lore.ts:107`, which today reads `input.userName` on its own. This affects lore keys, scanned messages and entry content.
 
-  Write tests T-e. They include the SC-003 regression check: deep-equal output without a persona,
-  compared with a fixture assembled the same way before this change.
-- [ ] T006 [US3] In `packages/engine/src/character-chat.ts`, make `assembleForCharacter` and `greetingFor` read `readActivePersona(paths)` and pass it in. Surface its notice through the existing `notices` channel (one-time in `CharacterChat`). Write tests T-f, including a `dryRun` that shows the `persona` part
+  Write tests T-e, T-e2 and the SC-003 regression check: deep-equal output without a persona, compared with a fixture assembled the same way before this change.
+
+- [ ] T006 [US3] In `packages/engine/src/character-chat.ts`, make `assembleForCharacter` and `greetingFor` read `readActivePersona(paths)` and pass it in. Surface its notice through the existing `notices` channel (one-time in `CharacterChat`). Write tests T-f, including a `dryRun` that shows the `persona` part, and **the happy path T-h**: a simulated `CharacterChat` with an active persona sends a message, and the request the simulated model receives contains the persona description in the right place, `{{user}}` resolved to the persona name, and a `persona` part in `lastTrace`
 
 **Checkpoint**: checks pass. Commit.
 
@@ -89,7 +93,7 @@ description: "Task list for 008-persona"
 - [ ] T008 [US2] In `packages/tui/src/app.ts`, open a `ListPicker` from `/persona`.
   - **Entries**: one per persona, with `● ` before the active one. Invalid persona files are shown with their error and cannot be selected.
   - **Actions**:
-    - "New persona": a draft from `PERSONA_TEMPLATE`, opened with `openInEditor` and the `tui.stop`/`tui.start` pattern from `/new-character`, then `createPersonaFromDraft`, which activates the new persona on success;
+    - "New persona": a draft from `PERSONA_TEMPLATE` in **`<importRoot>/drafts/personas/`**, a sub-folder, so that `/new-character`, which lists only `.md` files directly in `drafts/`, never offers persona drafts (regression test T-i), opened with `openInEditor` and the `tui.stop`/`tui.start` pattern from `/new-character`, then `createPersonaFromDraft`, which activates the new persona on success;
     - "Edit active persona": opens that file directly;
     - "No persona": sets `persona: null`.
   - **Selecting a persona**: writes `persona` to settings, shows a notice ("You are now <name>"), and applies from the next request.
@@ -102,7 +106,7 @@ description: "Task list for 008-persona"
 
 ## Phase 5: Polish
 
-- [ ] T009 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only`. Fix any failures
+- [ ] T009 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that the acceptance run uses **this checkout's built CLI** and not an installed command. Check that the record it writes names this branch and commit. Fix any failures
 - [ ] T010 Run `speckit-converge` on this feature and complete any appended tasks
 - [ ] T011 Write `specs/008-persona/report.md` with the same sections as the earlier reports. Commit
 

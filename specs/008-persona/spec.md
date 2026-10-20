@@ -157,8 +157,10 @@ request text shows the description in the right place.
 
 - **SC-001**: The owner can create a persona and make it active in under 2 minutes, and never has
   to retype it in later sessions.
-- **SC-002**: With a persona active, 100% of character-chat requests and dry runs contain its
-  description in the documented position, and the trace accounts for it.
+- **SC-002**: With a valid persona active whose description is non-empty, 100% of character-chat
+  requests and dry runs contain its description in the documented position, and the trace accounts
+  for it. An empty description adds no persona part, and a missing or invalid persona file falls
+  back as in FR-008.
 - **SC-003**: With no persona, the assembled requests are identical to the requests before this
   feature (no regression).
 

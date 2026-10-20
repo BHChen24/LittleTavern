@@ -22,15 +22,25 @@ call, with source `"persona"`, between `lore-before` (line ~49) and `description
 The assembly stays pure. 004's `assembleForCharacter` reads the active persona and passes it in,
 and so does `greetingFor`, so that `{{user}}` in greetings uses the persona name.
 
+**Lore resolves `{{user}}` too.** `lore.ts:107` builds its own
+`names = { char, user: input.userName ?? DEFAULT_USER_NAME }`, which it uses for keys, scanned
+messages and entry content. Both files must use one shared names helper that applies the persona
+rule, otherwise lore keeps the old user name. This was found by Codex's pre-implementation
+analysis on 2026-10-20.
+
 ## R3. Reusing 007's parser and editor flow
 
 - **Parser**: extract the `##` section splitting from `parseCharacterTemplate`
   (`packages/data/src/cards/template.ts`) into an exported
-  `parseMarkdownSections(text) → Map<lowercased heading, text>`. Both the character template and
-  personas use it. This is a small refactor, and 007's tests must stay green.
+  `parseMarkdownSections(text) → { title: string; key: string; body: string }[]`, in file order,
+  duplicates included. A `Map` would lose duplicates and the original heading spelling, and 007
+  reports both: `Duplicate section: nAmE.` and `Unknown section: Mystery; ignored.`. Both the
+  character template and personas use it. 007's tests must stay green, unchanged.
 - **Editor**: 007's `openInEditor`, and its `tui.stop()`/`tui.start()` pattern in `app.ts`, are
-  reused for New and Edit. A new persona starts as a draft in `<importRoot>/drafts/` and is moved
-  into `personas/` once it parses, which is the same draft-safety rule as 007.
+  reused for New and Edit. A new persona starts as a draft in **`<importRoot>/drafts/personas/`** and is moved
+  into `personas/` once it parses, which is the same draft-safety rule as 007. The sub-folder
+  matters, because `/new-character` offers every `.md` file directly in `drafts/` as a character
+  draft.
 
 ## R4. Storage and listing
 
