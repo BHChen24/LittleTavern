@@ -72,3 +72,26 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Review final diff, task markers and post-implementation hooks | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Wait for final Phase 7 checkpoint | functions.exec → write_stdin | Build, lint and 241 tests passed; no lint findings |
 | Commit final report, task markers and accounting; verify branch and clean worktree | functions.exec → exec_command (escalated Git) | The containing commit records completion; post-commit status and history are checked in this invocation |
+
+
+## Follow-up convergence review
+
+Platform-reported total development tokens for this review: **unknown**.
+The constitution requires this accounting append; application code, specs, plans, and task
+markers remain unchanged. No Git commands or comparisons were used for this assessment.
+
+| Purpose | Tools | Outcome |
+|---|---|---|
+| Check pre-hooks, initialize feature prerequisites once, read constitution/spec/plan/tasks | functions.exec → exec_command | Feature 006-usability found; artifacts available; no pre-hook configuration |
+| Read research, contracts, models and current implementation | functions.exec → exec_command | Assessed paths, commands, browser, home, keys, styles and app wiring |
+| Read tests, report and conservative implementation resolutions | functions.exec → exec_command | Checked all 17 tasks and their verification evidence |
+| Inspect key flow, rendering, picker behavior and pinned pi APIs; run existing tests | functions.exec → exec_command | Source assessed; full suite launched without environment-file loading or live tests |
+| Wait for the test suite | functions.exec → write_stdin | 41 files and 241 tests passed |
+| Inspect masking, key precedence, command dispatch and remaining component tests | functions.exec → exec_command | Verified resulting behavior; no actionable gaps |
+| Compare command definitions to the contract and inspect acceptance evidence | functions.exec → exec_command | 16 exact command names/descriptions matched; acceptance record has 19 passes, 0 failures |
+| Check post-hooks and append this review's accounting | functions.exec → exec_command | No extension configuration; accounting recorded; tasks.md untouched |
+
+Assessment: 15 functional requirements, 5 success criteria, 30 acceptance scenarios,
+6 research/plan decisions, 17 existing tasks and 7 constitution principles checked.
+Findings: missing 0, partial 0, contradicts 0, unrequested 0. All severity counts are zero.
+Outcome: converged; no tasks appended. Proceed to owner review.
