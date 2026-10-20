@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
-import { getItem, importFile, listLibrary, resolveAppPaths } from "@littletavern/engine";
+import {
+  DEFAULT_ASSEMBLY_SETTINGS,
+  dryRun,
+  getItem,
+  importFile,
+  listLibrary,
+  readSettings,
+  resolveAppPaths,
+} from "@littletavern/engine";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
+import { formatAssembledPrompt, formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
 
 export const CLI_HELP = `Usage:
@@ -11,6 +20,8 @@ export const CLI_HELP = `Usage:
   littletavern import <file…>  Import cards or lorebooks
   littletavern list            List the library
   littletavern show <id>       Inspect an item (unique prefix allowed)
+  littletavern dry-run <character-id> [--message <text>] [--session <id-or-path>] [--json]
+                               Show the next request and its lore trace; sends nothing
 
 Environment:
   OPENROUTER_API_KEY        Overrides a saved key; blank counts as unset
@@ -64,8 +75,47 @@ export async function runCli(
     for (const line of formatItemDetails(item)) out(line);
     return 0;
   }
+  if (argv[0] === "dry-run") return runDryRun(argv.slice(1), out);
   const { startApp } = await import("./app.ts");
   await startApp();
+  return 0;
+}
+
+/** `dry-run <character-id> [--message <text>] [--session <id-or-path>] [--json]` */
+async function runDryRun(args: string[], out: (text: string) => void): Promise<number> {
+  const characterId = args[0];
+  const flag = (name: string) => {
+    const index = args.indexOf(name);
+    return index > 0 ? args[index + 1] : undefined;
+  };
+  if (!characterId || characterId.startsWith("--")) {
+    out("Usage: littletavern dry-run <character-id> [--message <text>] [--session <id>] [--json]");
+    return 1;
+  }
+  const paths = resolveAppPaths();
+  const result = await dryRun({
+    paths,
+    characterId,
+    message: flag("--message"),
+    session: flag("--session"),
+  });
+  if (!result.ok) {
+    out(result.error);
+    return 1;
+  }
+  if (args.includes("--json")) {
+    out(JSON.stringify({ prompt: result.prompt, trace: result.trace }, null, 2));
+    return 0;
+  }
+  const meta = {
+    characterName: result.item.name,
+    modelId: result.modelId,
+    loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
+  };
+  for (const notice of result.notices) out(notice);
+  for (const line of formatTraceReport(result.trace, meta)) out(line);
+  out("── Request ──");
+  for (const line of formatAssembledPrompt(result.prompt)) out(line);
   return 0;
 }
 

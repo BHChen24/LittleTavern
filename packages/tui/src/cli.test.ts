@@ -57,3 +57,44 @@ it("imports multiple files with partial failure, lists and shows the shared form
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("dry-runs a character request as text or JSON without a key, and rejects unknown ids", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-cli-dry-run-"));
+  vi.stubEnv("LITTLETAVERN_HOME", home);
+  vi.stubEnv("OPENROUTER_API_KEY", "");
+  const file = join(home, "mira.json");
+  writeFileSync(
+    file,
+    JSON.stringify({
+      spec: "chara_card_v3",
+      data: {
+        name: "Mira",
+        first_mes: "Welcome.",
+        character_book: { entries: [{ keys: ["lighthouse"], content: "Haunted." }] },
+      },
+    }),
+  );
+  const output: string[] = [];
+  const out = (text: string) => {
+    output.push(text);
+  };
+  try {
+    await runCli(["import", file], out);
+    const id = listLibrary(resolveAppPaths())[0]?.id ?? "";
+    output.length = 0;
+    expect(await runCli(["dry-run", id, "--message", "the lighthouse"], out)).toBe(0);
+    expect(output[0]).toContain("Mira ·");
+    expect(output).toContain("Lore fired (1)");
+    expect(output).toContain("── Request ──");
+    expect(output).toContain("the lighthouse");
+    output.length = 0;
+    expect(await runCli(["dry-run", id, "--json"], out)).toBe(0);
+    const parsed = JSON.parse(output.join("\n"));
+    expect(Object.keys(parsed)).toEqual(["prompt", "trace"]);
+    output.length = 0;
+    expect(await runCli(["dry-run", "zzzz"], out)).toBe(1);
+    expect(output).toEqual(["Character not found: zzzz"]);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

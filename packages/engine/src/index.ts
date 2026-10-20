@@ -28,6 +28,7 @@ export { estimateTokens } from "./assembly/tokens.ts";
 export * from "./assembly/types.ts";
 export * from "./character-chat.ts";
 export * from "./chat-session.ts";
+export * from "./dry-run.ts";
 export * from "./models.ts";
 export * from "./provider-errors.ts";
 export * from "./system-prompt.ts";

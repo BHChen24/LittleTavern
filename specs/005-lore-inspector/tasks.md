@@ -36,7 +36,7 @@ layout, R5 the overlay and R6 the CLI syntax), plus 004's `character-chat.ts` an
 
 ## Phase 1: Foundational (shared path)
 
-- [ ] T001 In `packages/engine/src/character-chat.ts`, extract `assembleForCharacter({ paths, item, history, modelId })` → `{ prompt, trace, notices }` per research R1:
+- [X] T001 In `packages/engine/src/character-chat.ts`, extract `assembleForCharacter({ paths, item, history, modelId })` → `{ prompt, trace, notices }` per research R1:
   - it re-reads the settings, resolves the attached lorebooks (skipping missing ones and returning their notices), takes the context window from `findAllowedModel`, and calls `assemblePrompt`;
   - `CharacterChat.send` and `regenerate` must call it, with no change in behaviour;
   - all existing 004 tests must pass unchanged (T-c).
@@ -49,14 +49,14 @@ layout, R5 the overlay and R6 the CLI syntax), plus 004's `character-chat.ts` an
 
 ## Phase 2: User Story 1 - See a request before sending it (P1) 🎯 MVP
 
-- [ ] T002 [P] [US1] Implement `formatTraceReport(trace, meta)` and `formatAssembledPrompt(prompt)` in `packages/tui/src/trace-format.ts`. Use exactly research R3 (the reason sentences, `entry #n`, the ignored-features suffix) and R4 (the layout and the "No lorebooks." case). Align and truncate with pi-tui's `visibleWidth` and `truncateToWidth`. Write tests T-a and T-b in `trace-format.test.ts`, including the "every entry exactly once" and "group count equals listed entries" invariants
-- [ ] T003 [US1] Implement `dryRun({ paths, characterId, message?, session? })` in `packages/engine/src/dry-run.ts`:
+- [X] T002 [P] [US1] Implement `formatTraceReport(trace, meta)` and `formatAssembledPrompt(prompt)` in `packages/tui/src/trace-format.ts`. Use exactly research R3 (the reason sentences, `entry #n`, the ignored-features suffix) and R4 (the layout and the "No lorebooks." case). Align and truncate with pi-tui's `visibleWidth` and `truncateToWidth`. Write tests T-a and T-b in `trace-format.test.ts`, including the "every entry exactly once" and "group count equals listed entries" invariants
+- [X] T003 [US1] Implement `dryRun({ paths, characterId, message?, session? })` in `packages/engine/src/dry-run.ts`:
   - resolve the character with `getItem` (prefix; ambiguous or not found returns an error);
   - build the history: for a new chat, the greeting with macros replaced, then the message; for a session, open it with `SessionManager.open(path, <dataDir>/sessions)`, read the current branch and append the message;
   - call `assembleForCharacter`.
 
   The session is found by id prefix through `listChats` or by file path. Write tests T-d, T-e and T-f in `dry-run.test.ts`. T-f compares against a simulated `CharacterChat.send`.
-- [ ] T004 [US1] Add the `dry-run` subcommand to `packages/tui/src/cli.ts` per research R6 and `contracts/cli-and-overlay.md`:
+- [X] T004 [US1] Add the `dry-run` subcommand to `packages/tui/src/cli.ts` per research R6 and `contracts/cli-and-overlay.md`:
   - text mode prints the report lines, `── Request ──` and the prompt lines;
   - `--json` prints `JSON.stringify({ prompt, trace }, null, 2)`;
   - errors print one line and return 1;
