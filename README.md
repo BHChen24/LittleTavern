@@ -48,7 +48,10 @@ ignore the warnings and do not need `--allow-scripts`.
 ## Quick start
 
 1. Run `littletavern` and press Enter. On the first interactive start, Alice and the Wonderland
-   lorebook are added to your library, with Wonderland already attached to Alice.
+   lorebook are added to your library, with Wonderland already attached to Alice. When no player
+   name or active persona is set, the app asks what characters should call you. Enter saves
+   `Traveler` or your edited name; Esc uses `Traveler` for this run and asks again next start.
+   A persona's name takes precedence.
 2. `/apikey` adds your OpenRouter key. You choose whether it is kept for this session only or
    saved to a file only you can read.
 3. `/model` chooses a model.
@@ -68,6 +71,7 @@ Type `/` at any time to see the commands, with completion.
 | `/new` | Start a new chat with the current character |
 | `/sessions` | Resume a saved chat |
 | `/regenerate` | Regenerate the last reply (also Ctrl+R) |
+| `/prev` | Bring back the reply that the last regenerate replaced; use again to swap back |
 | `/trace` | Show why the last request looked the way it did |
 | `/lorebooks` | Choose, attach or import lorebooks for the current character |
 | `/persona` | Choose, create or edit who you are in the story |
@@ -88,6 +92,53 @@ Type `/` at any time to see the commands, with completion.
 | PgUp / PgDn, mouse wheel | Scroll the transcript |
 | Ctrl+Shift+F | Search the transcript |
 | Ctrl+C | Quit |
+
+`/prev` keeps the latest replaced reply for this run only, in character chats. Sending a new
+message, starting another regenerate, switching chats or quitting clears that slot. A successful
+regenerate fills it with the reply it replaced. The shown reply is saved and used in later requests.
+
+If a reply fails, the notice tells you how to retry or fix the cause and where to find the
+technical details in the diagnostic log. In character chats, retry with Ctrl+R or `/regenerate`;
+retryable failure notices count manual retries. Partial failed replies are marked incomplete
+and are neither saved nor sent with later requests. There are no automatic retries.
+
+## Limits and generation settings
+
+By default, each request asks for at most **4096 output tokens**, including reasoning tokens,
+and the app asks before starting another request once this run has spent **$1**. A request already
+in progress finishes and may cross the threshold. `Continue` adds another cap's worth to this
+run's allowance; `Stop` keeps your message in the input. Unknown model prices cannot be checked
+against the spending limit. A reply cut off at the token limit is saved normally.
+
+The home screen and setup notice show the limits and the path to `settings.json` until a chat
+starts. Edit that file to change the limits and sampling parameters, then **restart the app**:
+
+```json
+{
+  "limits": { "replyTokens": 4096, "runSpendUsd": 1 },
+  "generation": {
+    "temperature": 1.1,
+    "topP": 0.9,
+    "topK": 40,
+    "minP": 0.05,
+    "repetitionPenalty": 1.05
+  }
+}
+```
+
+| Setting | Accepted values |
+|---|---|
+| `limits.replyTokens` | Whole number at least 0; 0 removes the app's reply cap |
+| `limits.runSpendUsd` | Number at least 0, in USD; 0 turns off the spending limit |
+| `generation.temperature` | 0 to 2 |
+| `generation.topP`, `generation.minP` | 0 to 1 |
+| `generation.topK` | Whole number at least 1 |
+| `generation.repetitionPenalty` | Number greater than 0 |
+
+Unset sampling parameters use model defaults. Invalid fields produce a startup notice;
+invalid limits use their defaults and other valid fields still apply. `/trace` shows the values
+LittleTavern requested under `Requested:`. pi may lower the output cap to fit remaining context;
+with no app cap it uses the model's maximum. A model may ignore sampling parameters.
 
 ## Command line
 

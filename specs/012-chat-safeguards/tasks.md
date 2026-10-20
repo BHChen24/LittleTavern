@@ -200,13 +200,13 @@ Phase 1.
 
 ## Phase 7: Happy path and docs
 
-- [ ] T013 Write the happy path T-k in `packages/tui/src/app-safeguards.test.ts`:
+- [X] T013 Write the happy path T-k in `packages/tui/src/app-safeguards.test.ts`:
   1. a fresh temporary home;
   2. the name prompt → "Mira";
   3. a synthetic card whose greeting uses `{{user}}`;
   4. send, regenerate, `/prev`;
   5. check that the next request (captured with `simulated.onRequest` or the faux context) contains the restored reply and "Mira", and that `/trace` shows the request line.
-- [ ] T014 Update `README.md`:
+- [X] T014 Update `README.md`:
   - the first-start name prompt;
   - the limits and how to change them in `settings.json`, noting that a restart is needed;
   - the `generation` section with its ranges;

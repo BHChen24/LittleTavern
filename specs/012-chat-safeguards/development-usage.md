@@ -112,4 +112,13 @@ see conversation output for completion of the final refresh.
 | 103 | write_stdin | Collect affected trace tests | exit 0 |
 | 104 | exec_command | Confirm trace checks and request fixture setup | exit 0 |
 | 105 | exec_command | Run the phase-six checkpoint after all trace regressions are corrected | completed; see conversation output |
+| 106 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 107 | exec_command | Review formatting and implementation state without changing design | exit 0 |
+| 108 | write_stdin | Collect phase-six final checkpoint | exit 0 |
+| 109 | exec_command | Confirm requested-parameter tracing is validated | exit 0 |
+| 110 | exec_command | Commit validated phase six | completed; see conversation output |
+| 111 | exec_command | Add faux-provider happy path, real settings plumbing verification, and user documentation | completed; see conversation output |
+| 112 | write_stdin | Collect phase-seven validation | exit 0 |
+| 113 | write_stdin | Collect request-tracing commit result | exit 0 |
+| 114 | exec_command | Inspect phase-seven results and confirm failed-turn transport handling | exit 0 |
 

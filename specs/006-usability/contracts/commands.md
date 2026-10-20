@@ -11,6 +11,7 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/new` | — | Start a new chat with the current character (added by 011) |
 | `/sessions` | — | Resume a saved chat |
 | `/regenerate` | — | Regenerate the last reply (Ctrl+R) |
+| `/prev` | — | Bring back the reply that the last regenerate replaced (added by 012) |
 | `/trace` | — | Show why the last request looked the way it did |
 | `/lorebooks` | — | Choose or import lorebooks for the current character (changed by 011) |
 | `/innkeeper` | — | Talk to the innkeeper |

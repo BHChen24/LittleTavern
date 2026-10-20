@@ -18,7 +18,7 @@
 - Esc on the spend picker follows its normal cancellation behavior and chooses Stop.
 
 - The phase 2 checkpoint passed, but its commit was blocked by the reported secret-scan false
-  positive. Phases 2 and 3 will share a commit after the approved fixture fix and both validations.
+  positive. Phases 2 and 3 shared commit `8917257` after the approved fixture fix and both validations.
 
 ## Open behavior questions
 

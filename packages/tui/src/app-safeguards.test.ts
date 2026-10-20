@@ -435,3 +435,69 @@ it.each(["saved", "active", "missing", "invalid"])(
     }
   },
 );
+
+it("runs the fresh-name, regenerate, prev and trace happy path through the faux provider", async () => {
+  const f = fixture(
+    [
+      "First reply",
+      "Newer reply",
+      (history) => {
+        const texts = history.map((message) => message.text);
+        expect(texts).toContain("Welcome, Mira.");
+        expect(texts).toContain("First reply");
+        expect(texts).not.toContain("Newer reply");
+        return "The restored conversation continues.";
+      },
+    ],
+    { generation: { temperature: 1.1 } },
+    true,
+  );
+  f.app.enterChat();
+  f.input("\x15");
+  f.input("Mira");
+  f.input("\r");
+  await f.character();
+  expect(f.screen()).toContain("Welcome, Mira.");
+  await f.app.submit("hello");
+  await f.app.submit("/regenerate");
+  await f.app.submit("/prev");
+  expect(f.screen()).toContain("First reply");
+  await f.app.submit("continue");
+  expect(f.screen()).toContain("The restored conversation continues.");
+  await f.app.submit("/trace");
+  expect(f.overlay()).toContain("Requested: max 4096 output tokens · temperature 1.1");
+});
+
+it("builds production session request settings at startup and warns once for invalid fields", async () => {
+  const f = fixture([], {
+    limits: { replyTokens: 8000, runSpendUsd: 0 },
+    generation: { temperature: 1.1, topP: 0.9, topK: 40, minP: 0.05, repetitionPenalty: 1.05 },
+  });
+  await f.app.quit();
+  const app = createApp({ paths: f.paths, env: {} });
+  try {
+    expect(app.session.request).toEqual({
+      maxTokens: 8000,
+      temperature: 1.1,
+      samplingParams: { top_p: 0.9, top_k: 40, min_p: 0.05, repetition_penalty: 1.05 },
+    });
+    writeFileSync(f.paths.settingsFile, JSON.stringify({ generation: { temperature: 0.2 } }));
+    expect(app.session.request.temperature).toBe(1.1);
+  } finally {
+    await app.quit();
+  }
+  writeFileSync(
+    f.paths.settingsFile,
+    JSON.stringify({ userName: "Traveler", generation: { topP: 2 } }),
+  );
+  const invalid = createApp({ paths: f.paths, env: {} });
+  try {
+    invalid.enterChat();
+    const screen = () =>
+      invalid.tui.children.flatMap((component) => component.render(500)).join("\n");
+    expect(screen().match(/Ignored generation.topP in settings.json:/g)).toHaveLength(1);
+    expect(invalid.session.request).toEqual({ maxTokens: 4096 });
+  } finally {
+    await invalid.quit();
+  }
+});
