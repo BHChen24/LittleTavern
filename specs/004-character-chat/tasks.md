@@ -138,7 +138,7 @@ quickstart.md
 
 - [X] T015 Try T-h in `packages/tui/src/app-character.test.ts` with 001's app test harness. If the harness grows beyond about 60 lines, delete the attempt and record T-h as deferred
 - [X] T016 Run `pnpm build && pnpm lint && pnpm test`. Fix any failures
-- [ ] T017 Write `specs/004-character-chat/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
+- [X] T017 Write `specs/004-character-chat/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
 
 ---
 
@@ -155,3 +155,9 @@ edits `character-chat.ts` and `app.ts`, so run them sequentially.
 2. **US2** adds regenerate, which the owner requires for v1.
 3. **US3** makes chats survive restarts.
 4. **US4** adds world books.
+
+## Phase 8: Convergence
+
+- [X] T018 CRITICAL: Stop exporting `historyFromEntries` (it takes pi's `SessionEntry`) from `packages/engine/src/character-chat.ts`; keep it module-private and add an exported `readChatHistory(paths, sessionPath): ChatHistoryItem[]` that opens the session read-only and uses only LittleTavern types, per Constitution II (contradicts)
+- [X] T019 Show each saved chat's start time next to its last activity and message count in the `/sessions` picker in `packages/tui/src/app.ts` per US3/AC2 (partial)
+- [X] T020 Record this run's tool invocations and the platform-reported total tokens ("unknown" when not exposed) in `specs/004-character-chat/development-usage.md` per Constitution V (missing)

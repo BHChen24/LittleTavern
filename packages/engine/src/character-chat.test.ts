@@ -8,6 +8,7 @@ import {
   type CharacterItem,
   type LorebookItem,
   listChats,
+  readChatHistory,
   sessionsDir,
 } from "./character-chat.ts";
 import { ChatSession, type SimulatedReply } from "./chat-session.ts";
@@ -170,6 +171,7 @@ it("resumes the current branch after a restart and lists the chat", async () => 
     sessionPath: listed?.path ?? "",
   });
   expect(resumed.history()).toEqual(before);
+  expect(readChatHistory(paths, listed?.path ?? "")).toEqual(before);
   expect(before.at(-1)?.text).toBe("Two, again.");
 });
 

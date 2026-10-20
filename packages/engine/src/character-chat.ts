@@ -91,7 +91,7 @@ export function greetingFor(paths: AppPaths, item: CharacterItem): string {
 }
 
 /** Turns the current branch of a session into chat history; unknown entries are ignored. */
-export function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
+function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
   const history: ChatHistoryItem[] = [];
   for (const entry of entries) {
     if (entry.type === "custom" && entry.customType === GREETING_ENTRY) {
@@ -130,6 +130,11 @@ function characterIdOf(manager: SessionManager): { libraryId: string; name: stri
     }
   }
   return null;
+}
+
+/** The current branch of a saved chat, read without writing anything (used by the dry run). */
+export function readChatHistory(paths: AppPaths, sessionPath: string): ChatHistoryItem[] {
+  return historyFromEntries(SessionManager.open(sessionPath, sessionsDir(paths)).getBranch());
 }
 
 export function listChats(paths: AppPaths): Promise<ChatListEntry[]> {

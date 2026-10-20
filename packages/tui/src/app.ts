@@ -227,7 +227,7 @@ export function createApp(options: AppOptions = {}) {
       chats.map((entry) => ({
         value: entry.path,
         label: entry.characterName,
-        description: `${entry.modified.toLocaleString()} · ${entry.messageCount} messages`,
+        description: `started ${entry.created.toLocaleString()} · last ${entry.modified.toLocaleString()} · ${entry.messageCount} messages`,
         search: entry.characterName,
       })),
       "Filter chats",
