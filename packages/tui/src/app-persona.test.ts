@@ -55,7 +55,6 @@ beforeEach(() => {
   app = createApp({ paths, env: { VISUAL: editorCommand }, terminal });
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
 });
 afterEach(async () => {
   await app.quit();
@@ -87,7 +86,6 @@ it("creates, persists, reopens and clears a persona through a fake VISUAL withou
   app = createApp({ paths, env: { VISUAL: editorCommand }, terminal });
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   await app.submit("/persona");
   expect(overlay()).toContain("● Traveller");
   writeFileSync(join(home, "content.md"), "## Name\nSailor\n## Description\nChanged.\n");

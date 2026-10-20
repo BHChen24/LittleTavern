@@ -26,6 +26,7 @@ afterEach(async () => {
 function fixture(reply: SimulatedReply = "Hello", key = true) {
   const home = mkdtempSync(join(tmpdir(), "lt-polish-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  writeSettings(paths, { model: DEFAULT_MODEL_ID });
   let input: (data: string) => void = () => {};
   const terminal: Terminal = {
     columns: 80,
@@ -69,7 +70,7 @@ it("keeps the waiting indicator until text arrives and removes it on error", asy
   const gate = Promise.withResolvers<string>();
   const { app, lines } = fixture(async () => await gate.promise);
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  await app.submit("/innkeeper");
   let sawText = false;
   app.session.onDelta(() => {
     sawText = true;
@@ -89,7 +90,7 @@ it("keeps the waiting indicator until text arrives and removes it on error", asy
   }
   const failed = fixture({ text: "", errorMessage: "Provider unavailable" });
   failed.app.enterChat();
-  failed.app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  await failed.app.submit("/innkeeper");
   await failed.app.submit("hi");
   expect(failed.lines().join("\n")).not.toContain("is writing…");
   expect(failed.lines().join("\n")).toContain("Error:");
@@ -100,7 +101,7 @@ it("removes the indicator immediately on Esc before the delayed reply resolves",
   const { app, lines, input } = fixture(async () => await gate.promise);
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  await app.submit("/innkeeper");
   const sending = app.submit("hi");
   try {
     expect(lines().join("\n")).toContain("is writing…");
@@ -115,7 +116,7 @@ it("removes the indicator immediately on Esc before the delayed reply resolves",
 it("shows all placeholders, follows persona changes, and hides invalid active personas", async () => {
   const { app, home, paths, lines } = fixture();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  await app.submit("/innkeeper");
   expect(lines().join("\n")).toContain("Talk to the innkeeper… (/ for commands)");
   const file = join(home, "card.json");
   writeFileSync(
@@ -140,7 +141,6 @@ it("shows all placeholders, follows persona changes, and hides invalid active pe
   expect(lines().join("\n")).not.toContain("Persona:");
   const noKey = fixture("Hello", false);
   noKey.app.enterChat();
-  noKey.app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   expect(noKey.lines().join("\n")).toContain("Add your key with /apikey to start talking");
   expect(noKey.lines().join("\n")).not.toContain(DEFAULT_MODEL_ID);
 });
@@ -154,7 +154,7 @@ it("renders home, messages and status within 30 columns at eight rows under NO_C
   expect(lines(30).every((line) => visibleWidth(line) <= 30)).toBe(true);
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+  await app.submit("/innkeeper");
   await app.submit('"Hello" *waves*');
   await app.submit("/unknown");
   const rendered = lines(30);
@@ -181,7 +181,6 @@ it("composes the current draft through a fake VISUAL and restores the terminal a
   const stop = vi.spyOn(terminal, "stop");
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   app.editor.setText("Keep this first line.");
   input("\x0f");
   expect(app.editor.getText()).toBe("Keep this first line.\nEdited second line.");
@@ -199,7 +198,6 @@ it("keeps the draft and reports an editor failure", () => {
   env.VISUAL = `${process.execPath} ${script}`;
   app.start();
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   app.editor.setText("Keep this draft.");
   input("\x0f");
   expect(app.editor.getText()).toBe("Keep this draft.");

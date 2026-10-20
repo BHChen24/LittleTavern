@@ -44,6 +44,17 @@
   disabled; branch and stored feature state were left unchanged. Existing ignore rules
   already cover this private TypeScript workspace and its build/editor artifacts.
 
+- Phase 8 owner follow-up overrides FR-012/T017: Enter opens only the chat layout.
+  The original specification is retained for the design side; the later owner instructions
+  are recorded as tasks T021–T023.
+- Phase 8 owner-confirmed configuration rule: valid saved models and environment/saved API
+  keys count as configured; a character (including a resumed chat) or Innkeeper must be
+  explicitly selected in each app run. Picker cancellation never supplies a missing choice.
+- Phase 8 implementation: the existing engine default remains an internal initialization
+  value. A separate `modelSelected` flag prevents requests until a saved or newly selected
+  model is valid; `chat` and `innkeeperSelected` track the current run’s explicit mode.
+  The guard is shared by sending and regeneration; setup/offline commands stay available.
+
 ## Open behaviour questions
 
 None.

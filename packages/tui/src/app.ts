@@ -85,6 +85,7 @@ export function createApp(options: AppOptions = {}) {
   const settings = readSettings(paths);
   const storedModel = findAllowedModel(settings.model);
   let modelId = storedModel?.id ?? DEFAULT_MODEL_ID;
+  let modelSelected = Boolean(storedModel);
   const saved = readSavedKey(paths);
   let activeKey = resolveApiKey({ envValue: env.OPENROUTER_API_KEY, savedValue: saved.key });
   const secrets = [env.OPENROUTER_API_KEY, saved.key].filter((value): value is string =>
@@ -107,7 +108,7 @@ export function createApp(options: AppOptions = {}) {
   });
   const transcript = new Container();
   const editor = new Editor(tui, editorTheme);
-  const status = new StatusBar({ model: modelId, keySource: activeKey?.source ?? "none" });
+  const status = new StatusBar({ model: storedModel?.id, keySource: activeKey?.source ?? "none" });
   const homeScreen = new HomeScreen({
     version: VERSION,
     keyStatus: activeKey?.source ?? "none",
@@ -140,17 +141,23 @@ export function createApp(options: AppOptions = {}) {
       ]),
     );
     tui.setFocus(editor);
+    const steps = setupSteps();
+    if (steps.length) notice(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
     tui.requestRender();
-    openCharacterPicker();
   }
   let reply: MessageView | undefined;
   let chat: CharacterChat | null = null;
+  let innkeeperSelected = false;
   const inputBox = new InputBox(editor, () =>
     !activeKey
       ? "Add your key with /apikey to start talking"
-      : chat
-        ? `Talk to ${display(chat.character.name)}… (/ for commands)`
-        : "Talk to the innkeeper… (/ for commands)",
+      : !modelSelected
+        ? "Select a model with /model to start talking"
+        : !chat && !innkeeperSelected
+          ? "Choose /characters or /innkeeper to start talking"
+          : chat
+            ? `Talk to ${display(chat.character.name)}… (/ for commands)`
+            : "Talk to the innkeeper… (/ for commands)",
   );
   let waiting: Loader | undefined;
   function clearWaiting(): void {
@@ -258,23 +265,32 @@ export function createApp(options: AppOptions = {}) {
     };
     tui.showOverlay(provider, { width: "90%" });
   }
-  function interceptMissingKey(value: string): boolean {
-    if (activeKey) return false;
+  function setupSteps(): string[] {
+    const steps: string[] = [];
+    if (!activeKey) steps.push("No API key yet. Type /apikey to add your OpenRouter key.");
+    if (!modelSelected) steps.push("Select a model with /model.");
+    if (!chat && !innkeeperSelected)
+      steps.push("Choose a character with /characters or enter /innkeeper mode.");
+    return steps;
+  }
+  function interceptIncompleteSetup(value: string): boolean {
+    const steps = setupSteps();
+    if (!steps.length) return false;
     editor.setText(value);
-    notice("No API key yet. Type /apikey to add your OpenRouter key.");
+    notice(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
     return true;
   }
   const importNotice = ensureImportFolders(paths);
   if (importNotice) notice(importNotice);
   if (settings.model && !storedModel)
-    notice(`Saved model ${settings.model} is unavailable; using ${DEFAULT_MODEL_ID}.`);
+    notice(`Saved model ${settings.model} is unavailable. Choose a model with /model.`);
   if (saved.warning)
     notice("Saved credentials permissions allow access by other users; expected 0600.");
   if (saved.error) errorNotice(saved.error);
 
   function updateStatus(): void {
     status.update({
-      model: modelId,
+      model: modelSelected ? modelId : undefined,
       keySource: activeKey?.source ?? "none",
       character: chat?.character.name,
       persona: readActivePersona(paths).persona?.name,
@@ -300,6 +316,7 @@ export function createApp(options: AppOptions = {}) {
   }
   function setCharacterChat(next: CharacterChat): void {
     chat = next;
+    innkeeperSelected = false;
     chat.onNotice = notice;
     renderHistory(chat.history());
     updateStatus();
@@ -530,7 +547,7 @@ export function createApp(options: AppOptions = {}) {
     tui.showOverlay(picker, { width: "90%" });
   }
   async function regenerate(value = editor.getText()): Promise<void> {
-    if (interceptMissingKey(value)) return;
+    if (interceptIncompleteSetup(value)) return;
     if (!chat) {
       errorNotice("Start a character chat first (/characters).");
       return;
@@ -675,6 +692,7 @@ export function createApp(options: AppOptions = {}) {
       try {
         session.setModel(model.id);
         modelId = model.id;
+        modelSelected = true;
       } catch {
         errorNotice("Could not select that model.");
         return;
@@ -815,6 +833,7 @@ export function createApp(options: AppOptions = {}) {
       },
       innkeeper: async () => {
         chat = null;
+        innkeeperSelected = true;
         transcript.clear();
         notice("You are talking to the innkeeper. Use /characters to start a character chat.");
         updateStatus();
@@ -846,7 +865,7 @@ export function createApp(options: AppOptions = {}) {
       await handlers[command.name]?.();
       return;
     }
-    if (interceptMissingKey(value)) return;
+    if (interceptIncompleteSetup(value)) return;
     addMessage("user", display(value));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));

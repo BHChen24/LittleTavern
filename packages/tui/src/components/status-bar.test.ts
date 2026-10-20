@@ -1,3 +1,4 @@
+import { visibleWidth } from "@earendil-works/pi-tui";
 import type { SessionTotals } from "@littletavern/engine";
 import { expect, it } from "vitest";
 import { StatusBar } from "./status-bar.ts";
@@ -50,4 +51,10 @@ it("shows the active persona and omits it when it falls back", () => {
   bar.update({ model: "m", keySource: "none" });
   expect(bar.render(100).join("\n")).not.toContain("Persona:");
   expect(bar.render(100).join("\n")).not.toContain("Model:");
+});
+
+it("shows the model setup command when a key exists but no model was selected", () => {
+  const bar = new StatusBar({ keySource: "saved" });
+  expect(bar.render(100)).toEqual(["No model — /model | Key: saved"]);
+  expect(visibleWidth(bar.render(20)[0] ?? "")).toBeLessThanOrEqual(20);
 });

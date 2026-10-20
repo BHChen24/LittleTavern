@@ -212,3 +212,76 @@ No `.specify/extensions.yml` exists; implementation and convergence hooks were s
   are absent from completion/help and return an unknown-command error.
 
 These owner checks remain pending; automated validation does not claim visual acceptance.
+
+
+## Phase 8: Explicit chat setup
+
+The owner's follow-up replaces automatic character selection on home Enter. Enter now opens
+only the chat layout, with the editor focused and no overlay. Missing setup steps are listed
+explicitly on entry and on blocked attempts. Input placeholders point to the next missing step.
+
+Requests are blocked until all three conditions hold: a valid saved or newly selected model;
+an environment, saved or session API key; and a character selected/resumed in this run or an
+explicit `/innkeeper` command. Merely cancelling a picker does not complete setup or select
+Innkeeper. The engine's internal default model does not count as a user selection. An invalid
+saved model requires `/model`, and the status displays `No model — /model` when a key is present.
+
+The same guard handles normal sends, `/regenerate` and Ctrl+R. A blocked attempt preserves the
+input, adds no user/reply message, starts no loader, sends no provider request and writes no
+usage record. Configuration, import, library and other offline commands stay available. Keys
+forgotten or rejected by the provider cause subsequent requests to be blocked again. Engine
+internals, the system prompt and existing creation flows are unchanged.
+
+The owner explicitly confirmed that valid saved model configuration and environment/saved
+keys count as configured, while the character or Innkeeper must be selected per run. Tasks
+T021–T023 record these later instructions, which supersede the older FR-012/T017 startup flow.
+The original specification and plan were left unchanged, per repository instructions.
+
+### Validation
+
+Seven focused readiness tests cover missing setup/input preservation, invalid saved models,
+model-picker cancellation, valid saved models and environment keys without an implicit mode,
+saved keys and character selection, forgotten-key regeneration, missing keys in character
+chats, regeneration before/after setup, and adding a session key while cancelling the chained
+model picker. A status test covers the unselected-model hint. Existing request-producing tests
+now explicitly configure a model and select the intended chat mode; initial-picker Esc steps
+were removed. Ctrl+R still exercises the shared guard through the stub terminal input callback.
+
+The initial five readiness tests failed before implementation. Six focused tests passed after
+implementation; the seventh covers the session-key/chained-picker path. Full validation then
+identified a test assertion counting terminal markers as visible width, and lint identified
+an import placement error. Both were corrected before the final successful gate:
+
+```text
+pnpm build && pnpm lint && pnpm test
+Checked 122 files. No fixes applied.
+Test Files  56 passed (56)
+     Tests  312 passed (312)
+```
+
+External offline acceptance: **19 passed, 0 failed**.
+Record: `../acceptance/results/v1-acceptance-20261020-053707.md`, against this checkout's current
+built working tree. No `.env`, real keys, network provider, local model, GPU or real editor was
+used. No dependencies were added and no automated tests were deferred.
+
+Convergence rechecked the startup, mode-selection, model/key and generation paths against the
+owner-confirmed Phase 8 tasks, the existing feature requirements with superseded behavior
+excluded, and the constitution. The shared guard precedes both request-producing paths;
+successful session resumption uses the same character activation path. **Outcome: converged**,
+with no actionable findings and no appended remediation tasks. No extension configuration
+exists; implementation and convergence hooks were skipped.
+
+### Manual checks for the owner
+
+- On home, press Enter once: no picker opens, the editor has focus, and the app lists the missing
+  setup commands. Typing is allowed; sending preserves the draft while setup is incomplete.
+- With no saved model/key, use `/apikey` and cancel its chained model picker. Confirm chat stays
+  disabled. Select a model and then a character or `/innkeeper`; only then should sending work.
+- Restart with a valid saved model and environment/saved key. Confirm sending stays blocked until
+  a character is selected/resumed or `/innkeeper` is entered in that run.
+- Cancel `/characters` or `/model` while the corresponding choice is missing: cancellation must
+  not supply that choice. Import, creation, library and help commands must remain usable.
+- In a character chat, verify Ctrl+R and `/regenerate` respect missing configuration. Forget a
+  saved key and confirm subsequent sends/regeneration preserve input and prompt for `/apikey`.
+
+These visual/terminal checks remain pending owner acceptance.

@@ -156,3 +156,17 @@ apply. Work in the checkout you were started in, on branch `009-ui-polish`.
 ## Dependencies & Execution Order
 
 Phase 1 → 2 → 3 → 4 → 5 → 6 → 7. **Parallel**: T001, T002, T003; T005 and T006; T009 alongside T008; T016 alongside T017–T018 (T017, T018 and T020 all edit `app.ts`, so do them in order). T019 is last.
+
+## Phase 8: Explicit chat setup (owner follow-up)
+
+Requested directly by the owner after Phase 7. These instructions supersede T017 and the
+old automatic-picker/default-innkeeper startup behavior. Keep existing creation and key flows.
+
+- [X] T021 Open only the chat layout on home Enter, keeping the editor focused and no picker open.
+- [X] T022 Block all LLM requests, including regenerate and Ctrl+R, until a model is selected,
+  an API key is supplied, and a character is selected/resumed or `/innkeeper` is explicitly used.
+  Show the missing setup steps explicitly and preserve blocked input; setup and offline commands
+  remain available. A valid saved model and an environment or saved API key count as configured;
+  a character or Innkeeper must be selected in the current run (owner-confirmed).
+- [X] T023 Update lightweight app regression tests for the setup gate, cancellation and both chat modes.
+  Run build/lint/tests and external offline acceptance; record results, manual checks and usage; commit.

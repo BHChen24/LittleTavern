@@ -57,9 +57,10 @@ it("starts a character chat, regenerates the reply and records usage under the c
     }),
   });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const screen = () => app.tui.children.flatMap((component) => component.render(80)).join("\n");
   try {
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("/characters");
     const picker = app.tui.getFocusedComponent();
     const choices = picker?.render(100).join("\n") ?? "";

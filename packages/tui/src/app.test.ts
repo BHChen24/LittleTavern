@@ -51,7 +51,9 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
       "v0.1.0 · Terminal roleplay with character cards and lorebooks",
     );
     app.enterChat();
-    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
+    await app.submit("/innkeeper");
     app.editor.handleInput("hi");
     app.editor.handleInput("\r");
     await vi.waitFor(() =>
@@ -74,7 +76,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   }
 });
 
-it("opens the character picker on Enter and returns to the innkeeper on Esc", async () => {
+it("opens the chat on Enter with the editor focused and no character picker", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-home-"));
   const app = createApp({
     terminal: stubTerminal(),
@@ -86,12 +88,6 @@ it("opens the character picker on Enter and returns to the innkeeper on Esc", as
       "Press Enter to start",
     );
     app.tui.getFocusedComponent()?.handleInput?.("\r");
-    expect(app.tui.hasOverlay()).toBe(true);
-    const picker = app.tui.getFocusedComponent();
-    expect(picker?.render(100).join("\n")).toContain("Choose a character");
-    expect(picker?.render(100).join("\n")).toContain("New character");
-    expect(picker?.render(100).join("\n")).not.toContain("(nothing here yet)");
-    picker?.handleInput?.("\x1b");
     expect(app.tui.hasOverlay()).toBe(false);
     expect(app.chat).toBeNull();
     expect(app.tui.getFocusedComponent()).toBe(app.editor);
@@ -99,7 +95,6 @@ it("opens the character picker on Enter and returns to the innkeeper on Esc", as
       "Press Enter to start",
     );
     app.enterChat();
-    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
     expect(app.tui.children).toHaveLength(4);
   } finally {
     await app.quit();
@@ -137,7 +132,6 @@ it("preserves input and sends nothing when Ctrl+R is pressed without a key", asy
   try {
     app.start();
     input?.("\r");
-    input?.("\x1b");
     app.editor.setText("keep this draft");
     input?.("\x12");
     expect(app.editor.getText()).toBe("keep this draft");
@@ -159,7 +153,6 @@ it("survives an import root that is a file and still imports an explicit path", 
   writeFileSync(card, JSON.stringify({ spec: "chara_card_v3", data: { name: "Mira" } }));
   const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   try {
     expect(app.tui.children.flatMap((component) => component.render(120)).join("\n")).toContain(
       "Could not create import folders",
@@ -193,7 +186,6 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
     }),
   });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
   try {
     await app.submit("/invalid-command");
@@ -207,6 +199,8 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
       await app.submit(removed);
       expect(screen().match(/Error: Unknown command/g)).toHaveLength(errors.length + 1);
     }
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("hello");
     expect(screen()).toMatch(/Error: .*Provider/);
   } finally {

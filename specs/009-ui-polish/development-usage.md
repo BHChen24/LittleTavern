@@ -199,3 +199,63 @@ separately, with its purpose and outcome. Full arguments and outputs are in the 
 37. `exec_command` (escalated): stage the reviewed Phase 7 files, commit with an English conventional message,
     and check final worktree status. Outcome: commit/status are recorded in the session transcript and final response;
     the commit identifier is unavailable inside the document being committed.
+
+
+## Phase 8: Explicit chat setup follow-up
+
+Platform-reported total development tokens: **unknown**. No run total is exposed; no estimate
+or zero is substituted. No sub-agents were used. Each nested tool invocation is recorded below;
+`functions.exec` wrappers group the calls in the transcript. No secrets are included.
+
+The preceding diagnostic turn was interrupted by the owner before edits:
+- `exec_command`: inspect startup, home/picker handling and startup test. Outcome: current code opens the picker per T017.
+- `exec_command`: inspect pinned pi input dispatch, Enter handling and FR-012/T017 references.
+  Outcome: automatic picker opening is specified; owner then explicitly changed the behavior.
+
+1. `request_user_input_async`: clarify existing model/key configuration. Outcome: owner confirmed valid
+   saved models and saved/environment keys count; a character or Innkeeper is required per run.
+2. `exec_command`: inspect branch/status and read repository/constitution constraints. Outcome: clean `009-ui-polish`.
+3. `exec_command`: inspect app setup, model/key/generation paths and input/status components. Outcome: shared guard location identified.
+4. `exec_command`: read existing API-key, app, polish, command and status tests. Outcome: regression touch points identified;
+   truncated portions were inspected through focused later reads.
+5. `exec_command`: inspect model selection, settings, request tests, engine model adapter and explicit 009 prerequisites/hooks.
+   Outcome: valid feature; no hooks; default model is currently implicit.
+6. `apply_patch`: remove automatic picker opening and change startup regression expectation. Outcome: applied.
+7. `exec_command`: inspect models, picker selection and spec/task context. Outcome: setup-policy boundary confirmed against pinned pi.
+8. `exec_command`: inspect engine request paths, existing fixtures and key/status behavior. Outcome: no engine changes required.
+9. `exec_command`: append owner-requested Phase 8 tasks without changing existing task history. Outcome: T021–T023 recorded.
+10. `exec_command`: create focused readiness tests and run red suite. Outcome: started.
+11. `exec_command`: simplify the saved-key test and add the selected-character/missing-key case. Outcome: six focused cases prepared.
+12. `write_stdin`: collect initial red suite. Outcome: all five original readiness cases failed as expected before implementation.
+13. `apply_patch`: implement explicit model/mode state, shared send/regenerate guard, setup hints and unselected-model status.
+    Outcome: applied; default engine model retained only for initialization.
+14. `exec_command`: format implementation/readiness tests and run focused suite. Outcome: suite started.
+15. `write_stdin`: collect focused suite. Outcome: six tests passed.
+16. `exec_command`: update existing request-producing fixtures, remove old startup-picker cancellations,
+    add status coverage and record owner-confirmed policy in tasks; run full gate. Outcome: gate started.
+17. `write_stdin`: collect full gate. Outcome: build/lint passed; 310 tests passed, one width assertion failed.
+18. `exec_command`: review setup/guard diff, readiness cases and fixture changes. Outcome: width assertion counts pi markers;
+    implementation paths and scope confirmed.
+19. `apply_patch`: use visible width in the new status test. Outcome: applied; import placement needed correction.
+20. `exec_command`: rerun full gate. Outcome: gate started.
+21. `write_stdin`: collect gate. Outcome: build passed; lint rejected the misplaced new import.
+22. `exec_command`: add session-key/chained-picker regression, record owner instructions in notes/quickstart and run gate.
+    Outcome: test/docs prepared; gate started.
+23. `write_stdin`: collect gate. Outcome: same import-placement lint issue reproduced; tests were not run.
+24. `exec_command`: move the import to the top of its test module and rerun full gate. Outcome: gate started.
+25. `write_stdin`: collect corrected gate. Outcome: build/lint passed; 56 files, 312 tests passed.
+26. `exec_command`: inspect final startup, readiness test coverage, diff and task markers. Outcome: scoped behavior confirmed.
+27. `exec_command` (escalated): run external offline acceptance with temporary app home. Outcome: started;
+    escalation permits the required external report file.
+28. `exec_command`: initialize 009 convergence, check hooks and review changed request/model/mode paths.
+    Outcome: no hooks; shared guard covers all UI generation paths; no actionable convergence gap.
+29. `write_stdin`: collect external acceptance. Outcome: 19 passed, 0 failed;
+    report `v1-acceptance-20261020-053707.md`.
+30. `exec_command`: inspect final status, tasks and fixture/status-test changes. Outcome: only scoped files changed.
+31. `exec_command`: mark T021–T023, record Phase 8 validation/manual checks and this usage log.
+    Outcome: documentation prepared for final audit and commit.
+32. `exec_command`: audit branch, 23 completed tasks, unchanged protected artifacts/engine/data/dependencies,
+    final diff and absent post-execution hooks. Outcome: audit passed; documentation lint already passed.
+33. `exec_command` (escalated): commit validated Phase 8 files and check final worktree status.
+    Outcome: commit identifier/status are recorded in the session transcript and final response;
+    the identifier is not available inside the document being committed.

@@ -4,7 +4,7 @@ import { stripControls } from "../sanitize.ts";
 import { messageStyles } from "../theme.ts";
 
 export interface StatusInfo {
-  model: string;
+  model?: string;
   keySource: string;
   character?: string;
   persona?: string;
@@ -45,7 +45,9 @@ export class StatusBar implements Component {
   private renderTop(width: number): string[] {
     const { character, persona, model, keySource } = this.info;
     const key =
-      keySource === "none" ? "No API key — /apikey" : `Model: ${model} | Key: ${keySource}`;
+      keySource === "none"
+        ? "No API key — /apikey"
+        : `${model ? `Model: ${model}` : "No model — /model"} | Key: ${keySource}`;
     const labels = [
       ...(character ? [`Character: ${character}`] : []),
       ...(persona ? [`Persona: ${persona}`] : []),
@@ -54,7 +56,7 @@ export class StatusBar implements Component {
     const compact = [
       ...(character ? [character] : []),
       ...(persona ? [`Persona: ${persona}`] : []),
-      keySource === "none" ? key : `${model} | Key: ${keySource}`,
+      keySource === "none" ? key : `${model ?? "No model — /model"} | Key: ${keySource}`,
     ];
     return [this.fit(labels.join(" | "), compact.join(" | "), width)];
   }

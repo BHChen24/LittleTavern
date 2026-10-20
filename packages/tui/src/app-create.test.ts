@@ -51,7 +51,6 @@ it("creates from the character picker without a key through a fake VISUAL and co
     expect(existsSync(paths.credentialsFile)).toBe(false);
     // Creation is available through /characters without a key.
     app.enterChat();
-    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
     await app.submit("/characters");
     app.tui.getFocusedComponent()?.handleInput?.("New character");
     app.tui.getFocusedComponent()?.handleInput?.("\r");

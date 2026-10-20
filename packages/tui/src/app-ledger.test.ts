@@ -46,8 +46,10 @@ it("records a rejected key, preserves the transcript, and points to /apikey with
   });
   const app = createApp({ terminal: terminal(), paths, env: { OPENROUTER_API_KEY: key }, session });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   try {
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
+    await app.submit("/innkeeper");
     await app.submit("hello");
     const rendered = app.tui.children.flatMap((component) => component.render(80)).join("\n");
     expect(rendered).toContain("hello");
@@ -85,12 +87,14 @@ it("waits for the interrupted ledger record before quitting and shows ledger tot
     session,
   });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   let quitting: Promise<void> | undefined;
   session.onDelta(() => {
     quitting ??= app.quit();
   });
   try {
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
+    await app.submit("/innkeeper");
     await app.submit("hello");
     await quitting;
     const records = readUsageRecords(paths.usageLedgerFile);

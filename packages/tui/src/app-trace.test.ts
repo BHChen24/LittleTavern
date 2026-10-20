@@ -59,9 +59,10 @@ it("explains /trace outside character chats and shows the last request's trace",
     }),
   });
   app.enterChat();
-  app.tui.getFocusedComponent()?.handleInput?.("\x1b");
   const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
   try {
+    await app.submit("/model");
+    app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("/trace");
     expect(screen()).toContain("The trace is available in character chats");
     await app.submit(`/chat ${report.item.id}`);
