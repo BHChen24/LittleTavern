@@ -6,17 +6,17 @@ import {
   getItem,
   type LibraryItem,
   type Lorebook,
+  readActivePersona,
   readSettings,
   writeSettings,
 } from "@littletavern/data";
 import { assemblePrompt } from "./assembly/assemble.ts";
-import { replaceMacros } from "./assembly/macros.ts";
-import {
-  type AssembledPrompt,
-  type AssemblySettings,
-  type AssemblyTrace,
-  DEFAULT_USER_NAME,
-  type HistoryMessage,
+import { replaceMacros, resolveNames } from "./assembly/macros.ts";
+import type {
+  AssembledPrompt,
+  AssemblySettings,
+  AssemblyTrace,
+  HistoryMessage,
 } from "./assembly/types.ts";
 import type { ChatSession, TurnResult } from "./chat-session.ts";
 import { findAllowedModel } from "./models.ts";
@@ -59,6 +59,8 @@ export function assembleForCharacter(options: {
 }): { prompt: AssembledPrompt; trace: AssemblyTrace; notices: string[] } {
   const settings = readSettings(options.paths);
   const notices: string[] = [];
+  const active = readActivePersona(options.paths);
+  if (active.notice) notices.push(active.notice);
   const lorebooks: Lorebook[] = [];
   for (const id of settings.lorebookAttachments?.[options.item.id] ?? []) {
     const attached = getItem(options.paths, id);
@@ -74,6 +76,7 @@ export function assembleForCharacter(options: {
     character: options.item.character,
     lorebooks,
     userName: settings.userName,
+    persona: active.persona ?? undefined,
     history: options.history,
     contextWindow: findAllowedModel(options.modelId)?.contextWindow,
     settings: assemblySettings,
@@ -83,11 +86,14 @@ export function assembleForCharacter(options: {
 
 /** The greeting as shown and stored: first_mes with {{char}}/{{user}} replaced. */
 export function greetingFor(paths: AppPaths, item: CharacterItem): string {
-  const userName = readSettings(paths).userName ?? DEFAULT_USER_NAME;
-  return replaceMacros(item.character.firstMessage, {
-    char: item.character.name,
-    user: userName,
-  }).trim();
+  return replaceMacros(
+    item.character.firstMessage,
+    resolveNames({
+      character: item.character,
+      userName: readSettings(paths).userName,
+      persona: readActivePersona(paths).persona ?? undefined,
+    }),
+  ).trim();
 }
 
 /** Turns the current branch of a session into chat history; unknown entries are ignored. */

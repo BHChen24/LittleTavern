@@ -1,4 +1,4 @@
-import type { Character, Lorebook } from "../index.ts";
+import type { Character, Lorebook, Persona } from "../index.ts";
 
 export interface HistoryMessage {
   role: "user" | "character";
@@ -15,6 +15,7 @@ export interface AssemblyInput {
   character: Character;
   lorebooks?: Lorebook[];
   userName?: string;
+  persona?: Persona;
   history: HistoryMessage[];
   contextWindow?: number;
   settings?: Partial<AssemblySettings>;
@@ -30,6 +31,7 @@ export interface TracePart {
   source:
     | "main"
     | "lore-before"
+    | "persona"
     | "description"
     | "personality"
     | "scenario"

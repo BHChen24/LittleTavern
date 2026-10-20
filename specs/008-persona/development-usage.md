@@ -27,3 +27,15 @@ Total platform-reported development tokens: **unknown**. No run total is exposed
 23. `exec_command` — Inspect chat tests and verify pinned simulated-provider source. Outcome: Success.
 24. `functions.exec / write_stdin` — Collect Phase 2 full gate. Outcome: See output.
 25. `functions.exec / exec_command` — Record Phase 2 choices, usage and completed task. Outcome: Phase 2 gate passed: 47 files, 273 tests.
+26. `exec_command` — Commit validated Phase 2 implementation. Outcome: See commit output.
+27. `exec_command` — Read exact integration fixture helpers and pinned faux implementation. Outcome: Success.
+28. `exec_command` — Capture synthetic SC-003 baseline from unmodified assembly. Outcome: Success.
+29. `functions.exec / apply_patch` — Add T-e/T-e2/T-f/T-h tests for persona assembly, lore, greeting, dry run, faux request and notices. Outcome: Success.
+30. `exec_command` — Embed captured baseline and run Phase 3 tests before implementation. Outcome: Started; expected failures.
+31. `functions.exec / write_stdin` — Collect Phase 3 red-test failures. Outcome: Expected missing persona assembly/integration.
+32. `apply_patch` — Implement T005/T006 persona names, lore, prompt part, greeting and notices. Outcome: Success.
+33. `exec_command` — Run Phase 3 full validation gate. Outcome: Started.
+34. `exec_command` — Read command contracts and app command/editor integration. Outcome: Success.
+35. `exec_command` — Inspect picker testing patterns, sanitization, acceptance options and converge skill. Outcome: Success.
+36. `functions.exec / write_stdin` — Collect Phase 3 full gate results. Outcome: See output.
+37. `functions.exec / exec_command` — Mark Phase 3 complete and update usage. Outcome: Build/lint passed; 48 test files, 281 tests.

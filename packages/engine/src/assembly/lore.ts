@@ -1,12 +1,7 @@
 import type { LorebookEntry } from "../index.ts";
-import { replaceMacros } from "./macros.ts";
+import { replaceMacros, resolveNames } from "./macros.ts";
 import { estimateTokens } from "./tokens.ts";
-import {
-  type AssemblyInput,
-  DEFAULT_ASSEMBLY_SETTINGS,
-  DEFAULT_USER_NAME,
-  type LoreDecision,
-} from "./types.ts";
+import { type AssemblyInput, DEFAULT_ASSEMBLY_SETTINGS, type LoreDecision } from "./types.ts";
 
 export interface ActivatedLore {
   decision: LoreDecision;
@@ -104,7 +99,7 @@ function reasonFor(
 }
 
 export function activateLore(input: AssemblyInput): ActivatedLore[] {
-  const names = { char: input.character.name, user: input.userName ?? DEFAULT_USER_NAME };
+  const names = resolveNames(input);
   const scanDepth = input.settings?.scanDepth ?? DEFAULT_ASSEMBLY_SETTINGS.scanDepth;
   const scanned = input.history
     .map((message, index) => ({

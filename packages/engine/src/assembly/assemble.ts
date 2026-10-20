@@ -1,6 +1,6 @@
 import { fitHistory } from "./history.ts";
 import { activateLore, applyLoreBudget } from "./lore.ts";
-import { replaceMacros } from "./macros.ts";
+import { replaceMacros, resolveNames } from "./macros.ts";
 import { estimateTokens } from "./tokens.ts";
 import {
   type AssembledPrompt,
@@ -9,7 +9,6 @@ import {
   DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_CONTEXT_WINDOW,
   DEFAULT_MAIN_INSTRUCTION,
-  DEFAULT_USER_NAME,
   type TracePart,
 } from "./types.ts";
 
@@ -24,7 +23,7 @@ export function assemblePrompt(input: AssemblyInput): {
   };
   const contextWindow = input.contextWindow || DEFAULT_CONTEXT_WINDOW;
   const character = input.character;
-  const names = { char: character.name, user: input.userName ?? DEFAULT_USER_NAME };
+  const names = resolveNames(input);
   const main = character.systemPrompt.trim() ? character.systemPrompt : DEFAULT_MAIN_INSTRUCTION;
   const lore = applyLoreBudget(activateLore(input), settings.loreBudget);
   const includedLore = lore
@@ -47,6 +46,7 @@ export function assemblePrompt(input: AssemblyInput): {
   addSystemPart("main", replaceMacros(main, names));
   const before = lorePart("before");
   addSystemPart("lore-before", before.text, before.detail);
+  if (input.persona) addSystemPart("persona", replaceMacros(input.persona.description, names));
   addSystemPart("description", replaceMacros(character.description, names));
   addSystemPart("personality", replaceMacros(character.personality, names));
   addSystemPart("scenario", replaceMacros(character.scenario, names));

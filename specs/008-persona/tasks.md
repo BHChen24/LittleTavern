@@ -73,7 +73,7 @@ description: "Task list for 008-persona"
 
 ## Phase 3: User Story 3 - The persona in the assembly and the trace (P2, done before US2 because US2 depends on it)
 
-- [ ] T005 [US3] In `packages/engine/src/assembly/types.ts`, `assemble.ts` **and `lore.ts`**, apply research R1 and R2:
+- [X] T005 [US3] In `packages/engine/src/assembly/types.ts`, `assemble.ts` **and `lore.ts`**, apply research R1 and R2:
   - `AssemblyInput.persona?`;
   - the `"persona"` TracePart source;
   - the part placed between `lore-before` and `description`, with macros replaced;
@@ -81,7 +81,7 @@ description: "Task list for 008-persona"
 
   Write tests T-e, T-e2 and the SC-003 regression check: deep-equal output without a persona, compared with a fixture assembled the same way before this change.
 
-- [ ] T006 [US3] In `packages/engine/src/character-chat.ts`, make `assembleForCharacter` and `greetingFor` read `readActivePersona(paths)` and pass it in. Surface its notice through the existing `notices` channel (one-time in `CharacterChat`). Write tests T-f, including a `dryRun` that shows the `persona` part, and **the happy path T-h**: a simulated `CharacterChat` with an active persona sends a message, and the request the simulated model receives contains the persona description in the right place, `{{user}}` resolved to the persona name, and a `persona` part in `lastTrace`
+- [X] T006 [US3] In `packages/engine/src/character-chat.ts`, make `assembleForCharacter` and `greetingFor` read `readActivePersona(paths)` and pass it in. Surface its notice through the existing `notices` channel (one-time in `CharacterChat`). Write tests T-f, including a `dryRun` that shows the `persona` part, and **the happy path T-h**: a simulated `CharacterChat` with an active persona sends a message, and the request the simulated model receives contains the persona description in the right place, `{{user}}` resolved to the persona name, and a `persona` part in `lastTrace`
 
 **Checkpoint**: checks pass. Commit.
 

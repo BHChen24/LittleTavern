@@ -1,17 +1,26 @@
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type AppPaths, importFile, resolveAppPaths, writeSettings } from "@littletavern/data";
+import {
+  type AppPaths,
+  ensureImportFolders,
+  importFile,
+  resolveAppPaths,
+  writeSettings,
+} from "@littletavern/data";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import {
+  assembleForCharacter,
   CharacterChat,
   type CharacterItem,
+  greetingFor,
   type LorebookItem,
   listChats,
   readChatHistory,
   sessionsDir,
 } from "./character-chat.ts";
 import { ChatSession, type SimulatedReply } from "./chat-session.ts";
+import { dryRun } from "./dry-run.ts";
 import { DEFAULT_MODEL_ID } from "./models.ts";
 import { DEFAULT_SYSTEM_PROMPT } from "./system-prompt.ts";
 
@@ -78,6 +87,93 @@ function recorder(seen: Seen[], reply: string): SimulatedReply {
     return reply;
   };
 }
+
+it("sends the active persona through the faux provider and matches the dry-run trace", async () => {
+  ensureImportFolders(paths);
+  writeFileSync(
+    join(paths.importPersonasDir, "traveller.md"),
+    "## Name\nTraveller\n## Description\n{{user}} visits {{char}}.\n",
+  );
+  writeSettings(paths, { persona: "traveller.md", userName: "Parker" });
+  const item = importJson("persona-character.json", {
+    spec: "chara_card_v3",
+    spec_version: "3.0",
+    data: {
+      name: "Mira",
+      description: "Mira keeps the lighthouse.",
+      first_mes: "Welcome, {{user}}. I am {{char}}.",
+      character_book: {
+        entries: [
+          {
+            keys: [],
+            constant: true,
+            enabled: true,
+            content: "Before {{user}}",
+            position: "before_char",
+          },
+        ],
+      },
+    },
+  });
+  if (item.kind !== "character") throw new Error("expected character");
+  const seen: Seen[] = [];
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated([recorder(seen, "Welcome.")]),
+    item,
+  });
+  expect(chat.history()[0]?.text).toBe("Welcome, Traveller. I am Mira.");
+  const assembled = assembleForCharacter({
+    paths,
+    item,
+    history: [...chat.history(), { role: "user", text: "Hello" }],
+    modelId: DEFAULT_MODEL_ID,
+  });
+  expect((await chat.send("Hello"))?.outcome).toBe("completed");
+  const system = seen[0]?.[0]?.text ?? "";
+  expect(system.indexOf("Before Traveller")).toBeLessThan(system.indexOf("Traveller visits Mira."));
+  expect(system.indexOf("Traveller visits Mira.")).toBeLessThan(
+    system.indexOf("Mira keeps the lighthouse."),
+  );
+  expect(system).toContain("Traveller visits Mira.");
+  expect(system).not.toContain("Parker");
+  expect(chat.lastTrace).toEqual(assembled.trace);
+  expect(chat.lastTrace?.parts.map((part) => part.source)).toContain("persona");
+  const preview = await dryRun({ paths, characterId: item.id, message: "Hello" });
+  if (!preview.ok) throw new Error(preview.error);
+  expect(preview.prompt.system).toContain("Traveller visits Mira.");
+  expect(preview.prompt.history[0]?.text).toContain("Traveller");
+  expect(preview.trace.parts.map((part) => part.source)).toContain("persona");
+  expect(preview.trace).toEqual(chat.lastTrace);
+  writeFileSync(join(paths.importPersonasDir, "traveller.md"), "## Name\nChanged\n");
+  expect(greetingFor(paths, item)).toContain("Changed");
+});
+
+it.each(["missing", "invalid"])(
+  "falls back for a %s active persona and notices only once in a chat",
+  async (state) => {
+    ensureImportFolders(paths);
+    if (state === "invalid") writeFileSync(join(paths.importPersonasDir, "active.md"), "No name");
+    writeSettings(paths, { persona: "active.md", userName: "Parker" });
+    const item = importCharacter();
+    expect(greetingFor(paths, item)).toContain("Parker");
+    const chat = CharacterChat.start({ paths, session: simulated(["One", "Two"]), item });
+    const notices: string[] = [];
+    chat.onNotice = (notice) => notices.push(notice);
+    await chat.send("First");
+    await chat.send("Second");
+    expect(notices).toHaveLength(1);
+    expect(notices[0]).toContain("active.md");
+    expect(chat.lastTrace?.parts.some((part) => part.source === "persona")).toBe(false);
+    const preview = await dryRun({ paths, characterId: item.id });
+    if (!preview.ok) throw new Error(preview.error);
+    expect(preview.notices[0]).toContain("active.md");
+    writeSettings(paths, { persona: null });
+    expect(greetingFor(paths, item)).toContain("Parker");
+    writeFileSync(paths.settingsFile, "{}");
+    expect(greetingFor(paths, item)).toContain("User");
+  },
+);
 
 it("starts with the greeting, with macros replaced, as the first character message", () => {
   writeSettings(paths, { userName: "Parker" });
