@@ -19,11 +19,12 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 import { runCli } from "./cli.ts";
 import { formatItemDetails, formatLibraryList } from "./library-format.ts";
+import { VERSION } from "./version.ts";
 
 it("prints version without starting the terminal", async () => {
   const output: string[] = [];
   expect(await runCli(["--version"], (text) => output.push(text))).toBe(0);
-  expect(output).toEqual(["LittleTavern 0.1.0"]);
+  expect(output).toEqual([`LittleTavern ${VERSION}`]);
 });
 it("prints documented commands and environment variables", async () => {
   const output: string[] = [];

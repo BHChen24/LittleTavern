@@ -1,11 +1,16 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
+} from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
 it("shows slash suggestions, accepts Tab and leaves middle-of-message slashes alone", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-suggestions-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const app = createApp({ env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" } });
   app.enterChat();
   try {

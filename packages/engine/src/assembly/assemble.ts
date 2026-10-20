@@ -60,7 +60,10 @@ export function assemblePrompt(input: AssemblyInput): {
   const afterTokens = estimateTokens(afterHistory ?? "");
   const history = fitHistory(
     input.history.map((message) => ({ ...message, text: replaceMacros(message.text, names) })),
-    contextWindow - settings.replyReserve - systemTokens - afterTokens,
+    contextWindow -
+      Math.max(settings.replyReserve, input.settings?.replyTokens ?? 0) -
+      systemTokens -
+      afterTokens,
   );
   const historyTokens = history.kept.reduce(
     (sum, message) => sum + estimateTokens(message.text),

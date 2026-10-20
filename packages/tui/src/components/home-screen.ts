@@ -16,10 +16,11 @@ export interface HomeScreenOptions {
   keyStatus: string;
   libraryEmpty: boolean;
   importDirs: string[];
+  limits?: string;
 }
 export class HomeScreen extends Text {
   onEnter?: () => void;
-  constructor({ version, keyStatus, libraryEmpty, importDirs }: HomeScreenOptions) {
+  constructor({ version, keyStatus, libraryEmpty, importDirs, limits }: HomeScreenOptions) {
     super(
       stripControls(
         [
@@ -28,6 +29,7 @@ export class HomeScreen extends Text {
           "Press Enter to start",
           "Type / for commands",
           keyStatus === "none" ? "No API key yet — use /apikey" : `API key: ${keyStatus}`,
+          ...(limits ? [limits] : []),
           ...(libraryEmpty ? ["", "Put files to import in:", ...importDirs] : []),
         ].join("\n"),
       ),

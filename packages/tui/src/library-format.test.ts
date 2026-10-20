@@ -110,3 +110,13 @@ it("shows character fields and shortens only display text", () => {
   expect(formatLibraryList([character, item])).toContain("Characters (1)");
   expect(formatLibraryList([character, item])).toContain("Lorebooks (1)");
 });
+
+it("formats configured and disabled reply and spending limits", async () => {
+  const { formatLimits } = await import("./library-format.ts");
+  expect(formatLimits(4096, 1, "/tmp/settings.json")).toBe(
+    "Limits: replies up to 4096 tokens, $1.00 per run. Change them in /tmp/settings.json.",
+  );
+  expect(formatLimits(0, 0, "/tmp/settings.json")).toBe(
+    "Limits: replies not capped, spending not capped. Change them in /tmp/settings.json.",
+  );
+});

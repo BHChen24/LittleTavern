@@ -58,7 +58,9 @@ it("uses the default main instruction and omits blank parts without empty headin
     }),
     history: [],
   });
-  expect(prompt.system).toBe("Write Luna's next reply in a fictional chat between Luna and User.");
+  expect(prompt.system).toBe(
+    "Write Luna's next reply in a fictional chat between Luna and Traveler.",
+  );
   expect(prompt.afterHistory).toBeNull();
   expect(prompt.history).toEqual([]);
   expect(trace.parts.map((part) => part.source)).toEqual(["main"]);
@@ -137,7 +139,7 @@ it("assembles the story's lore example and traces every entry once", () => {
     "description",
     "personality",
     "scenario",
-    "Lighthouse User",
+    "Lighthouse Traveler",
     "examples",
   ]);
   expect(trace.lore.map((item) => item.reason)).toEqual([
@@ -149,7 +151,7 @@ it("assembles the story's lore example and traces every entry once", () => {
   expect(trace.lore.map((item) => item.index)).toEqual([0, 1, 2, 3]);
   expect(trace.parts.filter((part) => part.source.startsWith("lore-"))).toEqual([
     { source: "lore-before", tokens: estimateTokens("Constant Luna"), detail: "1 entries" },
-    { source: "lore-after", tokens: estimateTokens("Lighthouse User"), detail: "1 entries" },
+    { source: "lore-after", tokens: estimateTokens("Lighthouse Traveler"), detail: "1 entries" },
   ]);
 });
 it("sorts each placement ascending with source-order ties and evaluates books independently", () => {
@@ -345,4 +347,17 @@ it("uses defaults for explicitly undefined optional settings", () => {
       settings: { scanDepth: undefined, loreBudget: undefined, replyReserve: undefined },
     }),
   ).toEqual(assemblePrompt(input));
+});
+
+it("reserves the larger configured reply cap and preserves the reserve when the cap is off", () => {
+  const input: AssemblyInput = {
+    character: makeCharacter({ systemPrompt: "main" }),
+    history: chat("a".repeat(12000), "b".repeat(12000), "latest"),
+    contextWindow: 10000,
+  };
+  const baseline = assemblePrompt(input);
+  expect(assemblePrompt({ ...input, settings: { replyTokens: 0 } })).toEqual(baseline);
+  const capped = assemblePrompt({ ...input, settings: { replyTokens: 8000 } });
+  expect(capped.trace.history.included).toBeLessThan(baseline.trace.history.included);
+  expect(capped.prompt.history.at(-1)?.text).toBe("latest");
 });

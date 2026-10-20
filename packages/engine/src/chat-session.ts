@@ -16,6 +16,7 @@ export interface TurnUsage {
 }
 export interface TurnResult {
   outcome: "completed" | "interrupted" | "error";
+  cutOff: boolean;
   text: string;
   errorMessage?: string;
   model: string;
@@ -33,6 +34,7 @@ export interface SimulatedMessage {
 export type SimulatedReply =
   | string
   | { text: string; errorMessage: string }
+  | { text: string; stopReason: "length" }
   | ((history: SimulatedMessage[]) => string | Promise<string>);
 /** A fully assembled request (see 003's AssembledPrompt); used by character chats. */
 export interface ChatContext {
@@ -44,7 +46,26 @@ export interface ChatSessionOptions {
   modelId: string;
   systemPrompt: string;
   getApiKey: () => string | undefined;
-  simulated?: { replies: SimulatedReply[]; price?: ModelPrice };
+  request?: RequestOptions;
+  simulated?: {
+    replies: SimulatedReply[];
+    price?: ModelPrice;
+    onRequest?: (
+      options:
+        | {
+            maxTokens?: number;
+            temperature?: number;
+            samplingParams?: Record<string, unknown>;
+          }
+        | undefined,
+    ) => void;
+  };
+}
+
+export interface RequestOptions {
+  maxTokens?: number;
+  temperature?: number;
+  samplingParams?: Record<string, number>;
 }
 
 export class ChatSession {
@@ -77,12 +98,13 @@ export class ChatSession {
         ],
       });
       faux.setResponses(
-        options.simulated.replies.map((reply) => async (context) => {
+        options.simulated.replies.map((reply) => async (context, streamOptions) => {
+          options.simulated?.onRequest?.(streamOptions);
           if (typeof reply === "string") return fauxAssistantMessage(reply);
           if (typeof reply === "object")
             return fauxAssistantMessage(reply.text, {
-              stopReason: "error",
-              errorMessage: reply.errorMessage,
+              stopReason: "stopReason" in reply ? reply.stopReason : "error",
+              ...("errorMessage" in reply ? { errorMessage: reply.errorMessage } : {}),
             });
           const history = context.messages.map((message) => ({
             role: message.role,
@@ -105,7 +127,8 @@ export class ChatSession {
     if (!model || !findAllowedModel(options.modelId)) throw new Error("Model is not allowed");
     this.agent = new Agent({
       initialState: { systemPrompt: options.systemPrompt, model, tools: [] },
-      streamFn: this.models.streamSimple.bind(this.models),
+      streamFn: (model, context, streamOptions) =>
+        this.models.streamSimple(model, context, { ...streamOptions, ...this.request }),
       getApiKey: () => this.options.getApiKey(),
       // generate() replaces the whole transcript with an assembled context; send() leaves it alone.
       transformContext: async (messages) => this.pendingContext ?? messages,
@@ -121,6 +144,9 @@ export class ChatSession {
 
   get isStreaming(): boolean {
     return this.sending;
+  }
+  get request(): RequestOptions {
+    return this.options.request ?? {};
   }
   get modelId(): string {
     return this.agent.state.model.id;
@@ -218,6 +244,7 @@ export class ChatSession {
       const message = this.getFinalMessage();
       if (!message) throw new Error("Request ended without an assistant message");
       const turn: TurnResult = {
+        cutOff: message.stopReason === "length",
         outcome:
           message.stopReason === "aborted"
             ? "interrupted"

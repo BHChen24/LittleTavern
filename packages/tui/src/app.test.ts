@@ -19,9 +19,12 @@ import {
   listLibrary,
   readSettings,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
 } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
+import { VERSION } from "./version.ts";
 
 function stubTerminal(): Terminal {
   return {
@@ -46,6 +49,7 @@ function stubTerminal(): Terminal {
 
 it("renders the title, accepts editor input and renders a simulated reply", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const key = "synthetic-key";
   const app = createApp({
     terminal: stubTerminal(),
@@ -59,7 +63,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   });
   try {
     expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
-      "v0.1.0 · Terminal roleplay with character cards and lorebooks",
+      `v${VERSION} · Terminal roleplay with character cards and lorebooks`,
     );
     app.enterChat();
     await app.submit("/model");
@@ -89,6 +93,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
 
 it("opens the chat on Enter with the editor focused and no character picker", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-home-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const app = createApp({
     terminal: stubTerminal(),
     env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" },
@@ -115,6 +120,7 @@ it("opens the chat on Enter with the editor focused and no character picker", as
 
 it("quits from the home screen on Ctrl+C", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-home-quit-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const terminal = stubTerminal();
   let input: ((data: string) => void) | undefined;
   terminal.start = (onInput) => {
@@ -133,6 +139,7 @@ it("quits from the home screen on Ctrl+C", async () => {
 
 it("preserves input and sends nothing when Ctrl+R is pressed without a key", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-no-key-regenerate-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const terminal = stubTerminal();
   let input: ((data: string) => void) | undefined;
@@ -158,6 +165,7 @@ it("preserves input and sends nothing when Ctrl+R is pressed without a key", asy
 
 it("survives an import root that is a file and refuses app path arguments", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-broken-import-root-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   writeFileSync(paths.importRoot, "existing file");
   const card = join(home, "mira.json");
@@ -187,6 +195,7 @@ it("survives an import root that is a file and refuses app path arguments", asyn
 
 it("prefixes failed commands and provider errors while keeping ordinary notices distinct", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-error-style-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const app = createApp({
     terminal: stubTerminal(),
     env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" },
@@ -214,7 +223,7 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
     await app.submit("/model");
     app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("hello");
-    expect(screen()).toMatch(/Error: .*Provider/);
+    expect(screen()).toContain("Error: The reply failed.");
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });
@@ -225,6 +234,9 @@ it.each(["file", "directory"])(
   "refuses a selected file outside the import root through a %s link",
   async (kind) => {
     const home = mkdtempSync(join(tmpdir(), "lt-import-boundary-"));
+    writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), {
+      userName: "Traveler",
+    });
     const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
     const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
     app.enterChat();
@@ -255,6 +267,7 @@ it.each(["file", "directory"])(
 
 it("imports a regular card from the browser and refuses an oversized selection", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-import-browser-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
   app.enterChat();

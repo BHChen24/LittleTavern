@@ -1,3 +1,4 @@
+import type { RequestOptions } from "../chat-session.ts";
 import type { Character, Lorebook, Persona } from "../index.ts";
 
 export interface HistoryMessage {
@@ -9,6 +10,7 @@ export interface AssemblySettings {
   scanDepth: number;
   loreBudget: number;
   replyReserve: number;
+  replyTokens?: number;
 }
 
 export interface AssemblyInput {
@@ -61,6 +63,7 @@ export interface LoreDecision {
 }
 
 export interface AssemblyTrace {
+  request?: RequestOptions;
   tokensAreEstimates: true;
   parts: TracePart[];
   lore: LoreDecision[];
@@ -74,7 +77,7 @@ export const DEFAULT_ASSEMBLY_SETTINGS: AssemblySettings = {
   loreBudget: 4000,
   replyReserve: 4000,
 };
-export const DEFAULT_USER_NAME = "User";
+export const DEFAULT_USER_NAME = "Traveler";
 export const DEFAULT_CONTEXT_WINDOW = 128000;
 export const DEFAULT_MAIN_INSTRUCTION =
   "Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}.";

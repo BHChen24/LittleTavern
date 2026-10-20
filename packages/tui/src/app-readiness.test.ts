@@ -8,7 +8,9 @@ import {
   importFile,
   readUsageRecords,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
   saveKey,
+  writeSettings as writeFixtureSettings,
   writeSettings,
 } from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
@@ -28,6 +30,7 @@ function fixture({
   savedKey?: boolean;
 } = {}) {
   const home = mkdtempSync(join(tmpdir(), "lt-readiness-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   if (model) writeSettings(paths, { model });
   if (savedKey) saveKey(paths, "synthetic-saved-key");

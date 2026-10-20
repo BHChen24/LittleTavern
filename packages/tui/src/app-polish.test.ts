@@ -9,7 +9,9 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   importFile,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
   type SimulatedReply,
+  writeSettings as writeFixtureSettings,
   writeSettings,
 } from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
@@ -25,6 +27,7 @@ afterEach(async () => {
 });
 function fixture(reply: SimulatedReply = "Hello", key = true) {
   const home = mkdtempSync(join(tmpdir(), "lt-polish-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   writeSettings(paths, { model: DEFAULT_MODEL_ID });
   let input: (data: string) => void = () => {};

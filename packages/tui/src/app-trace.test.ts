@@ -8,6 +8,8 @@ import {
   DEFAULT_SYSTEM_PROMPT,
   importFile,
   resolveAppPaths,
+  resolveAppPaths as resolveFixturePaths,
+  writeSettings as writeFixtureSettings,
 } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
@@ -33,6 +35,7 @@ const terminal: Terminal = {
 
 it("explains /trace outside character chats and shows the last request's trace", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-trace-"));
+  writeFixtureSettings(resolveFixturePaths({ LITTLETAVERN_HOME: home }), { userName: "Traveler" });
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const card = join(home, "mira.json");
   writeFileSync(

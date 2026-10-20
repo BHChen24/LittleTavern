@@ -1,6 +1,6 @@
 {
   "name": "littletavern",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A terminal (TUI) app for character-card roleplay chat.",
   "private": true,
   "type": "module",

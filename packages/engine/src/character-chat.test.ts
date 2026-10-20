@@ -137,14 +137,14 @@ it("sends the active persona through the faux provider and matches the dry-run t
   );
   expect(system).toContain("Traveller visits Mira.");
   expect(system).not.toContain("Parker");
-  expect(chat.lastTrace).toEqual(assembled.trace);
+  expect(chat.lastTrace).toMatchObject(assembled.trace);
   expect(chat.lastTrace?.parts.map((part) => part.source)).toContain("persona");
   const preview = await dryRun({ paths, characterId: item.id, message: "Hello" });
   if (!preview.ok) throw new Error(preview.error);
   expect(preview.prompt.system).toContain("Traveller visits Mira.");
   expect(preview.prompt.history[0]?.text).toContain("Traveller");
   expect(preview.trace.parts.map((part) => part.source)).toContain("persona");
-  expect(preview.trace).toEqual(chat.lastTrace);
+  expect(chat.lastTrace).toMatchObject(preview.trace);
   writeFileSync(join(paths.importPersonasDir, "traveller.md"), "## Name\nChanged\n");
   expect(greetingFor(paths, item)).toContain("Changed");
 });
@@ -171,7 +171,7 @@ it.each(["missing", "invalid"])(
     writeSettings(paths, { persona: null });
     expect(greetingFor(paths, item)).toContain("Parker");
     writeFileSync(paths.settingsFile, "{}");
-    expect(greetingFor(paths, item)).toContain("User");
+    expect(greetingFor(paths, item)).toContain("Traveler");
   },
 );
 
@@ -208,7 +208,7 @@ it("sends an assembled request with the card and the triggered lore, and keeps t
     message: 2,
   });
   expect(chat.history().map((message) => message.text)).toEqual([
-    "Welcome, User. I am Mira.",
+    "Welcome, Traveler. I am Mira.",
     "Tell me about the lighthouse.",
     "The light still turns.",
   ]);
@@ -339,4 +339,88 @@ it("writes session files only inside the app's own data directory", async () => 
   expect(sessionsDir(paths).startsWith(home)).toBe(true);
   expect(existsSync(sessionsDir(paths))).toBe(true);
   expect(readdirSync(sessionsDir(paths))).toHaveLength(1);
+});
+
+it("swaps only the latest regenerated pair, persists the shown reply and clears the slot on send or reopen", async () => {
+  const seen: Seen[] = [];
+  const item = importCharacter();
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated(["A", "B", "C", recorder(seen, "Next reply")]),
+    item,
+  });
+  expect(chat.prev()).toBe("nothing-to-restore");
+  await chat.send("hello");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("A");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("B");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("B");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("C");
+  chat.prev();
+  const [saved] = await listChats(paths);
+  const reopened = CharacterChat.resume({
+    paths,
+    session: simulated([]),
+    sessionPath: saved?.path ?? "",
+  });
+  expect(reopened.history().at(-1)?.text).toBe("B");
+  expect(reopened.prev()).toBe("nothing-to-restore");
+  await chat.send("next");
+  expect(seen[0]?.map((message) => message.text)).toContain("B");
+  expect(seen[0]?.map((message) => message.text)).not.toContain("C");
+  expect(chat.prev()).toBe("nothing-to-restore");
+});
+
+it("clears the previous slot on a failed regenerate and saves length-limited replies normally", async () => {
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated([
+      "A",
+      { text: "B", stopReason: "length" },
+      { text: "broken", errorMessage: "failure" },
+    ]),
+    item: importCharacter(),
+  });
+  await chat.send("hello");
+  const length = await chat.regenerate();
+  expect(length).toMatchObject({ outcome: "completed", cutOff: true });
+  expect(chat.history().at(-1)?.text).toBe("B");
+  await chat.regenerate();
+  expect(chat.prev()).toBe("nothing-to-restore");
+  const [saved] = await listChats(paths);
+  expect(readFileSync(saved?.path ?? "", "utf8")).toContain('"text":"B"');
+  expect(readFileSync(saved?.path ?? "", "utf8")).not.toContain('"text":"broken"');
+});
+
+it("keeps an interrupted regenerate as the current reply and allows restoring its predecessor", async () => {
+  const session = simulated(["A", "A longer replacement response".repeat(10)]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("hello");
+  const remove = session.onDelta(() => session.abort());
+  expect(await chat.regenerate()).toMatchObject({ outcome: "interrupted" });
+  remove();
+  expect(chat.history().at(-1)?.interrupted).toBe(true);
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("A");
+  chat.prev();
+  expect(chat.history().at(-1)?.interrupted).toBe(true);
+});
+
+it("records the session's configured options in the last-request trace", async () => {
+  const request = { maxTokens: 30, temperature: 1.5, samplingParams: { top_p: 0.9 } };
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => "synthetic-key",
+    request,
+    simulated: { replies: ["reply"] },
+  });
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("hello");
+  expect(chat.lastTrace?.request).toEqual(request);
 });

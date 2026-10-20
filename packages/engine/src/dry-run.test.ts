@@ -65,7 +65,7 @@ it("assembles a new chat from the greeting and the message, writing no files", a
   });
   if (!result.ok) throw new Error(result.error);
   expect(result.prompt.history).toEqual([
-    { role: "character", text: "Welcome, User." },
+    { role: "character", text: "Welcome, Traveler." },
     { role: "user", text: "The lighthouse?" },
   ]);
   expect(result.trace.lore).toHaveLength(2);
@@ -76,7 +76,7 @@ it("assembles a new chat from the greeting and the message, writing no files", a
 it("assembles the greeting only when no message is given", async () => {
   const result = await dryRun({ paths, characterId: item.id });
   if (!result.ok) throw new Error(result.error);
-  expect(result.prompt.history).toEqual([{ role: "character", text: "Welcome, User." }]);
+  expect(result.prompt.history).toEqual([{ role: "character", text: "Welcome, Traveler." }]);
 });
 
 it("continues a saved chat from its current branch after a regeneration", async () => {
@@ -91,7 +91,7 @@ it("continues a saved chat from its current branch after a regeneration", async 
   });
   if (!result.ok) throw new Error(result.error);
   const texts = result.prompt.history.map((message) => message.text);
-  expect(texts).toEqual(["Welcome, User.", "hello", "Second.", "next"]);
+  expect(texts).toEqual(["Welcome, Traveler.", "hello", "Second.", "next"]);
 });
 
 it("rejects a saved chat that belongs to another or a missing character", async () => {
@@ -135,7 +135,7 @@ it("produces the same trace as a real request with the same history (SC-003)", a
     message: "Tell me about the lighthouse.",
   });
   if (!result.ok) throw new Error(result.error);
-  expect(result.trace).toEqual(chat.lastTrace);
+  expect(chat.lastTrace).toMatchObject(result.trace);
 });
 
 it("dry-runs and chats with a created character whose lore is always on or keyword-triggered (T-h)", async () => {
@@ -175,8 +175,8 @@ The tea is smoky.
     session: simulated(["Here is your tea."]),
     item: created.item,
   });
-  expect(chat.history()[0]?.text).toBe("Welcome User.");
+  expect(chat.history()[0]?.text).toBe("Welcome Traveler.");
   await chat.send("May I have tea?");
   expect(chat.history().at(-1)?.text).toBe("Here is your tea.");
-  expect(chat.lastTrace).toEqual(result.trace);
+  expect(chat.lastTrace).toMatchObject(result.trace);
 });

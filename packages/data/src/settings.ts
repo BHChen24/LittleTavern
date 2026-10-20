@@ -13,6 +13,75 @@ export interface Settings {
   lorebookAttachments?: Record<string, string[]>;
 }
 
+export interface GenerationSettings {
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  minP?: number;
+  repetitionPenalty?: number;
+}
+
+export interface RequestSettings {
+  replyTokens: number;
+  runSpendUsd: number;
+  generation: GenerationSettings;
+  warnings: string[];
+}
+
+/** Request settings are read separately so existing settings consumers stay unchanged. */
+export function readRequestSettings(paths: AppPaths): RequestSettings {
+  const raw = readFile(paths);
+  const warnings: string[] = [];
+  function section(name: string): Record<string, unknown> {
+    const value = raw[name];
+    if (value === undefined) return {};
+    if (value && typeof value === "object" && !Array.isArray(value))
+      return value as Record<string, unknown>;
+    warnings.push(`Ignored ${name} in settings.json: must be an object.`);
+    return {};
+  }
+  function number(
+    values: Record<string, unknown>,
+    key: string,
+    prefix: string,
+    valid: (value: number) => boolean,
+    rule: string,
+  ): number | undefined {
+    const value = values[key];
+    if (value === undefined) return undefined;
+    if (typeof value === "number" && Number.isFinite(value) && valid(value)) return value;
+    warnings.push(`Ignored ${prefix}.${key} in settings.json: ${rule}.`);
+    return undefined;
+  }
+  const limits = section("limits");
+  const generation = section("generation");
+  const result: RequestSettings = {
+    replyTokens:
+      number(
+        limits,
+        "replyTokens",
+        "limits",
+        (n) => Number.isInteger(n) && n >= 0,
+        "whole number ≥ 0",
+      ) ?? 4096,
+    runSpendUsd: number(limits, "runSpendUsd", "limits", (n) => n >= 0, "number ≥ 0") ?? 1,
+    generation: {},
+    warnings,
+  };
+  const rules: [keyof GenerationSettings, (value: number) => boolean, string][] = [
+    ["temperature", (n) => n >= 0 && n <= 2, "number 0–2"],
+    ["topP", (n) => n >= 0 && n <= 1, "number 0–1"],
+    ["topK", (n) => Number.isInteger(n) && n >= 1, "whole number ≥ 1"],
+    ["minP", (n) => n >= 0 && n <= 1, "number 0–1"],
+    ["repetitionPenalty", (n) => n > 0, "number > 0"],
+  ];
+  for (const [key, valid, rule] of rules) {
+    const value = number(generation, key, "generation", valid, rule);
+    if (value !== undefined) result.generation[key] = value;
+  }
+  return result;
+}
+
 function readFile(paths: AppPaths): Record<string, unknown> {
   try {
     const parsed: unknown = JSON.parse(readFileSync(paths.settingsFile, "utf8"));

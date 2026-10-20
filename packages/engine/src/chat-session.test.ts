@@ -188,3 +188,34 @@ it("generate() refuses a context that does not end with a user message", async (
   });
   expect(result).toBeNull();
 });
+
+it.each([
+  { maxTokens: 4096 },
+  {
+    maxTokens: 8000,
+    temperature: 1.1,
+    samplingParams: { top_p: 0.9, top_k: 40, min_p: 0.05, repetition_penalty: 1.05 },
+  },
+  {},
+])("passes configured request options to the faux provider: %j", async (request) => {
+  let received: unknown;
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: "",
+    getApiKey: () => "synthetic-key",
+    request,
+    simulated: {
+      replies: [{ text: "At the limit.", stopReason: "length" }],
+      onRequest: (options) => {
+        received = options;
+      },
+    },
+  });
+  const turn = await session.send("hello");
+  expect(received).toMatchObject(request);
+  for (const key of ["maxTokens", "temperature", "samplingParams"] as const) {
+    expect((received as Record<string, unknown>)[key]).toEqual(request[key]);
+  }
+  expect(session.request).toEqual(request);
+  expect(turn).toMatchObject({ outcome: "completed", cutOff: true, text: "At the limit." });
+});

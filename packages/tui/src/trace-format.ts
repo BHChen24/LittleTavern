@@ -82,6 +82,21 @@ export function formatTraceReport(trace: AssemblyTrace, meta: ReportMeta, width 
       `lore ~${loreUsed}/${meta.loreBudget} · history ${trace.history.included} kept, ` +
       `${trace.history.leftOut} left out`,
   ];
+  if (trace.request) {
+    const request = trace.request;
+    const params: string[] = [];
+    if (request.temperature !== undefined) params.push(`temperature ${request.temperature}`);
+    for (const key of ["top_p", "top_k", "min_p", "repetition_penalty"]) {
+      const value = request.samplingParams?.[key];
+      if (value !== undefined) params.push(`${key} ${value}`);
+    }
+    if (request.maxTokens !== undefined || params.length) {
+      const cap = request.maxTokens
+        ? `max ${request.maxTokens} output tokens`
+        : "model's maximum output";
+      lines.push(`Requested: ${[cap, ...params].join(" · ")}`);
+    } else lines.push("Requested: model defaults");
+  }
   if (trace.notes.length) lines.push(`Notes: ${trace.notes.join("; ")}`);
   lines.push("Parts (estimated tokens)");
   for (const part of trace.parts)

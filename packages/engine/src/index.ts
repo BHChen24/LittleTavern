@@ -24,6 +24,7 @@ export {
   type PersonaItem,
   parsePersona,
   readActivePersona,
+  readRequestSettings,
   readSavedKey,
   readSettings,
   readUsageRecords,
