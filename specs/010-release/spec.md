@@ -37,7 +37,8 @@ This feature makes v0.1 deliverable:
   internal modules are bundled into it; third-party libraries, including pi, stay ordinary
   dependencies that the package manager installs.
 - Q: Which Node.js versions are supported? → A: As broad as pi allows (22.19 and later), provided
-  the app's checks pass on them. Versions where they fail are not claimed.
+  the app's checks pass. The checks run on the even-numbered release lines 22 (from 22.19), 24 and
+  26; odd-numbered lines are not tested separately. A tested line that fails is not claimed.
 - Q: What may `/import` read inside the app? → A: Only files under the import folders
   (`~/.littletavern` by default). It takes no path argument, cannot navigate above the import
   root, and a file reached through a link must still be inside it. The command-line
@@ -53,8 +54,15 @@ This feature makes v0.1 deliverable:
   into the import folders, imported, and Wonderland is attached to Alice, so the user can chat at
   once. This happens once only: deleting them never brings them back, and existing files with the
   same names are never overwritten.
-- Q: Which checks run automatically? → A: On every push and pull request: build, lint, tests and a
-  secret scan, on each supported Node.js version. A release is made from a version tag after the
+- Q: What if a file with an example's name already exists in the import folders? → A: It is left
+  alone and not imported by this step. The library still receives the real Alice and Wonderland,
+  because they are imported from the copies shipped with the app, not from the import folders.
+- Q: What if the "done" marker cannot be saved? → A: The app still starts, shows one notice, and
+  tries again on the next start. Trying again is harmless: copies never overwrite, importing the
+  same file twice creates no duplicate, and the attachment is not added twice.
+- Q: Which checks run automatically? → A: On every push and pull request: build, lint and tests on
+  each tested Node.js release line, plus one full-history secret scan per run (the scan does not
+  depend on Node.js). A release is made from a version tag after the
   same checks, plus a check of the package's contents and a secret scan of the package.
 - Q: What is out of scope? → A: The innkeeper assistant (feature 011), spend limits, and the owner's
   own one-off actions: making the repository public, creating the npm account and token, and
@@ -195,7 +203,10 @@ work as written.
 ### Edge Cases
 
 - The import folders cannot be created or written on first start: the app still starts, shows one
-  notice naming the problem, and does not try to add the examples again on later starts.
+  notice naming the problem (the existing import-folder notice), and does not try to add the
+  examples again on later starts.
+- The settings file cannot be written, so the marker cannot be saved: see Clarifications; one
+  notice, and the step is tried again on the next start.
 - The examples are missing from the installed package (a broken install): the app starts normally,
   adds nothing, shows no notice, and does not record the step as done, so a repaired install can
   still add them.
@@ -224,9 +235,11 @@ work as written.
 - **FR-003**: The package MUST declare the supported Node.js versions, which MUST be versions on
   which the automated checks pass, starting no lower than 22.19.
 - **FR-004**: On the first interactive start, the app MUST copy the Alice card and the Wonderland
-  lorebook into the import folders without overwriting existing files, import both, and attach
-  Wonderland to Alice. It MUST record that this was done and MUST NOT repeat it, whether or not it
-  succeeded (except when the examples are missing from the install, see Edge Cases). A failure MUST produce one notice that names the reason.
+  lorebook into the import folders without overwriting existing files, import both from the copies
+  shipped with the app, and attach Wonderland to Alice. It MUST record that this was done and MUST
+  NOT repeat it, whether or not it succeeded, except when the examples are missing from the install
+  or the record itself cannot be saved (see Edge Cases and Clarifications). A failure MUST produce
+  one notice that names the reason, and MUST NOT stop the app from starting.
 - **FR-005**: Command-line subcommands MUST NOT add the examples.
 - **FR-006**: The example card and lorebook MUST be original works based only on public-domain
   text, released under CC0, with a notice saying so shipped next to them.
@@ -240,15 +253,16 @@ work as written.
   FR-008.
 - **FR-010**: Messages that currently suggest `/import <path>` MUST suggest the import folders or
   `littletavern import <file>` instead.
-- **FR-011**: Every push and pull request MUST run the build, lint, tests and a full-history secret
-  scan on each supported Node.js version.
+- **FR-011**: Every push and pull request MUST run the build, lint and tests on each tested Node.js
+  release line (22 from 22.19, 24 and 26), and one full-history secret scan.
 - **FR-012**: A release MUST be triggered by a version tag. It MUST refuse a tag that differs from
   the app's version, run the same checks as FR-011, build the package, check its contents
   (FR-002), scan it for secrets, publish it to npm, and create a GitHub release with the package
   attached.
 - **FR-013**: The package's content check and secret scan MUST also be runnable locally with one
   command, without publishing.
-- **FR-014**: The README MUST give the npm install command and the supported Node.js versions,
+- **FR-014**: The README MUST give the npm install command and the supported Node.js versions
+  (22.19 or newer; tested on 22, 24 and 26),
   mention the bundled Alice example, and move installing from source into a developer section.
 - **FR-015**: The project MUST document an owner checklist for the first release: making the
   repository public, enabling GitHub secret scanning and push protection, adding the npm token
@@ -273,8 +287,8 @@ work as written.
   secret scan finds nothing.
 - **SC-003**: Inside the app, 0 files outside the import root can be imported, and no import reads
   a file larger than 20 MB.
-- **SC-004**: Every push and pull request reports a pass or fail result for each supported Node.js
-  version.
+- **SC-004**: Every push and pull request reports a pass or fail result for each tested Node.js
+  release line, and for the secret scan.
 - **SC-005**: After the examples have been added once, deleting them and restarting 3 times never
   brings them back.
 

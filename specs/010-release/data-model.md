@@ -11,6 +11,7 @@
 ```text
 absent ──(interactive start, example files present)──▶ true   (success or failure)
 absent ──(interactive start, example files missing)──▶ absent (nothing done)
+absent ──(interactive start, marker cannot be saved)──▶ absent (one notice; retried next start)
 true   ──(any start)──▶ true                                   (never repeats)
 ```
 

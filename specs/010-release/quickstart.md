@@ -26,7 +26,9 @@ LITTLETAVERN_HOME="$tmp/home" "$tmp/prefix/bin/littletavern" list
 1. Run the install smoke test above, then start `LITTLETAVERN_HOME="$tmp/home2" "$tmp/prefix/bin/littletavern"`.
    Alice is in `/characters`; after choosing her, `/lorebooks` shows Wonderland. Add a key and a model, chat about
    the Cheshire Cat and open `/trace`: the Cheshire Cat entry is listed.
-2. Quit, delete Alice's file from the import folder, start again: she is not added back.
+2. Quit and delete `alice.json` from the import folder's `characters/`. Start and quit the app
+   three times: the file stays absent. (Alice stays in the library, because she was imported; the
+   check is that the file is not copied back.)
 3. In the app, `/import`: the browser starts at the import root and has no `..` there.
    `/import /etc/passwd` shows the "Choose a file from the import folders" message.
 4. `littletavern import ~/Downloads/<a card>.json` still works from a shell.

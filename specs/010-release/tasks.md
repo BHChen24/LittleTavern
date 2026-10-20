@@ -78,9 +78,9 @@ quickstart.md
 **Independent test**: a temporary home, one simulated first start, then Alice is in the library
 with Wonderland attached; a second start changes nothing.
 
-- [ ] T003 [US1] Create `packages/data/src/examples.ts` with `addExamplesOnce(paths, examplesDir: string | null): { notice?: string }`, following research R5 steps 1–5 exactly: no-op without a marker change when the marker is `true`, `examplesDir` is `null`, or either example file is missing; exclusive-create copies (an existing same-named file is left alone); import both copies with `importFile`, where `already-imported` counts as success; attach the lorebook id to `lorebookAttachments[<character id>]` without duplicates; set `examplesAdded: true` in every other outcome; on error return `Could not add the example character: <reason>`. Export it through the data barrel. Write tests T-d in `packages/data/src/examples.test.ts`, using the repository's `examples/` files
+- [ ] T003 [US1] Create `packages/data/src/examples.ts` with `addExamplesOnce(paths, examplesDir: string | null): { notice?: string }`, following research R5 steps 1–6 exactly. It never throws. It creates the import folders itself first; it imports **from `examplesDir`**, not from the copies; a failed marker write returns the "could not save settings" notice and leaves the marker absent. Export it through the data barrel. Write tests T-d in `packages/data/src/examples.test.ts` with **code-generated** example files (use the existing synthetic card and lorebook helpers) in a temporary folder, covering every case listed for T-d in plan.md
 - [ ] T004 [P] [US1] Create `packages/tui/src/examples-dir.ts` with `examplesDir(): string | null` (research R5: the release layout `../examples/` first, then the development layout `../../../examples/`, relative to the built file). Write test T-e
-- [ ] T005 [US1] In `packages/tui/src/cli.ts`, on the interactive path only, call `addExamplesOnce(resolveAppPaths(), examplesDir())` right before `startApp()`, and pass its notice to the app so that it is shown once, like the import-folder notice (extend `startApp`/`createApp` options with an optional `startupNotices: string[]`). Subcommands must not call it (FR-005); add a CLI test that `list` in a fresh temporary home adds nothing. Write the happy path T-g in `packages/engine/src/examples-chat.test.ts`: in a temporary home, `addExamplesOnce` with the real `examples/`, then a simulated `CharacterChat` with Alice sends "Have you seen the Cheshire Cat?", and `lastTrace` includes the Wonderland entry "The Cheshire Cat"
+- [ ] T005 [US1] In `packages/tui/src/cli.ts`, on the interactive path only, call `addExamplesOnce(resolveAppPaths(), examplesDir())` right before `startApp()`, and pass its notice to the app so that it is shown once, like the import-folder notice (extend `startApp`/`createApp` options with an optional `startupNotices: string[]`). Subcommands must not call it (FR-005); write test T-j. Write the happy path T-g (the plan's one justified use of the shipped `examples/` files) in `packages/engine/src/examples-chat.test.ts`: in a temporary home, `addExamplesOnce` with the real `examples/`, then a simulated `CharacterChat` with Alice sends "Have you seen the Cheshire Cat?", and `lastTrace` includes the Wonderland entry "The Cheshire Cat"
 
 **Checkpoint**: checks pass. Commit.
 
@@ -102,6 +102,7 @@ link is refused, and an oversized file is refused by both the app and the CLI.
   - a selected file whose real path is outside the real import root is refused with `<file name> is outside the import folders.`;
   - `/import` loses its `argumentHint` and its completion; delete `importCompletions`; the description becomes "Import a card or lorebook from the import folders";
   - `ensureImportFolders`' failure message becomes the contract's text;
+  - `EMPTY_LIBRARY_HINT` in `packages/tui/src/library-format.ts` becomes `Library is empty. Put cards in the import folders and use /import, or run "littletavern import <file>".`, and its test follows; then search the source (`grep -rn "/import <" packages`) and fix any other suggestion of `/import <path>` (FR-010);
   - update the `/import` row in `specs/006-usability/contracts/commands.md` with the note "changed by 010".
 
   Write tests T-c, and update the existing tests that used `/import <path>` to use the browser or the CLI.
@@ -135,7 +136,7 @@ when an extra file is added.
 **Independent test**: both files parse as YAML and match research R7. They run for real only
 after the owner pushes (quickstart).
 
-- [ ] T012 [P] [US3] Create `.github/workflows/ci.yml` per research R7: on push and pull request; a matrix job on Node `22.19.0`, `24` and `26` running `pnpm install --frozen-lockfile` (with `HUSKY=0`), `pnpm build`, `pnpm lint` and `pnpm test`; a secret-scan job that installs gitleaks `8.30.1` from its GitHub release, verifies the checksum, and runs `gitleaks git --redact --no-banner .` on full history; and a package job that installs gitleaks the same way, runs `pnpm release:check` and the install smoke test from `quickstart.md`
+- [ ] T012 [P] [US3] Create `.github/workflows/ci.yml` per research R7: on push and pull request; a matrix job on Node `22.19.0`, `24` and `26` running `pnpm install --frozen-lockfile` (with `HUSKY=0`), `pnpm build`, `pnpm lint` and `pnpm test`; a single secret-scan job (not per Node version) that installs gitleaks `8.30.1` from its GitHub release, verifies the checksum, and runs `gitleaks git --redact --no-banner .` on full history; and a package job that installs gitleaks the same way, runs `pnpm release:check` and the install smoke test from `quickstart.md`
 - [ ] T013 [P] [US3] Create `.github/workflows/release.yml` per research R7: on tags `v*`; the same checks; `pnpm release:check --tag "$GITHUB_REF_NAME"`; the smoke test; `npm publish release/littletavern-<version>.tgz --provenance --access public` with `NODE_AUTH_TOKEN` from `secrets.NPM_TOKEN` and `id-token: write`; then `gh release create "$GITHUB_REF_NAME" release/*.tgz --generate-notes` with `contents: write`. Check that both workflow files parse as YAML (for example with `node -e` run from `packages/data`, which already depends on `yaml`)
 
 **Checkpoint**: checks pass. Commit.
@@ -144,7 +145,7 @@ after the owner pushes (quickstart).
 
 ## Phase 7: User Story 5 - The README matches the release (P3)
 
-- [ ] T014 [US5] Update `README.md` (FR-014): the install section becomes `npm install -g littletavern`, with "Node.js 22.19 or newer"; the quick start mentions that Alice and the Wonderland lorebook are ready on first start; installing from source moves into the Development section; `/import` is described as importing from the import folders, with `littletavern import <file>` for other locations. Keep everything else
+- [ ] T014 [US5] Update `README.md` (FR-014): the install section becomes `npm install -g littletavern`, with "Node.js 22.19 or newer (tested on 22, 24 and 26)"; the quick start mentions that Alice and the Wonderland lorebook are ready on first start; installing from source moves into the Development section; `/import` is described as importing from the import folders, with `littletavern import <file>` for other locations. Keep everything else
 - [ ] T015 [US5] Add `pnpm release:build` and `pnpm release:check` to the Commands table in `AGENTS.md`, with one line each
 
 **Checkpoint**: checks pass. Commit.
@@ -172,5 +173,6 @@ Phase 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8.
 ## Implementation Strategy
 
 US1 and US2 make the app itself ready; US4 makes it shippable; US3 and US5 make it maintainable
-and readable. If time runs short, stop after Phase 5: the package can be built and checked
-locally, and the owner can add CI later.
+and readable. The feature is complete only when all phases are done. If a run is interrupted,
+leave the remaining tasks unchecked and say so in the report; do not present a partial run as
+delivered.

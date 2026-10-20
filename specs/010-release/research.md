@@ -74,19 +74,25 @@ commits) and pi `v1.3.0`.
   repository root. `examplesDir()` in `packages/tui/src/examples-dir.ts` returns the first
   existing directory of `new URL("../examples/", import.meta.url)` and
   `new URL("../../../examples/", import.meta.url)`, or `null`.
-- **The step**: `addExamplesOnce(paths, examplesDir)` in `packages/data/src/examples.ts`:
+- **The step**: `addExamplesOnce(paths, examplesDir)` in `packages/data/src/examples.ts`. It
+  never throws; every failure becomes the returned notice.
   1. if `settings.examplesAdded === true`, or `examplesDir` is `null`, or either example file is
-     missing, return without doing anything (the missing-files case sets no marker, per the spec's
-     edge cases);
-  2. copy `characters/alice.json` and `lorebooks/wonderland.json` into the import folders with an
-     exclusive-create copy, so an existing file of the same name is left alone;
-  3. import both copies with `importFile` from the import folders. If the user's same-named file
-     is not the example, that file is what gets imported, which is the user's choice;
-     `already-imported` counts as success;
-  4. if the card is a character and the lorebook is a lorebook, add the lorebook id to
-     `lorebookAttachments[<character id>]`, without duplicates;
-  5. write `examplesAdded: true` in every outcome except step 1. On any error, return one notice:
-     `Could not add the example character: <reason>`.
+     missing from `examplesDir`, return without doing anything (the missing-files case sets no
+     marker, per the spec's edge cases);
+  2. call `ensureImportFolders(paths)` first, because `createApp` (which also calls it) runs
+     later. If it fails, write the marker and return **no** notice: `createApp`'s existing
+     import-folder notice is the one notice the spec asks for;
+  3. copy `characters/alice.json` and `lorebooks/wonderland.json` into the import folders with an
+     exclusive-create copy (`copyFileSync` with `COPYFILE_EXCL`). An existing file of the same
+     name is left alone and is not imported;
+  4. import both **from `examplesDir`**, not from the copies, with `importFile`. So the library
+     always receives the real Alice and Wonderland, whatever is in the import folders.
+     `already-imported` counts as success. If either import fails, the notice names it;
+  5. add Wonderland's id to `lorebookAttachments[<Alice's id>]`, without duplicates;
+  6. write `examplesAdded: true` in every outcome after step 1. If that write fails, return
+     `Could not add the example character: could not save settings (<reason>)`; the next start
+     tries again, which is harmless because steps 3–5 are idempotent.
+  On any other error, return one notice: `Could not add the example character: <reason>`.
 - **Who calls it**: `cli.ts`, on the interactive path only, right before `startApp()`. The notice
   is passed into the app and shown like the existing import-folder notice. Subcommands never call
   it. App tests that build the app with `createApp` are therefore unaffected.
@@ -115,6 +121,9 @@ commits) and pi `v1.3.0`.
 
 ## R7. Continuous integration and releases
 
+- **Tested Node.js lines**: the even-numbered release lines 22 (pinned to its minimum, `22.19.0`),
+  24 and 26. Odd-numbered lines satisfy `engines` but are not tested separately (spec
+  clarification). The secret scan does not depend on Node.js, so it runs once per workflow run.
 - **`ci.yml`** (push and pull request): a matrix of Node `22.19.0`, `24` and `26` on
   `ubuntu-latest`. Steps: checkout with full history (`fetch-depth: 0`), `pnpm/action-setup@v4`
   (reads `packageManager`), `actions/setup-node@v5` with the pnpm cache,
