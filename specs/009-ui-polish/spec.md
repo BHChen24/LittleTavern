@@ -263,7 +263,7 @@ capability. Otherwise it is listed as deferred in the plan:
 - **FR-011**: The home screen MUST show the logo left-aligned and MUST NOT repeat the product name
   below it; the version appears once, with the tagline.
 - **FR-012**: Pressing Enter on the home screen MUST open the chat with the character picker shown.
-  Cancelling the picker leaves the user in plain chat, as before.
+  Cancelling the picker leaves the user with the innkeeper (the former plain chat).
 - **FR-013**: The character picker MUST offer "New character", which starts 007's creation flow
   (including continuing a draft). The `/new-character` command MUST be removed.
 - **FR-014**: The no-character chat MUST be presented as the innkeeper: the `/innkeeper` command
