@@ -33,5 +33,5 @@
 
 - The source field names (`before_char`/`after_char`, positions 0 and 1) are the ecosystem formats
   that 002 imports. They are not implementation choices.
-- The defaults (scan depth 2, lore budget 2,000 tokens, user name "User") and the "history in
-  full, no trimming" decision are the best candidates for `/speckit-clarify`.
+- Clarified on 2026-10-19: the lore budget defaults to 4,000 tokens and is adjustable; history
+  is trimmed by a fixed newest-first rule, with summarisation deferred.

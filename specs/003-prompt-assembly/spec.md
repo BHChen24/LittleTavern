@@ -28,6 +28,19 @@ It is deliberately a simple first version. It borrows the shape of SillyTavern's
 behaviour, not its full feature set, and the owner will refine it later. Each simplification is
 listed so that refining it later is a conscious choice.
 
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: Should the lore budget default be a fixed number or a share of the model's context window?
+  → A: A fixed default of 4,000 tokens, which the owner can change. It is a setting, not a code
+  constant: 003 takes it as input, and 004 reads it from the settings file, so a change applies
+  to the next request without a rebuild.
+- Q: When the history no longer fits the model's context window, what happens? → A: In the long
+  run, the oldest messages are summarised. That needs its own feature. For v1, use a fixed rule:
+  fill the history from newest to oldest and stop at the first message that does not fit. The
+  number of left-out messages goes into the trace. Nothing is summarised yet.
+
 ## User Scenarios & Testing *(mandatory)*
 
 The "user" of this feature is the owner, judging the assembled request through tests now and
@@ -143,7 +156,8 @@ for every included part.
 
 1. **Given** any assembly, **When** it completes, **Then** the trace lists every included part
    (main instruction, each card field, each lore entry, history as one block with its message
-   count, post-history instructions) with an estimated token count, plus the estimated total.
+   count and the number of left-out messages, post-history instructions) with an estimated
+   token count, plus the estimated total.
 2. **Given** an included lore entry, **When** traced, **Then** its reason is either "always on"
    or "keyword `<key>` matched in message <n>", naming the first match found.
 3. **Given** a lore entry that was not included, **When** traced, **Then** its reason is one of:
@@ -169,8 +183,11 @@ for every included part.
 - The same entry matching several keywords is included once, and the first match is reported.
 - Two lorebooks (embedded plus one standalone) contain entries with the same keyword: both
   entries are evaluated independently.
-- Very long history: in this version, history is included in full. Trimming to the model's
-  context window is not done (see Assumptions).
+- Very long history: the oldest messages are left out by the fixed rule in FR-015, and the trace
+  says how many.
+- The newest message alone does not fit: it is still included, because a request without the
+  user's latest message is useless. The trace notes that the request exceeds the window, and the
+  provider's error (shown by 001) is the visible result.
 - A card field consisting only of whitespace is treated as empty.
 
 ## Requirements *(mandatory)*
@@ -179,9 +196,13 @@ for every included part.
 
 **Inputs and output**
 
-- **FR-001**: The assembly MUST take as input: a character (as imported by 002), zero or more
-  lorebooks, the user's display name, the conversation history (ordered messages, each from the
-  user or the character), and settings (scan depth and lore budget, with defaults).
+- **FR-001**: The assembly MUST take these inputs:
+  - a character, as imported by 002;
+  - zero or more lorebooks;
+  - the user's display name;
+  - the conversation history: ordered messages, each from the user or the character;
+  - the selected model's context window, in tokens;
+  - settings: scan depth, lore budget and reply reserve, each with a default.
 - **FR-002**: The assembly MUST produce an ordered list of messages, each with a role
   (instruction, user or character) and text, ready for 004 to send. It MUST also produce the
   trace.
@@ -230,8 +251,17 @@ for every included part.
 **Budget**
 
 - **FR-011**: The total estimated tokens of included lore MUST NOT exceed the lore budget
-  (default: 2,000 tokens). Candidates are admitted in descending insertion order; the first
-  candidate that does not fit, and every candidate after it, is left out with reason "budget".
+  (default 4,000 tokens, adjustable through settings). Candidates are admitted in descending
+  insertion order. The first candidate that does not fit, and every candidate after it, is left
+  out with the reason "budget".
+
+**History fit**
+
+- **FR-015**: History MUST fit in the space left in the model's context window after the reply
+  reserve (default 4,000 tokens) and all other included parts. Messages are added from newest to
+  oldest; the first message that does not fit, and every older one, is left out. The newest
+  message is always included. The number of left-out messages MUST be recorded in the trace.
+  Summarising left-out messages is out of scope (see Clarifications).
 
 **Trace**
 
@@ -253,7 +283,8 @@ for every included part.
 - **Assembled message**: role (instruction, user or character) and text.
 - **Trace**: included parts (source, tokens), lore decisions (lorebook, entry, included, reason,
   matched keyword and message when relevant), notes, and total estimated tokens.
-- **Settings**: scan depth (default 2) and lore budget in tokens (default 2,000).
+- **Settings**: scan depth (default 2), lore budget in tokens (default 4,000), and reply reserve
+  in tokens (default 4,000). All three can be adjusted.
 
 ## Success Criteria *(mandatory)*
 
@@ -296,9 +327,8 @@ Per the constitution's testing policy:
   - sticky, cooldown and delay;
   - placement at depth or in the author's note;
   - per-entry scan depth.
-- History is included in full. Trimming history to the model's context window and summarising
-  old messages are later work. Current models have large context windows, and v1 sessions are
-  short.
+- History is trimmed by the fixed rule in FR-015. Summarising old messages is planned as a later
+  feature (clarified 2026-10-19).
 - The user's display name defaults to "User". Changing it (personas) is outside this feature.
 - Which standalone lorebooks accompany a character is decided by 004; this feature takes whatever
   lorebooks it is given.
