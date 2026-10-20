@@ -5,7 +5,8 @@
 ```bash
 pnpm build && pnpm lint && pnpm test
 bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"
-grep -rn "/chat <\|/attach\|/detach\|/show <" packages/tui/src README.md | grep -v "\.test\."
+grep -rn "/chat <\|/attach\|/detach\|/show <" packages/tui/src README.md specs/006-usability/contracts/commands.md \
+  | grep -v "\.test\." | grep -v "removed by 011"
 ```
 
 The last command must print nothing. The shell subcommand `littletavern show <id>` appears only

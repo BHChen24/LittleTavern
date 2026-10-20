@@ -32,7 +32,10 @@ Verified on 2026-10-20 against `main` at `827e8ef` (branch `011-tui-pickers`) an
   - `Frame` forwards `handleInput`, `invalidate` and the `focused` getter and setter to the child.
   - The child keeps its own title line inside the frame (for example "Choose a character (Enter
     starts a chat, Esc cancels)"), which meets the spec's "border and title" without moving
-    titles.
+    titles. `ListPicker` renders its title with pi-tui's `Text`, which **wraps**. Because the child
+    renders at the inner width, a long title wraps onto further lines inside the frame. Entries
+    are truncated by pi-tui's `SelectList`. The frame's own truncation is only a safety net for
+    child lines that come out wider than the inner width.
   - Every `tui.showOverlay(x, options)` call in `app.ts` goes through one helper,
     `showPanel(x, options)`, which wraps `x` in a `Frame`. No other call opens an overlay.
 - **Alternatives**:
@@ -135,7 +138,7 @@ Verified on 2026-10-20 against `main` at `827e8ef` (branch `011-tui-pickers`) an
 
 - **Fact**: `ci.yml` runs `on: [push, pull_request]`, so a branch with an open pull request runs
   every job twice.
-- **Decision**: `on: { push: { branches: [main] }, pull_request: {} }`. Pull requests and `main`
+- **Decision** (spec FR-011): `on: { push: { branches: [main] }, pull_request: {} }`. Pull requests and `main`
   are checked; tags are covered by `release.yml`'s own checks.
 
 ## R8. Documentation
@@ -143,7 +146,12 @@ Verified on 2026-10-20 against `main` at `827e8ef` (branch `011-tui-pickers`) an
 - The help overlay is generated from `COMMANDS()`, so it follows automatically.
 - `README.md` command table rows: remove `/chat <id>` and `/attach <id>, /detach <id>`; add
   `/new`; change `/lorebooks` and `/library, /show`.
-- `specs/006-usability/contracts/commands.md` rows for `/chat`, `/attach`, `/detach`, `/lorebooks`
-  and `/show` are updated with "changed by 011", and `/new` is added.
+- `specs/006-usability/contracts/commands.md`, the active table "Commands (suggested and listed by
+  `/help`)":
+  - the `/chat <id>`, `/attach <id>` and `/detach <id>` rows are **removed**;
+  - the `/lorebooks` and `/show` rows are rewritten to the 011 meaning, ending "(changed by 011)";
+  - a `/new` row is added, ending "(added by 011)";
+  - under the table, next to the existing notes, add the line
+    `` `/chat`, `/attach`, `/detach`: removed by 011 (use `/characters` and `/lorebooks`). ``
 - The only id suggestion inside `app.ts` today is "No lorebooks. Attach one with /attach <id>.";
   it disappears with the old `/lorebooks` listing.

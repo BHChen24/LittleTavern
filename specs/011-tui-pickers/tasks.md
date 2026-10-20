@@ -63,7 +63,7 @@ quickstart.md
 
 ## Phase 1: Setup
 
-- [ ] T001 In `.github/workflows/ci.yml`, change the trigger to `on: { push: { branches: [main] }, pull_request: {} }`, written in block YAML style like the rest of the file (research R7). Check that it parses with the `yaml` package (for example `node -e` run from `packages/data`) and that `push.branches` is `["main"]` and `pull_request` is present (T-j). Record the command and output for the report
+- [ ] T001 (FR-011) In `.github/workflows/ci.yml`, change the trigger to `on: { push: { branches: [main] }, pull_request: {} }`, written in block YAML style like the rest of the file (research R7). Check that it parses with the `yaml` package (for example `node -e` run from `packages/data`) and that `push.branches` is `["main"]` and `pull_request` is present (T-j). Record the command and output for the report
 
 **Checkpoint**: checks pass. Commit.
 
@@ -93,7 +93,7 @@ quickstart.md
   - an empty library shows `EMPTY_LIBRARY_HINT` and opens no picker;
   - `/show <anything>` shows `/show opens a picker. In a shell, run: littletavern show <id>` and looks nothing up. In the dispatch check, `show` joins `import` as a command that accepts trailing text (research R3).
 
-  Write tests T-c and update the command tests (T-b, the `show` part) in `packages/tui/src/commands.test.ts` and the app tests
+  Write tests T-c (as listed in plan.md) and update the command tests (T-b, the `show` part) in `packages/tui/src/commands.test.ts` and the app tests
 
 **Checkpoint**: checks pass. Commit.
 
@@ -123,7 +123,7 @@ quickstart.md
   - on selection, call `importSelected`;
   - only if the report is ok and its item is a lorebook, call `chat.attachLorebook(report.item.id)` and show `Attached <name>.`;
   - any other result attaches nothing.
-- [ ] T008 [US2] Remove `attach` and `detach` from `COMMANDS()` in `packages/tui/src/commands.ts` and from the handler table. Set the `lorebooks` description to `Choose or import lorebooks for the current character`. Delete the now-unused `/detach` completion code. Write tests T-d and T-e, and update existing tests that used `/attach` or `/detach` to use the `/lorebooks` picker
+- [ ] T008 [US2] Remove `attach` and `detach` from `COMMANDS()` in `packages/tui/src/commands.ts` and from the handler table. Set the `lorebooks` description to `Choose or import lorebooks for the current character`. Delete the now-unused `/detach` completion code. Write tests T-d and T-e with every case listed for them in plan.md (including the library with no lorebooks, the already-imported lorebook and the damaged file), and update existing tests that used `/attach` or `/detach` to use the `/lorebooks` picker
 
 **Checkpoint**: checks pass. Commit.
 
@@ -143,7 +143,7 @@ earlier history, and `/sessions` lists both chats.
   - in innkeeper mode, call `session.clearConversation()`, clear the transcript, and show `Started a new conversation with the innkeeper.`;
   - otherwise show `Choose a character with /characters, or use /innkeeper.`;
   - in `submit()`, before the early return for `session.isStreaming`: if the trimmed text is `/new`, show `Wait for the reply, or press Esc to stop it.` and leave the editor text as it is. Other input keeps today's behaviour.
-- [ ] T010 [US3] Remove `chat` from `COMMANDS()` and its handler. Write tests T-f and T-g (`/chat x`, `/attach x` and `/detach x` give `Unknown command. Use /help.`), and update existing tests that used `/chat <id>` to use the character picker or `startChat`
+- [ ] T010 [US3] Remove `chat` from `COMMANDS()` and its handler. Write tests T-f with every case listed in plan.md (including `/new` in a resumed chat) and T-g (`/chat x`, `/attach x` and `/detach x` give `Unknown command. Use /help.`), and update existing tests that used `/chat <id>` to use the character picker or `startChat`
 - [ ] T011 [US3] Write the happy path T-h in `packages/tui/src/app-pickers.test.ts`, using the faux provider and code-generated synthetic cards and lorebooks, as the existing app tests do:
   1. start a chat;
   2. attach the lorebook through the `/lorebooks` picker;
@@ -167,7 +167,7 @@ earlier history, and `/sessions` lists both chats.
   - it truncates lines with pi-tui `truncateToWidth` and measures them with `visibleWidth`;
   - it forwards `handleInput`, `invalidate` and the `focused` getter and setter.
 
-  Write T-a in `packages/tui/src/components/frame.test.ts`
+  A long `ListPicker` title wraps inside the frame (pi-tui `Text` wraps it); do not add title truncation. Write T-a, including the long-title case, in `packages/tui/src/components/frame.test.ts`
 - [ ] T013 [US4] Make `showPanel` in `packages/tui/src/app.ts` wrap the component in a `Frame`. Check that the Esc and help-closing paths, the overlay focus and the trace overlay's height still work (the trace computes its height from the terminal rows; leave room for the two border rows). Adjust any app test that asserts exact overlay lines
 
 **Checkpoint**: checks pass. Commit.
@@ -182,7 +182,7 @@ earlier history, and `/sessions` lists both chats.
   - `/lorebooks` becomes "Choose, attach or import lorebooks for the current character";
   - `/library`, `/show` becomes "List the library, or pick an item to inspect".
 
-  Update `specs/006-usability/contracts/commands.md`: the `/chat`, `/attach`, `/detach`, `/lorebooks` and `/show` rows note "changed by 011", and a `/new` row is added. Then run the quickstart grep: `grep -rn "/chat <\|/attach\|/detach\|/show <" packages/tui/src README.md | grep -v "\.test\."` must print nothing
+  Update `specs/006-usability/contracts/commands.md` exactly as research R8 lists: remove the `/chat <id>`, `/attach <id>` and `/detach <id>` rows from the active table; rewrite the `/lorebooks` and `/show` rows "(changed by 011)"; add a `/new` row "(added by 011)"; add the "removed by 011" note under the table. Then run `grep -rn "/chat <\|/attach\|/detach\|/show <" packages/tui/src README.md specs/006-usability/contracts/commands.md | grep -v "\.test\." | grep -v "removed by 011"`: it must print nothing
 
 **Checkpoint**: checks pass. Commit.
 

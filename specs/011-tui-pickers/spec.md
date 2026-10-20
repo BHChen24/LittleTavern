@@ -51,6 +51,8 @@ names things explicitly, often from scripts.
     be detached;
   - it still requires a character chat.
 - Q: What does `/library` show? → A: Unchanged: everything that has been imported.
+- Q: Is the duplicate CI run fixed here? → A: Yes (owner, 2026-10-20). Continuous integration
+  runs once per change: on pull requests, and on pushes to `main` only.
 - Q: Which overlays get a border? → A: Every overlay the app opens (pickers, help, trace, the file
   browser, the key and model panels, confirmations), with the overlay's title in or on the border.
 
@@ -199,8 +201,10 @@ and `/new` as pickers or actions without ids, and no longer list `/chat`, `/atta
 - `/new` when the current character has been deleted from the library since the chat started:
   the app says the character is no longer in the library and suggests `/characters`.
 - `/new` in a resumed chat: the new chat uses the resumed chat's character.
-- `/show` for an item whose stored files are damaged: the same error the shell `show` reports.
-- Long names in pickers and panel titles: truncated to fit, never wrapped through the border.
+- Library items whose stored files are damaged are not listed by `/show`, just as `/library` and
+  `littletavern list` already skip them; nothing new is reported for them.
+- Long names in picker entries are truncated to fit. A long panel title wraps onto further lines
+  inside the frame. Nothing is ever drawn across or outside the border.
 
 ## Requirements *(mandatory)*
 
@@ -228,11 +232,14 @@ and `/new` as pickers or actions without ids, and no longer list `/chat`, `/atta
   previous chat MUST remain saved and resumable from `/sessions`. In innkeeper mode it MUST clear
   the innkeeper conversation. Otherwise it MUST point to `/characters` and `/innkeeper`.
 - **FR-008**: Every overlay MUST be drawn with a visible border and its title, MUST fit the
-  terminal width, and MUST stay visible without colour (`NO_COLOR`).
+  terminal width with all content inside the border (entries truncated, long titles wrapped
+  inside the frame), and MUST stay visible without colour (`NO_COLOR`).
 - **FR-009**: No message, hint, help text, README section or command contract MAY suggest typing
   an id inside the app. The shell subcommands keep their ids.
 - **FR-010**: The command-line subcommands (`import`, `list`, `show`, `create`, `dry-run`) MUST
   behave exactly as before.
+- **FR-011**: Continuous integration MUST run on pull requests and on pushes to `main`, and MUST
+  NOT run a second time for pushes to other branches.
 
 ### Key Entities
 
