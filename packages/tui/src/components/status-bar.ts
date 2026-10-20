@@ -1,11 +1,13 @@
-import { Text, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { type Component, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import type { SessionTotals } from "@littletavern/engine";
 import { stripControls } from "../sanitize.ts";
+import { messageStyles } from "../theme.ts";
 
 export interface StatusInfo {
   model: string;
   keySource: string;
   character?: string;
+  persona?: string;
   totals?: SessionTotals;
 }
 
@@ -19,49 +21,59 @@ function cost(totals: SessionTotals): string {
   return `$${totals.cost.toFixed(4)}${totals.incomplete ? "~" : ""}`;
 }
 
-/** One line: labelled when it fits, the compact form when the terminal is narrow. */
-export class StatusBar extends Text {
+/** The two status components are mounted above the transcript and below the input. */
+export class StatusBar implements Component {
   private info: StatusInfo;
+  readonly top: Component = { render: (width) => this.renderTop(width), invalidate() {} };
+  readonly bottom: Component = { render: (width) => this.renderBottom(width), invalidate() {} };
 
   constructor(info: StatusInfo) {
-    super("");
     this.info = info;
-    this.update(info);
   }
-
   update(info: StatusInfo): void {
     this.info = info;
-    this.setText(this.labelled());
+  }
+  invalidate(): void {}
+
+  private fit(labelled: string, compact: string, width: number): string {
+    const full = stripControls(labelled);
+    return visibleWidth(full) <= width
+      ? full
+      : truncateToWidth(stripControls(compact), Math.max(0, width));
   }
 
-  private labelled(): string {
-    const { character, model, keySource, totals } = this.info;
-    const parts = [
+  private renderTop(width: number): string[] {
+    const { character, persona, model, keySource } = this.info;
+    const key =
+      keySource === "none" ? "No API key — /apikey" : `Model: ${model} | Key: ${keySource}`;
+    const labels = [
       ...(character ? [`Character: ${character}`] : []),
-      `Model: ${model}`,
-      `Key: ${keySource}`,
+      ...(persona ? [`Persona: ${persona}`] : []),
+      key,
     ];
-    if (totals?.requests) {
-      parts.push(`Tokens: ${totals.inputTokens} in / ${totals.outputTokens} out`);
-      parts.push(`Cache: ${cacheHitPercent(totals)}%`);
-      parts.push(cost(totals));
-    }
-    return stripControls(parts.join(" | "));
+    const compact = [
+      ...(character ? [character] : []),
+      ...(persona ? [`Persona: ${persona}`] : []),
+      keySource === "none" ? key : `${model} | Key: ${keySource}`,
+    ];
+    return [this.fit(labels.join(" | "), compact.join(" | "), width)];
   }
 
-  private compact(): string {
-    const { character, model, keySource, totals } = this.info;
-    const usage = totals?.requests
-      ? `${totals.inputTokens}/${totals.outputTokens} | ${cost(totals)}`
-      : "—";
-    return stripControls(
-      `${character ? `${character} | ` : ""}${model} | Key: ${keySource} | ${usage}`,
-    );
+  private renderBottom(width: number): string[] {
+    const totals = this.info.totals;
+    if (!totals?.requests) return [];
+    return [
+      messageStyles.muted(
+        this.fit(
+          `Tokens: ${totals.inputTokens} in / ${totals.outputTokens} out | Cache: ${cacheHitPercent(totals)}% | ${cost(totals)}`,
+          `${totals.inputTokens}/${totals.outputTokens} | ${cost(totals)}`,
+          width,
+        ),
+      ),
+    ];
   }
 
-  override render(width: number): string[] {
-    const labelled = this.labelled();
-    if (visibleWidth(labelled) <= width) return [labelled];
-    return [truncateToWidth(this.compact(), Math.max(0, width))];
+  render(width: number): string[] {
+    return [...this.renderTop(width), ...this.renderBottom(width)];
   }
 }

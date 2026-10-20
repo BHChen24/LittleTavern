@@ -15,8 +15,10 @@ export class ModelPicker implements Component {
   private list: SelectList;
   onSelect?: (model: ModelInfo) => void;
   onCancel?: () => void;
-  constructor() {
+  constructor(currentModel?: string) {
     this.list = this.createList();
+    if (currentModel)
+      this.list.setSelectedIndex(this.models.findIndex((model) => model.id === currentModel));
   }
   get focused(): boolean {
     return this.input.focused;

@@ -5,6 +5,7 @@ import {
   CombinedAutocompleteProvider,
   Container,
   Editor,
+  Loader,
   matchesKey,
   ProcessTerminal,
   ScrollView,
@@ -41,6 +42,7 @@ import {
   PERSONA_TEMPLATE,
   type PersonaItem,
   parsePersona,
+  readActivePersona,
   readSavedKey,
   readSettings,
   resolveApiKey,
@@ -55,6 +57,7 @@ import {
 import { COMMANDS, helpText } from "./commands.ts";
 import { FileBrowser } from "./components/file-browser.ts";
 import { HomeScreen } from "./components/home-screen.ts";
+import { InputBox } from "./components/input-box.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker, type PickerItem } from "./components/list-picker.ts";
 import { MessageView } from "./components/message-view.ts";
@@ -118,22 +121,21 @@ export function createApp(options: AppOptions = {}) {
     if (inChat) return;
     inChat = true;
     tui.clear();
-    const header = new Text(`LittleTavern ${VERSION}`);
-    tui.addChild(header);
+    tui.addChild(status.top);
     tui.addChild(transcript);
-    tui.addChild(editor);
-    tui.addChild(status);
+    tui.addChild(inputBox);
+    tui.addChild(status.bottom);
     tui.setLayoutRoot(
       new VStack([
-        { component: header, shrink: 1, minSize: 0 },
+        { component: status.top, shrink: 1, minSize: 0 },
         {
           component: new ScrollView(transcript, { primary: true, follow: "end" }),
           basis: 0,
           grow: 1,
           minSize: 1,
         },
-        { component: editor, shrink: 1, minSize: 3 },
-        { component: status, shrink: 1, minSize: 0 },
+        { component: inputBox, shrink: 1, minSize: 3 },
+        { component: status.bottom, shrink: 1, minSize: 0 },
       ]),
     );
     tui.setFocus(editor);
@@ -141,6 +143,21 @@ export function createApp(options: AppOptions = {}) {
   }
   let reply: MessageView | undefined;
   let chat: CharacterChat | null = null;
+  const inputBox = new InputBox(editor, () =>
+    !activeKey
+      ? "Add your key with /apikey to start talking"
+      : chat
+        ? `Talk to ${display(chat.character.name)}… (/ for commands)`
+        : "Talk… (/ for commands)",
+  );
+  let waiting: Loader | undefined;
+  function clearWaiting(): void {
+    if (!waiting) return;
+    waiting.stop();
+    transcript.removeChild(waiting);
+    waiting = undefined;
+    tui.requestRender();
+  }
   const commands = COMMANDS({ paths, getChat: () => chat });
   editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
   let response = "";
@@ -187,6 +204,7 @@ export function createApp(options: AppOptions = {}) {
       updateStatus();
       if (replacedEnvironment)
         notice("OPENROUTER_API_KEY in the environment will be used again next launch.");
+      openModelPicker();
     };
     tui.showOverlay(keyPrompt, { width: "90%" });
     tui.requestRender();
@@ -257,6 +275,7 @@ export function createApp(options: AppOptions = {}) {
       model: modelId,
       keySource: activeKey?.source ?? "none",
       character: chat?.character.name,
+      persona: readActivePersona(paths).persona?.name,
       totals: sumUsage(records),
     });
   }
@@ -431,6 +450,7 @@ export function createApp(options: AppOptions = {}) {
       }
       writeSettings(paths, { persona: file });
       notice(`You are now ${persona.name}`);
+      updateStatus();
     } catch (error) {
       errorNotice(
         `${error instanceof Error ? error.message : String(error)} File path: ${draft ?? file}`,
@@ -467,9 +487,11 @@ export function createApp(options: AppOptions = {}) {
         else if (choice === "none") {
           writeSettings(paths, { persona: null });
           notice("No persona is active.");
+          updateStatus();
         } else if (typeof choice === "object") {
           writeSettings(paths, { persona: choice.file });
           notice(`You are now ${choice.name}`);
+          updateStatus();
         }
       };
       tui.showOverlay(picker, { width: "90%" });
@@ -518,26 +540,37 @@ export function createApp(options: AppOptions = {}) {
     await stream(() => (chat ? chat.regenerate() : Promise.resolve(null)));
   }
   async function stream(run: () => Promise<unknown>): Promise<void> {
+    waiting = new Loader(
+      tui,
+      messageStyles.accent,
+      messageStyles.muted,
+      `${display(chat?.character.name ?? "Assistant")} is writing…`,
+    );
+    transcript.addChild(waiting);
     reply = addMessage("character", "");
     response = "";
     editor.disableSubmit = true;
-    running = run();
+    tui.requestRender();
     try {
+      running = run();
       await running;
     } catch (error) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
       errorNotice("Chat request failed. See the diagnostic log.");
     } finally {
+      clearWaiting();
       editor.disableSubmit = false;
       tui.requestRender();
     }
   }
   const onDelta = session.onDelta((delta) => {
+    if (delta) clearWaiting();
     response += delta;
     reply?.setText(display(response));
     tui.requestRender();
   });
   const onFinish = session.onFinish((turn) => {
+    clearWaiting();
     const record = toUsageRecord(turn, {
       sessionId: chat?.sessionId ?? sessionId,
       modelPrice: findAllowedModel(turn.model)?.price ?? null,
@@ -575,6 +608,7 @@ export function createApp(options: AppOptions = {}) {
   function quit(): Promise<void> {
     if (closing) return closing;
     closing = (async () => {
+      clearWaiting();
       session.abort();
       try {
         await running;
@@ -599,6 +633,32 @@ export function createApp(options: AppOptions = {}) {
     process.exitCode = 1;
     void quit();
   };
+
+  function openModelPicker(): void {
+    const picker = new ModelPicker(modelId);
+    picker.onCancel = () => {
+      tui.hideOverlay();
+      tui.requestRender();
+    };
+    picker.onSelect = (model) => {
+      try {
+        session.setModel(model.id);
+        modelId = model.id;
+      } catch {
+        errorNotice("Could not select that model.");
+        return;
+      }
+      try {
+        writeSettings(paths, { model: model.id });
+      } catch {
+        errorNotice("Could not save the selected model; using it for this session only.");
+      }
+      tui.hideOverlay();
+      updateStatus();
+      tui.requestRender();
+    };
+    tui.showOverlay(picker, { width: "90%" });
+  }
 
   async function submit(value: string): Promise<void> {
     const text = value.trim();
@@ -734,32 +794,7 @@ export function createApp(options: AppOptions = {}) {
         await regenerate(value);
         return;
       },
-      model: async () => {
-        const picker = new ModelPicker();
-        picker.onCancel = () => {
-          tui.hideOverlay();
-          tui.requestRender();
-        };
-        picker.onSelect = (model) => {
-          try {
-            session.setModel(model.id);
-            modelId = model.id;
-          } catch {
-            errorNotice("Could not select that model.");
-            return;
-          }
-          try {
-            writeSettings(paths, { model: model.id });
-          } catch {
-            errorNotice("Could not save the selected model; using it for this session only.");
-          }
-          tui.hideOverlay();
-          updateStatus();
-          tui.requestRender();
-        };
-        tui.showOverlay(picker, { width: "90%" });
-        return;
-      },
+      model: openModelPicker,
       help: async () => {
         const help = new Text(helpText());
         tui.showOverlay(help);
@@ -799,6 +834,7 @@ export function createApp(options: AppOptions = {}) {
       return { consume: true };
     }
     if (matchesKey(data, "escape") && session.isStreaming) {
+      clearWaiting();
       session.abort();
       return { consume: true };
     }

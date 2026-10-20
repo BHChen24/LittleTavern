@@ -18,6 +18,16 @@
 - Phase 2: wheel, native selection/copy, resize and restore on each exit path remain owner
   manual checks (T-j); the adapter's success/error contract has a small injected-function test.
 
+- Phase 4: `InputBox` contains the original Editor and uses pi's exported cursor helpers for
+  its empty line; focus and editing still target the Editor. The placeholder keeps one cursor
+  cell and truncates the hint to the remaining width.
+- Phase 4: the status exposes top and bottom components from one `StatusInfo`. Top carries
+  character/persona/model/key; bottom carries usage only after a request, with the compact
+  form when the labelled form cannot fit. Persona names are read fresh on status updates.
+- Phase 4: the existing simulated reply factory was synchronous in our adapter even though
+  pi supports asynchronous factories. It now accepts a promise so the planned delayed-response
+  lifecycle tests can use the real faux provider without timers or a network.
+
 ## Open behaviour questions
 
-None at the end of Phase 1.
+None.

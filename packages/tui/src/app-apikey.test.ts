@@ -72,6 +72,8 @@ it("offers only OpenRouter, masks the key and defaults to session only without w
   expect(choices).toContain(paths.credentialsFile);
   expect(choices).toContain("readable only by you");
   input("\r");
+  expect(overlay()).toContain("Choose a model");
+  input("\x1b");
   expect(app.tui.getFocusedComponent()).toBe(app.editor);
   expect(app.tui.hasOverlay()).toBe(false);
   expect(existsSync(paths.credentialsFile)).toBe(false);
@@ -96,6 +98,8 @@ it("writes a saved key only when explicitly selected, with mode 0600, and can fo
   input("\r");
   input("\x1b[B");
   input("\r");
+  expect(overlay()).toContain("Choose a model");
+  input("\x1b");
   expect(readSavedKey(paths).key).toBe("synthetic-saved-key");
   expect(statSync(paths.credentialsFile).mode & 0o777).toBe(0o600);
   await app.submit("/apikey");
@@ -107,7 +111,7 @@ it("writes a saved key only when explicitly selected, with mode 0600, and can fo
   input("\x1b[B");
   input("\r");
   expect(readSavedKey(paths).key).toBeNull();
-  expect(screen()).toContain("Key: none");
+  expect(screen()).toContain("No API key — /apikey");
   await app.submit("/apikey");
   input("\r");
   expect(overlay()).not.toContain("Forget saved key");

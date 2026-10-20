@@ -72,7 +72,7 @@ it("starts a character chat, regenerates the reply and records usage under the c
     await app.submit("/lorebooks");
     expect(screen()).toContain("· No lorebooks.");
     const lines = app.tui.children.flatMap((component) => component.render(80));
-    expect(lines.at(-1)).toContain("Mira |");
+    expect(lines[0]).toContain("Character: Mira |");
     expect(lines.filter((line) => /^─{4}/.test(line))).toHaveLength(2);
     const records = readUsageRecords(paths.usageLedgerFile);
     expect(records).toHaveLength(2);

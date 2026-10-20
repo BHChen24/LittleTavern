@@ -88,9 +88,9 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 4: User Stories 4, 5, 6 - Waiting, placeholder, key first (P1)
 
-- [ ] T008 [US4] Add the `Loader` waiting indicator in `app.ts` (R4). Write tests T-g with a simulated reply that waits before answering
-- [ ] T009 [P] [US5] Create `components/input-box.ts` (R5) and use it in `app.ts`, with the three placeholders. Write tests T-d
-- [ ] T010 [US6] Status bar (R6, R7a):
+- [X] T008 [US4] Add the `Loader` waiting indicator in `app.ts` (R4). Write tests T-g with a simulated reply that waits before answering
+- [X] T009 [P] [US5] Create `components/input-box.ts` (R5) and use it in `app.ts`, with the three placeholders. Write tests T-d
+- [X] T010 [US6] Status bar (R6, R7a):
   - with no key, show `No API key — /apikey` and no model;
   - split the status into a top line (character, persona, model) and a bottom line (tokens, cache, cost), keeping 007's narrow fallback;
   - the persona field is `Persona: <name>` from 008's `readActivePersona`, added to `StatusInfo` as `persona?: string`; with no persona, or when the active one falls back, the field is omitted, the same way `character` is omitted outside a chat. It updates after `/persona` changes the selection;

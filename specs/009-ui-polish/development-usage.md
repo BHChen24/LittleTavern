@@ -73,3 +73,27 @@ Subsequent commits and verification invocations are recorded in the next phase's
     Outcome: pinned APIs checked for the next phase.
 38. `write_stdin`: collect gate. Outcome: build/lint passed; 53 files, 295 tests passed.
 39. `exec_command`: mark T005-T007 and record this usage. Outcome: phase ready for commit.
+
+## Phase 4
+
+40. `exec_command` (escalated): commit validated Phase 3. Outcome: commit `f9867c9`.
+41. `exec_command`: inspect cursor helpers, simulated factory, status and selection APIs.
+    Outcome: wrapping and preselection mechanisms confirmed.
+42. `exec_command`: inspect faux async support and terminal-colour query API.
+    Outcome: async factory support verified in pinned source.
+43. `exec_command`: add placeholder, picker, status, waiting, persona, tiny and NO_COLOR tests.
+    Outcome: targeted red tests started.
+44. `exec_command`: implement waiting, InputBox, split status, key/model chaining and async faux factory.
+    Outcome: build passed; ANSI-test regex needed a lint annotation.
+45. `write_stdin`: collect red-test result. Outcome: expected missing behavior failures reproduced.
+46. `write_stdin`: collect full gate. Outcome: build passed; lint blocked the ANSI regex assertion.
+47. `exec_command`: try RegExp constructor and rerun gate. Outcome: Biome normalized it to a regex.
+48. `exec_command`: annotate intentional ANSI assertion and rerun gate. Outcome: gate started.
+49. `write_stdin`: collect previous gate. Outcome: lint error from the unannotated version confirmed.
+50. `write_stdin`: collect annotated gate. Outcome: 300 tests passed; two old layout expectations needed updating.
+51. `exec_command`: inspect layout, placeholder cursor and diff. Outcome: fix needed to preserve cursor end marker.
+52. `exec_command`: use pi cursor helper, align changed status assertions, strengthen first-delta/NO_COLOR/key tests.
+    Outcome: gate started.
+53. `write_stdin`: collect gate. Outcome: build/lint passed; 55 files, 302 tests passed.
+54. `exec_command`: check diff and inspect optional palette/editor APIs. Outcome: no whitespace problems.
+55. `exec_command`: mark T008-T010 and record notes/usage. Outcome: phase ready for commit.

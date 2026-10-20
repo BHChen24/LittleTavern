@@ -96,7 +96,7 @@ it("waits for the interrupted ledger record before quitting and shows ledger tot
     expect(records[0]?.outcome).toBe("interrupted");
     const totals = sumUsage(records);
     const rendered = app.tui.children.flatMap((component) => component.render(80)).join("\n");
-    expect(rendered).toContain(`${totals.inputTokens}/${totals.outputTokens}`);
+    expect(rendered).toContain(`Tokens: ${totals.inputTokens} in / ${totals.outputTokens} out`);
     expect(rendered).toContain(`$${totals.cost.toFixed(4)}`);
     expect(rendered).toContain("[interrupted]");
   } finally {

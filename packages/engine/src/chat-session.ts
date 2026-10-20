@@ -33,7 +33,7 @@ export interface SimulatedMessage {
 export type SimulatedReply =
   | string
   | { text: string; errorMessage: string }
-  | ((history: SimulatedMessage[]) => string);
+  | ((history: SimulatedMessage[]) => string | Promise<string>);
 /** A fully assembled request (see 003's AssembledPrompt); used by character chats. */
 export interface ChatContext {
   system: string;
@@ -77,7 +77,7 @@ export class ChatSession {
         ],
       });
       faux.setResponses(
-        options.simulated.replies.map((reply) => (context) => {
+        options.simulated.replies.map((reply) => async (context) => {
           if (typeof reply === "string") return fauxAssistantMessage(reply);
           if (typeof reply === "object")
             return fauxAssistantMessage(reply.text, {
@@ -94,7 +94,7 @@ export class ChatSession {
                     .map((block) => (block.type === "text" ? block.text : ""))
                     .join(""),
           }));
-          return fauxAssistantMessage(reply(history));
+          return fauxAssistantMessage(await reply(history));
         }),
       );
       this.models.setProvider(faux.provider);

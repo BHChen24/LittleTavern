@@ -19,3 +19,13 @@ it("fuzzy-filters by a name fragment, selects and cancels", () => {
   picker.handleInput("\x1b");
   expect(cancelled).toBe(true);
 });
+
+it("preselects the current model and keeps it on cancellation", () => {
+  const picker = new ModelPicker("openai/gpt-4o-mini");
+  let selected = "";
+  picker.onSelect = (model) => {
+    selected = model.id;
+  };
+  picker.handleInput("\r");
+  expect(selected).toBe("openai/gpt-4o-mini");
+});

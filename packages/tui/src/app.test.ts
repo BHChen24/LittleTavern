@@ -64,7 +64,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
     expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
       "Assistant:",
     );
-    expect(app.tui.children.flatMap((component) => component.render(80)).at(-1)).toContain(
+    expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
       "Key: environment",
     );
   } finally {
