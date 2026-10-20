@@ -16,7 +16,9 @@
     "lint:fix": "biome check --write .",
     "prepare": "husky",
     "dev": "pnpm build && node --env-file-if-exists=.env packages/tui/dist/cli.js",
-    "test:live": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --config vitest.live.config.ts"
+    "test:live": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --config vitest.live.config.ts",
+    "release:build": "pnpm build && node scripts/build-release.mjs",
+    "release:check": "pnpm release:build && node scripts/check-release.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",

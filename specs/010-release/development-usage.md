@@ -108,3 +108,31 @@ in the session transcript. No environment file or real credentials are read or u
 64. `exec_command`: search source hints, inspect installed esbuild types and check diff. Outcome:
     no obsolete hints; diff clean; bundler options confirmed locally.
 65. `exec_command`: mark T006-T008 and update usage. Outcome: import phase ready to commit.
+
+## Release package
+
+66. `exec_command` (escalated): commit import phase. Outcome: 7dc27e3; hooks passed.
+67. `write_stdin`: collect import commit. Outcome: committed.
+68. `exec_command`: add allowlist unit tests and run before implementation. Outcome: expected missing-module failure.
+69. `exec_command`: implement bundler/manifest/pack and allowlist/tag/secret checker; format,
+    run gate and release check. Outcome: build/lint and 342 tests passed; eight-file package built;
+    sandbox blocked tar subprocess with EPERM.
+70. `write_stdin`: collect packaging gate/check. Outcome: tar subprocess restriction confirmed.
+71. `exec_command`: prepare isolated install smoke script in /tmp. Outcome: script created.
+72. `exec_command` (escalated): rerun local release check. Outcome: exact eight files verified;
+    gitleaks no findings; release check passed.
+73. `write_stdin`: collect release check. Outcome: passed.
+74. `exec_command` (escalated): run install smoke. Outcome: npm parsed unprefixed tarball path
+    as GitHub shorthand; install failed before running the app.
+75. `write_stdin`: collect initial smoke. Outcome: invalid GitHub shorthand error confirmed.
+76. `exec_command`: check bad version tag. Outcome: expected exit 1 with mismatch reason.
+77. `exec_command`: correct smoke path to explicit ./ and document implementation detail. Outcome: corrected.
+78. `exec_command` (escalated): rerun isolated smoke. Outcome: installed 135 dependencies;
+    version/import/list succeeded in temporary prefix/home.
+79. `web.run`: inspect official gitleaks release and GitHub npm OIDC documentation. Outcome:
+    release page loaded; attempted GitHub docs path unavailable. No external mutations.
+80. `write_stdin`: collect corrected smoke. Outcome: passed.
+81. `exec_command`: query public GitHub release asset metadata. Outcome: sandbox DNS blocked;
+    no content returned, follow-up will use approved network access.
+82. `exec_command`: record package/smoke evidence, mark T009-T011 and update usage. Outcome:
+    packaging phase ready to commit.

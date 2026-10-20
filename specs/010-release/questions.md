@@ -15,3 +15,7 @@ None through Phase 4.
 - T007/T008: the browser bounds lexical navigation to the import root; the app validates the
   real selected file, including selections through directory links, as specified by T-b/T-c.
   Parent navigation cannot leave the configured root.
+
+- T011: npm interpreted `release/littletavern-0.1.0.tgz` as a GitHub shorthand instead
+  of a local tarball. The smoke test and workflows use `./release/littletavern-*.tgz`;
+  this is a path spelling correction, with no distribution behavior change.
