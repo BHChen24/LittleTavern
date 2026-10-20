@@ -34,8 +34,9 @@ a finished product.
 
 ### Session 2026-10-20
 
-- Q: Full-screen or inline? → A: Full screen by default. The terminal is restored on exit. Mouse
-  capture stays off by default, so the terminal's own selection and copy keep working.
+- Q: Full-screen or inline? → A: Full screen by default, and the terminal is restored on exit.
+  **Mouse is on by default** (owner, 2026-10-20). Wheel scrolling works, and text selection and
+  copy are handled by the app: copied on release. A setting can turn the mouse off.
 - Q: Should the home screen become a launcher menu? → A: No. Most actions happen through `/`
   commands after entering. The home screen only gains a logo.
 - Q: Input placeholder wording? → A: Immersive, not "Message": "Talk to <character>… (/ for
@@ -68,8 +69,11 @@ and the previous shell output is back.
    status bar stay in place.
 3. **Given** the app quits normally, by Ctrl+C or because of an error, **When** it exits, **Then**
    the terminal shows its previous content and works normally.
-4. **Given** the default settings, **When** the owner drags to select text, **Then** the terminal's
-   own selection works (mouse capture is off). A setting can turn mouse scrolling on.
+4. **Given** the default settings, **When** the owner scrolls the mouse wheel, **Then** the
+   transcript scrolls. **When** they drag to select text, **Then** the text is selected and copied
+   to the clipboard on release.
+5. **Given** the mouse setting is turned off, **When** the owner drags, **Then** the terminal's own
+   selection works.
 
 ---
 
@@ -222,8 +226,9 @@ capability. Otherwise it is listed as deferred in the plan:
 
 - **FR-001**: The app MUST run full-screen by default, using pi-tui's full-screen mode, and MUST
   restore the terminal on every exit path.
-- **FR-002**: The transcript MUST be scrollable with the keyboard while the input and the status
-  stay fixed. Mouse capture MUST be off by default and MAY be enabled by a setting.
+- **FR-002**: The transcript MUST be scrollable with the keyboard and the mouse wheel while the
+  input and the status stay fixed. Mouse capture MUST be on by default, with app-owned selection
+  that copies on release, and MUST be possible to turn off with a setting.
 - **FR-003**: The home screen MUST show an ASCII or box-drawing logo when it fits, and a plain
   title otherwise.
 - **FR-004**: The user's and the character's labels MUST have equal weight and different colours,
@@ -244,7 +249,7 @@ capability. Otherwise it is listed as deferred in the plan:
 ### Key Entities
 
 - **Theme**: named styles for user, character, notice, error, dialogue, accent and muted text.
-- **Display setting**: mouse capture on or off (default off).
+- **Display setting**: mouse capture on or off (default on).
 
 ## Success Criteria *(mandatory)*
 
