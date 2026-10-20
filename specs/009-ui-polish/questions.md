@@ -28,6 +28,13 @@
   pi supports asynchronous factories. It now accepts a promise so the planned delayed-response
   lifecycle tests can use the real faux provider without timers or a network.
 
+- Phase 5: Ctrl+O is active when the chat Editor has focus. It round-trips the current input
+  through a private temporary `message.md`, uses the existing VISUAL/EDITOR launcher, and
+  removes the temporary directory afterward. A failed editor leaves the input unchanged and
+  shows an error. The terminal restarts in a `finally` block.
+- Phase 5: T012's explicitly permitted deferral is recorded in the report; no palette-detection
+  policy or asynchronous theme state was introduced.
+
 ## Open behaviour questions
 
 None.

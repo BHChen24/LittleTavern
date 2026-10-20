@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   CombinedAutocompleteProvider,
@@ -634,6 +635,31 @@ export function createApp(options: AppOptions = {}) {
     void quit();
   };
 
+  function composeInput(): void {
+    let folder: string | undefined;
+    try {
+      folder = mkdtempSync(join(tmpdir(), "littletavern-message-"));
+      const file = join(folder, "message.md");
+      writeFileSync(file, editor.getText(), { mode: 0o600 });
+      tui.stop();
+      try {
+        const result = openInEditor(file, env.VISUAL || env.EDITOR);
+        if (!result.ok) {
+          errorNotice(result.reason);
+          return;
+        }
+        editor.setText(readFileSync(file, "utf8"));
+      } finally {
+        tui.start();
+        tui.requestRender(true);
+      }
+    } catch (error) {
+      errorNotice(error instanceof Error ? error.message : String(error));
+    } finally {
+      if (folder) rmSync(folder, { recursive: true, force: true });
+    }
+  }
+
   function openModelPicker(): void {
     const picker = new ModelPicker(modelId);
     picker.onCancel = () => {
@@ -827,6 +853,10 @@ export function createApp(options: AppOptions = {}) {
   tui.addInputListener((data) => {
     if (matchesKey(data, "ctrl+c")) {
       void quit();
+      return { consume: true };
+    }
+    if (matchesKey(data, "ctrl+o") && inChat && tui.getFocusedComponent() === editor) {
+      composeInput();
       return { consume: true };
     }
     if (matchesKey(data, "ctrl+r")) {

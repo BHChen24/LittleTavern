@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { stripVTControlCharacters } from "node:util";
@@ -53,18 +53,16 @@ function fixture(reply: SimulatedReply = "Hello", key = true) {
     getApiKey: () => "synthetic",
     simulated: { replies: [reply] },
   });
-  const app = createApp({
-    terminal,
-    paths,
-    env: { OPENROUTER_API_KEY: key ? "synthetic" : undefined },
-    session,
-  });
+  const env: Record<string, string | undefined> = {
+    OPENROUTER_API_KEY: key ? "synthetic" : undefined,
+  };
+  const app = createApp({ terminal, paths, env, session });
   cleanups.push(async () => {
     await app.quit();
     rmSync(home, { recursive: true, force: true });
   });
   const lines = (width = 100) => app.tui.children.flatMap((component) => component.render(width));
-  return { app, home, paths, terminal, lines, input: (data: string) => input(data) };
+  return { app, home, paths, env, terminal, lines, input: (data: string) => input(data) };
 }
 
 it("keeps the waiting indicator until text arrives and removes it on error", async () => {
@@ -160,4 +158,39 @@ it("renders home, messages and status within 30 columns at eight rows under NO_C
   // biome-ignore lint/suspicious/noControlCharactersInRegex: Assert that ANSI colour controls are absent.
   expect(rendered.join("\n")).not.toMatch(/\x1b\[(?:3[0-9]|4[0-9]|9[0-7]|10[0-7])m/);
   expect(() => app.tui.renderNow(true)).not.toThrow();
+});
+
+it("composes the current draft through a fake VISUAL and restores the terminal and input", async () => {
+  const { app, home, env, terminal, input } = fixture();
+  const script = join(home, "compose.cjs");
+  writeFileSync(
+    script,
+    'const fs = require("node:fs"), path = require("node:path"); const file = process.argv[2]; fs.writeFileSync(path.join(__dirname, "opened-path.txt"), file); fs.appendFileSync(file, "\\nEdited second line.");',
+  );
+  env.VISUAL = `${process.execPath} ${script}`;
+  const start = vi.spyOn(terminal, "start");
+  const stop = vi.spyOn(terminal, "stop");
+  app.start();
+  app.enterChat();
+  app.editor.setText("Keep this first line.");
+  input("\x0f");
+  expect(app.editor.getText()).toBe("Keep this first line.\nEdited second line.");
+  expect(stop).toHaveBeenCalledOnce();
+  expect(start).toHaveBeenCalledTimes(2);
+  const draft = readFileSync(join(home, "opened-path.txt"), "utf8");
+  expect(existsSync(draft)).toBe(false);
+  expect(app.tui.getFocusedComponent()).toBe(app.editor);
+});
+
+it("keeps the draft and reports an editor failure", () => {
+  const { app, home, env, input, lines } = fixture();
+  const script = join(home, "failed-editor.cjs");
+  writeFileSync(script, "process.exit(7);");
+  env.VISUAL = `${process.execPath} ${script}`;
+  app.start();
+  app.enterChat();
+  app.editor.setText("Keep this draft.");
+  input("\x0f");
+  expect(app.editor.getText()).toBe("Keep this draft.");
+  expect(lines().join("\n")).toContain("Error: Could not run editor");
 });

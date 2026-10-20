@@ -97,3 +97,17 @@ Subsequent commits and verification invocations are recorded in the next phase's
 53. `write_stdin`: collect gate. Outcome: build/lint passed; 55 files, 302 tests passed.
 54. `exec_command`: check diff and inspect optional palette/editor APIs. Outcome: no whitespace problems.
 55. `exec_command`: mark T008-T010 and record notes/usage. Outcome: phase ready for commit.
+
+## Phase 5
+
+56. `exec_command` (escalated): commit validated Phase 4. Outcome: commit `647fbd5`.
+57. `exec_command`: add fake-VISUAL compose success/failure tests and run them.
+    Outcome: expected failures before Ctrl+O implementation.
+58. `exec_command`: implement Ctrl+O with temporary-file round trip and update help; run gate.
+    Outcome: gate started.
+59. `write_stdin`: collect editor red tests. Outcome: both missing behaviors reproduced.
+60. `write_stdin`: collect full gate. Outcome: build/lint passed; 55 files, 304 tests passed.
+61. `exec_command`: read convergence skill and external acceptance script.
+    Outcome: convergence workflow loaded; acceptance writes only its results and temporary app home.
+62. `exec_command`: mark T011-T012, record allowed light/dark deferral and implementation notes.
+    Outcome: Phase 5 ready for commit; final validation still pending.

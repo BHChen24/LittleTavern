@@ -104,8 +104,8 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 5: User Story 7 - Optional refinements (P3)
 
-- [ ] T011 [US7] Bind **Ctrl+O** in `app.ts` to open the current input text in `$EDITOR` through 007's `openInEditor`, wrapped in `tui.stop()`/`tui.start()`, and put the edited text back into the input. Add it to `helpText()`. Test it with a fake `VISUAL`
-- [ ] T012 [US7] Light/dark palette via `TUI.queryTerminalColors()`, **only if it takes little time**. Otherwise record it as deferred in the report
+- [X] T011 [US7] Bind **Ctrl+O** in `app.ts` to open the current input text in `$EDITOR` through 007's `openInEditor`, wrapped in `tui.stop()`/`tui.start()`, and put the edited text back into the input. Add it to `helpText()`. Test it with a fake `VISUAL`
+- [X] T012 [US7] Light/dark palette via `TUI.queryTerminalColors()`, **only if it takes little time**. Otherwise record it as deferred in the report
 
 **Checkpoint**: checks pass. Commit.
 

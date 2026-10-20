@@ -132,6 +132,6 @@ export function helpText(): string {
           `/${command.name}${command.argumentHint ? ` ${command.argumentHint}` : ""}  ${command.description}`,
       )
       .join("\n") +
-    "\nCtrl+C  Quit\nCtrl+R  Regenerate the last reply\nEsc     Interrupt generation; close overlays or suggestions\nEnter   Send a message\nPgUp/PgDn  Scroll transcript\nCtrl+Home/Ctrl+End  Scroll to first/latest message\nCtrl+Shift+F  Search transcript"
+    "\nCtrl+C  Quit\nCtrl+R  Regenerate the last reply\nCtrl+O  Compose the current input in $EDITOR\nEsc     Interrupt generation; close overlays or suggestions\nEnter   Send a message\nPgUp/PgDn  Scroll transcript\nCtrl+Home/Ctrl+End  Scroll to first/latest message\nCtrl+Shift+F  Search transcript"
   );
 }
