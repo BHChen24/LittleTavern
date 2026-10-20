@@ -93,6 +93,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 - [ ] T010 [US6] Status bar (R6, R7a):
   - with no key, show `No API key — /apikey` and no model;
   - split the status into a top line (character, persona, model) and a bottom line (tokens, cache, cost), keeping 007's narrow fallback;
+  - the persona field is `Persona: <name>` from 008's `readActivePersona`, added to `StatusInfo` as `persona?: string`; with no persona, or when the active one falls back, the field is omitted, the same way `character` is omitted outside a chat. It updates after `/persona` changes the selection;
   - after a successful `/apikey`, open the `ModelPicker` with the current model preselected.
 
   Write tests T-e and T-h.
