@@ -16,7 +16,7 @@ lorebooks can be used with a character. Usage accounting from 001 keeps working.
 
 001 gives a working chat with a model, 002 an imported library, and 003 a prompt assembly with a
 trace. This feature connects them into the v1 end result: **basic roleplay in the terminal with
-an imported card**. 005 then shows the trace (`--dry-run`, `/lore`) for the demo.
+an imported card**. 005 then shows the trace (`--dry-run`, `/trace`) for the demo.
 
 ## Clarifications
 
