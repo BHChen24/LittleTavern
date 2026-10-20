@@ -75,7 +75,7 @@ the macros replaced.
 
 ## Phase 4: User Story 2 - Lore appears when the conversation calls for it (P1)
 
-- [ ] T010 [US2] Implement the activation part of `packages/engine/src/assembly/lore.ts`, following R5 exactly.
+- [X] T010 [US2] Implement the activation part of `packages/engine/src/assembly/lore.ts`, following R5 exactly.
   - **Entry order**: the character's embedded lorebook first, then `input.lorebooks`.
   - **Scan**: the last `scanDepth` messages. For each message, replace macros, lowercase it, and search for each key; message numbers are 1-based positions in the full history.
   - **Decision order**: disabled → constant → no-keywords → first keyword match, scanning from the newest message → no-match. Empty-string keys are ignored.
@@ -83,7 +83,7 @@ the macros replaced.
   - **Output**: one `LoreDecision` per entry.
 
   Write tests T-c and T-d in `lore.test.ts`.
-- [ ] T011 [US2] Wire lore into `assemblePrompt`. Included entries are grouped by placement, sorted ascending by `insertionOrder` (ties keep their source order), and their contents, after macro replacement and joined with `\n`, become the `lore-before` part (before the description) and the `lore-after` part (after the scenario). Add the `lore-before` and `lore-after` `TracePart`s with `detail` "N entries", and set `trace.lore`. Add tests to `assemble.test.ts`: the User Story 2 example (constant, lighthouse, harbor, disabled) gives the exact reasons from spec User Story 4, and every entry appears exactly once in `trace.lore` (SC-002)
+- [X] T011 [US2] Wire lore into `assemblePrompt`. Included entries are grouped by placement, sorted ascending by `insertionOrder` (ties keep their source order), and their contents, after macro replacement and joined with `\n`, become the `lore-before` part (before the description) and the `lore-after` part (after the scenario). Add the `lore-before` and `lore-after` `TracePart`s with `detail` "N entries", and set `trace.lore`. Add tests to `assemble.test.ts`: the User Story 2 example (constant, lighthouse, harbor, disabled) gives the exact reasons from spec User Story 4, and every entry appears exactly once in `trace.lore` (SC-002)
 
 **Checkpoint**: checks pass. Commit.
 

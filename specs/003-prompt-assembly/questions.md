@@ -11,3 +11,9 @@
   adding them need not equal the estimate of the joined text. History fitting uses that same
   joined-system estimate, as R7 requires. An already oversized system with empty history also
   produces the context-window note.
+- R5 explicitly requires ignored-feature notes to read entry.source, not normalized fields.
+  Secondary-key and regex-key notes therefore inspect the card/world-info raw field names
+  (secondary_keys/keysecondary and keys/key); secondaryKeys is also recognized if present
+  in the raw source. Normalized-only values do not invent a raw-source feature note.
+- Numeric placement takes precedence over string placement, including an unsupported numeric
+  value: it goes after and receives the required ignored-feature note.

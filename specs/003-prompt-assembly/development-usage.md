@@ -29,3 +29,11 @@ assembly, macro substitution, post-history instructions and structured trace tot
 exported the contract API. Biome formatted the tests. Build/lint (73 files) and all 133 tests
 in 25 files passed. exec_command marked T006–T009 complete and git committed the phase.
 questions.md records the contract output shape and separator/rounding treatment.
+
+Phase 4: apply_patch added activation, placement, ignored-feature and assembly tests first;
+the expected missing module and absent-lore failures were observed. It implemented source-order
+activation, newest-message matching, macro/CJK handling, disabled/constant precedence, raw-source
+feature notes, numeric placement precedence and stable placement ordering. Trace decisions are
+carried with the activated content and copied directly into the final trace. Biome formatted
+the changes. Build/lint (75 files) and all 150 tests in 26 files passed; T010/T011 were marked
+complete for the phase commit. No extension data is executed.

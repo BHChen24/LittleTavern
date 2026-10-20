@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { assemblePrompt } from "./assemble.ts";
-import { chat, makeCharacter } from "./fixtures.ts";
+import { chat, makeCharacter, makeEntry, makeLorebook } from "./fixtures.ts";
 import { estimateTokens } from "./tokens.ts";
 import type { AssemblyInput } from "./types.ts";
 
@@ -99,4 +99,74 @@ it.each([undefined, 0])("uses the default context window for %s", (contextWindow
   const { prompt, trace } = assemblePrompt({ character: makeCharacter(), history, contextWindow });
   expect(prompt.history).toEqual(history);
   expect(trace.notes).toEqual([]);
+});
+
+it("assembles the story's lore example and traces every entry once", () => {
+  const character = makeCharacter({
+    name: "Luna",
+    systemPrompt: "main",
+    description: "description",
+    personality: "personality",
+    scenario: "scenario",
+    exampleMessages: "examples",
+    lorebook: makeLorebook("book", [
+      makeEntry({
+        name: "constant",
+        constant: true,
+        content: "Constant {{char}}",
+        insertionOrder: 10,
+        source: { position: 0 },
+      }),
+      makeEntry({
+        name: "lighthouse",
+        keys: ["lighthouse"],
+        content: "Lighthouse {{user}}",
+        insertionOrder: 5,
+      }),
+      makeEntry({ name: "harbor", keys: ["harbor"], content: "Harbor" }),
+      makeEntry({ name: "disabled", keys: ["lighthouse"], enabled: false, content: "Disabled" }),
+    ]),
+  });
+  const { prompt, trace } = assemblePrompt({
+    character,
+    history: chat("harbor", "old", "hello", "The old lighthouse"),
+  });
+  expect(prompt.system.split("\n\n")).toEqual([
+    "main",
+    "Constant Luna",
+    "description",
+    "personality",
+    "scenario",
+    "Lighthouse User",
+    "examples",
+  ]);
+  expect(trace.lore.map((item) => item.reason)).toEqual([
+    { kind: "constant" },
+    { kind: "keyword", key: "lighthouse", message: 4 },
+    { kind: "no-match", depth: 2 },
+    { kind: "disabled" },
+  ]);
+  expect(trace.lore.map((item) => item.index)).toEqual([0, 1, 2, 3]);
+  expect(trace.parts.filter((part) => part.source.startsWith("lore-"))).toEqual([
+    { source: "lore-before", tokens: estimateTokens("Constant Luna"), detail: "1 entries" },
+    { source: "lore-after", tokens: estimateTokens("Lighthouse User"), detail: "1 entries" },
+  ]);
+});
+it("sorts each placement ascending with source-order ties and evaluates books independently", () => {
+  const entries = [
+    makeEntry({ keys: ["key"], content: "second", insertionOrder: 2 }),
+    makeEntry({ keys: ["key"], content: "first", insertionOrder: 1 }),
+  ];
+  const { prompt, trace } = assemblePrompt({
+    character: makeCharacter({ systemPrompt: "main", lorebook: makeLorebook("embedded", entries) }),
+    lorebooks: [
+      makeLorebook("standalone", [
+        makeEntry({ keys: ["key"], content: "third", insertionOrder: 2 }),
+      ]),
+    ],
+    history: chat("key"),
+  });
+  expect(prompt.system).toBe("main\n\nfirst\nsecond\nthird");
+  expect(trace.lore.map((item) => item.lorebook)).toEqual(["embedded", "embedded", "standalone"]);
+  expect(trace.lore.every((item) => item.included)).toBe(true);
 });

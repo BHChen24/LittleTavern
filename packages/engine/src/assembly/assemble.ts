@@ -1,4 +1,5 @@
 import { fitHistory } from "./history.ts";
+import { activateLore } from "./lore.ts";
 import { replaceMacros } from "./macros.ts";
 import { estimateTokens } from "./tokens.ts";
 import {
@@ -21,6 +22,17 @@ export function assemblePrompt(input: AssemblyInput): {
   const character = input.character;
   const names = { char: character.name, user: input.userName ?? DEFAULT_USER_NAME };
   const main = character.systemPrompt.trim() ? character.systemPrompt : DEFAULT_MAIN_INSTRUCTION;
+  const lore = activateLore(input);
+  const includedLore = lore
+    .filter((item) => item.decision.included)
+    .sort((left, right) => left.insertionOrder - right.insertionOrder);
+  function lorePart(placement: "before" | "after"): { text: string; detail: string } {
+    const entries = includedLore.filter((item) => item.decision.placement === placement);
+    return {
+      text: entries.map((item) => item.content).join("\n"),
+      detail: `${entries.length} entries`,
+    };
+  }
   const parts: TracePart[] = [];
   const systemTexts: string[] = [];
   function addSystemPart(source: TracePart["source"], text: string, detail?: string): void {
@@ -29,9 +41,13 @@ export function assemblePrompt(input: AssemblyInput): {
     parts.push({ source, tokens: estimateTokens(text), ...(detail ? { detail } : {}) });
   }
   addSystemPart("main", replaceMacros(main, names));
+  const before = lorePart("before");
+  addSystemPart("lore-before", before.text, before.detail);
   addSystemPart("description", replaceMacros(character.description, names));
   addSystemPart("personality", replaceMacros(character.personality, names));
   addSystemPart("scenario", replaceMacros(character.scenario, names));
+  const after = lorePart("after");
+  addSystemPart("lore-after", after.text, after.detail);
   addSystemPart("examples", replaceMacros(character.exampleMessages, names));
   const system = systemTexts.join("\n\n");
   const postHistory = replaceMacros(character.postHistoryInstructions, names);
@@ -58,7 +74,7 @@ export function assemblePrompt(input: AssemblyInput): {
     trace: {
       tokensAreEstimates: true,
       parts,
-      lore: [],
+      lore: lore.map((item) => item.decision),
       history: { included: history.kept.length, leftOut: history.leftOut },
       notes: history.overflow ? ["request exceeds the context window"] : [],
       totalTokens: systemTokens + historyTokens + afterTokens,
