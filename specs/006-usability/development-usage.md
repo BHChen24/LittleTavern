@@ -67,3 +67,8 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Wait for clean convergence checkpoint | functions.exec → write_stdin | Build, lint and 241 tests passed with no lint findings |
 | Initial sandboxed Git commit attempt during Phase 2 preparation | exec_command (recorded earlier in the combined invocation) | Git metadata was read-only; retried with authorized filesystem escalation and committed Phase 1 |
 | Mark convergence corrections complete and document verified outcomes | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Commit convergence corrections | functions.exec → exec_command (escalated Git) | Committed 695f2af |
+| Finish implementation report and recheck feature completion | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Review final diff, task markers and post-implementation hooks | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for final Phase 7 checkpoint | functions.exec → write_stdin | Build, lint and 241 tests passed; no lint findings |
+| Commit final report, task markers and accounting; verify branch and clean worktree | functions.exec → exec_command (escalated Git) | The containing commit records completion; post-commit status and history are checked in this invocation |

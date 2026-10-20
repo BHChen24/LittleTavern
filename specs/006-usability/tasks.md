@@ -144,9 +144,9 @@ quickstart.md
 
 ## Phase 7: Polish
 
-- [ ] T012 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only`. The 19 automated checks must still pass (SC-005). If one fails because of an intended behaviour change, record it in the report rather than weakening the app
-- [ ] T013 Run `speckit-converge` on this feature and complete any tasks it appends
-- [ ] T014 Write `specs/006-usability/report.md` with the same sections as the earlier reports, plus a "Guided acceptance changes" section. That section lists the steps of `../acceptance/run-v1-acceptance.sh` that must change for the owner: the key prompt at startup is gone, `/apikey` replaces it, there is a home screen, and `/import` has a browser. Do not edit that script, because it is outside the repository. Commit
+- [X] T012 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only`. The 19 automated checks must still pass (SC-005). If one fails because of an intended behaviour change, record it in the report rather than weakening the app
+- [X] T013 Run `speckit-converge` on this feature and complete any tasks it appends
+- [X] T014 Write `specs/006-usability/report.md` with the same sections as the earlier reports, plus a "Guided acceptance changes" section. That section lists the steps of `../acceptance/run-v1-acceptance.sh` that must change for the owner: the key prompt at startup is gone, `/apikey` replaces it, there is a home screen, and `/import` has a browser. Do not edit that script, because it is outside the repository. Commit
 
 ---
 
