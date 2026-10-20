@@ -1,5 +1,5 @@
 import { fitHistory } from "./history.ts";
-import { activateLore } from "./lore.ts";
+import { activateLore, applyLoreBudget } from "./lore.ts";
 import { replaceMacros } from "./macros.ts";
 import { estimateTokens } from "./tokens.ts";
 import {
@@ -22,7 +22,7 @@ export function assemblePrompt(input: AssemblyInput): {
   const character = input.character;
   const names = { char: character.name, user: input.userName ?? DEFAULT_USER_NAME };
   const main = character.systemPrompt.trim() ? character.systemPrompt : DEFAULT_MAIN_INSTRUCTION;
-  const lore = activateLore(input);
+  const lore = applyLoreBudget(activateLore(input), settings.loreBudget);
   const includedLore = lore
     .filter((item) => item.decision.included)
     .sort((left, right) => left.insertionOrder - right.insertionOrder);

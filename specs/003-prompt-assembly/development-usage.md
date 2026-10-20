@@ -37,3 +37,10 @@ feature notes, numeric placement precedence and stable placement ordering. Trace
 carried with the activated content and copied directly into the final trace. Biome formatted
 the changes. Build/lint (75 files) and all 150 tests in 26 files passed; T010/T011 were marked
 complete for the phase commit. No extension data is executed.
+
+Phase 5: apply_patch added budget tests first and observed four expected failures. It
+implemented descending priority admission with stable source-order ties, a shared budget for
+constant/keyword entries, stop-at-first-overflow behavior and tokens for rejected candidates.
+Assembly applies the budget before placement. Tests also cover CJK costs, macro expansion
+before budgeting, literal macro-looking names, a 4000 default, overrides and zero budget.
+Build/lint (75 files) and all 154 tests in 26 files passed. T012 was marked complete for commit.

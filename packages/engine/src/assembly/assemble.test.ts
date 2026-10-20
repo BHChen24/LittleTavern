@@ -170,3 +170,43 @@ it("sorts each placement ascending with source-order ties and evaluates books in
   expect(trace.lore.map((item) => item.lorebook)).toEqual(["embedded", "embedded", "standalone"]);
   expect(trace.lore.every((item) => item.included)).toBe(true);
 });
+
+it("uses the default 4000-token lore budget and accepts an explicit override", () => {
+  const input: AssemblyInput = {
+    character: makeCharacter({
+      lorebook: makeLorebook("book", [
+        makeEntry({ constant: true, content: "汉".repeat(4000), insertionOrder: 2 }),
+        makeEntry({ constant: true, content: "字", insertionOrder: 1 }),
+      ]),
+    }),
+    history: [],
+  };
+  const result = assemblePrompt(input);
+  expect(result.trace.lore.map((item) => [item.included, item.reason.kind, item.tokens])).toEqual([
+    [true, "constant", 4000],
+    [false, "budget", 1],
+  ]);
+  expect(result.prompt.system).not.toContain("字");
+  const overridden = assemblePrompt({ ...input, settings: { loreBudget: 4001 } });
+  expect(overridden.trace.lore.every((item) => item.included)).toBe(true);
+  expect(overridden.prompt.system).toContain("字");
+});
+it("budgets expanded lore text and does not replace macro-looking names twice", () => {
+  const { prompt, trace } = assemblePrompt({
+    character: makeCharacter({
+      name: "{{user}}",
+      lorebook: makeLorebook("book", [
+        makeEntry({ constant: true, content: "{{char}}" }),
+        makeEntry({ constant: true, content: "{{user}}" }),
+      ]),
+    }),
+    userName: "汉字汉字",
+    history: [],
+    settings: { loreBudget: 2 },
+  });
+  expect(trace.lore.map((item) => [item.included, item.tokens, item.reason.kind])).toEqual([
+    [true, 2, "constant"],
+    [false, 4, "budget"],
+  ]);
+  expect(prompt.system.split("\n\n").at(-1)).toBe("{{user}}");
+});

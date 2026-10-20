@@ -14,6 +14,25 @@ export interface ActivatedLore {
   insertionOrder: number;
 }
 
+export function applyLoreBudget(candidates: ActivatedLore[], budget: number): ActivatedLore[] {
+  const result = candidates.map((item) => ({ ...item, decision: { ...item.decision } }));
+  const admission = result
+    .filter((item) => item.decision.included)
+    .sort((left, right) => right.insertionOrder - left.insertionOrder);
+  let used = 0;
+  let exhausted = false;
+  for (const item of admission) {
+    const tokens = estimateTokens(item.content);
+    item.decision.tokens = tokens;
+    if (exhausted || used + tokens > budget) {
+      exhausted = true;
+      item.decision.included = false;
+      item.decision.reason = { kind: "budget" };
+    } else used += tokens;
+  }
+  return result;
+}
+
 function extensionsOf(entry: LorebookEntry): Record<string, unknown> {
   const value = entry.source.extensions;
   return value !== null && typeof value === "object" && !Array.isArray(value)

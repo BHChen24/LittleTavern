@@ -1,7 +1,63 @@
 import { expect, it } from "vitest";
 import { chat, makeCharacter, makeEntry, makeLorebook } from "./fixtures.ts";
-import { activateLore, ignoredFeatures, placementOf } from "./lore.ts";
+import { activateLore, applyLoreBudget, ignoredFeatures, placementOf } from "./lore.ts";
 import type { AssemblyInput } from "./types.ts";
+
+it("admits candidates descending and stops after the first overflow, retaining source-order trace", () => {
+  const candidates = activateLore({
+    character: makeCharacter(),
+    lorebooks: [
+      makeLorebook("book", [
+        makeEntry({ name: "low", constant: true, content: "a", insertionOrder: 1 }),
+        makeEntry({ name: "high", keys: ["key"], content: "你好", insertionOrder: 3 }),
+        makeEntry({ name: "middle", constant: true, content: "你好世界啊", insertionOrder: 2 }),
+        makeEntry({ name: "disabled", enabled: false, content: "ignored" }),
+      ]),
+    ],
+    history: chat("key"),
+  });
+  const original = structuredClone(candidates);
+  const result = applyLoreBudget(candidates, 3);
+  expect(
+    result.map((item) => [
+      item.decision.entry,
+      item.decision.included,
+      item.decision.reason.kind,
+      item.decision.tokens,
+    ]),
+  ).toEqual([
+    ["low", false, "budget", 1],
+    ["high", true, "keyword", 2],
+    ["middle", false, "budget", 5],
+    ["disabled", false, "disabled", undefined],
+  ]);
+  expect(candidates).toEqual(original);
+});
+it("breaks admission ties by source order and makes constants compete for the same budget", () => {
+  const candidates = activateLore({
+    character: makeCharacter({
+      lorebook: makeLorebook("embedded", [
+        makeEntry({ keys: ["key"], content: "a", insertionOrder: 2 }),
+        makeEntry({ constant: true, content: "b", insertionOrder: 1 }),
+      ]),
+    }),
+    lorebooks: [
+      makeLorebook("standalone", [makeEntry({ constant: true, content: "c", insertionOrder: 2 })]),
+    ],
+    history: chat("key"),
+  });
+  expect(applyLoreBudget(candidates, 1).map((item) => item.decision.included)).toEqual([
+    true,
+    false,
+    false,
+  ]);
+  for (const budget of [0, 1, 2, 3]) {
+    const included = applyLoreBudget(candidates, budget).filter((item) => item.decision.included);
+    expect(
+      included.reduce((sum, item) => sum + (item.decision.tokens ?? 0), 0),
+    ).toBeLessThanOrEqual(budget);
+  }
+});
 
 it("evaluates embedded entries before standalone entries and explains every exclusion", () => {
   const input: AssemblyInput = {

@@ -91,7 +91,7 @@ the macros replaced.
 
 ## Phase 5: User Story 3 - Lore stays within a budget (P2)
 
-- [ ] T012 [US3] Implement `applyLoreBudget(candidates, budget)` in `lore.ts` per R6. Sort by `insertionOrder` descending, breaking ties by source order, and accumulate `estimateTokens`. The first candidate that does not fit, and every candidate after it, is marked `{ included: false, reason: { kind: "budget" } }`. Record `tokens` on every candidate. Call it from `assemblePrompt` before placement. Write tests T-e in `lore.test.ts`: the admission order, constant entries competing, the invariant that the included sum is at most the budget, and the default budget of 4000 when no setting is given
+- [X] T012 [US3] Implement `applyLoreBudget(candidates, budget)` in `lore.ts` per R6. Sort by `insertionOrder` descending, breaking ties by source order, and accumulate `estimateTokens`. The first candidate that does not fit, and every candidate after it, is marked `{ included: false, reason: { kind: "budget" } }`. Record `tokens` on every candidate. Call it from `assemblePrompt` before placement. Write tests T-e in `lore.test.ts`: the admission order, constant entries competing, the invariant that the included sum is at most the budget, and the default budget of 4000 when no setting is given
 
 **Checkpoint**: checks pass. Commit.
 
