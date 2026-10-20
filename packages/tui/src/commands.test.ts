@@ -74,23 +74,9 @@ it("reads fresh library items, filters by name or id and offers only attached bo
       ?.getArgumentCompletions?.(""),
   ).toEqual([]);
 });
-it("completes import directories and supported files against the import root", async () => {
-  mkdirSync(join(paths.importRoot, "characters"), { recursive: true });
-  writeFileSync(join(paths.importRoot, "card.PNG"), "synthetic");
-  writeFileSync(join(paths.importRoot, "world.json"), "{}");
-  writeFileSync(join(paths.importRoot, "ignore.txt"), "text");
-  writeFileSync(join(paths.importRoot, "characters", "mira.json"), "{}");
-  const complete = COMMANDS({ paths, getChat: () => null }).find(
-    (c) => c.name === "import",
-  )?.getArgumentCompletions;
-  expect((await complete?.(""))?.map((item) => item.value)).toEqual([
-    `${join(paths.importRoot, "characters")}/`,
-    join(paths.importRoot, "card.PNG"),
-    join(paths.importRoot, "world.json"),
-  ]);
-  expect(await complete?.("characters/IRA")).toEqual([
-    expect.objectContaining({ value: join(paths.importRoot, "characters", "mira.json") }),
-  ]);
-  expect(await complete?.(`${paths.importRoot}/world`)).toHaveLength(1);
-  expect(await complete?.("missing/")).toEqual([]);
+it("offers import without a path hint or file completion", () => {
+  const command = COMMANDS({ paths, getChat: () => null }).find((item) => item.name === "import");
+  expect(command?.argumentHint).toBeUndefined();
+  expect(command?.getArgumentCompletions).toBeUndefined();
+  expect(command?.description).toBe("Import a card or lorebook from the import folders");
 });

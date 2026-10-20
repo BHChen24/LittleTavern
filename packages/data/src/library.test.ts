@@ -1,10 +1,19 @@
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  truncateSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { makePng, makeV2Card, makeV3Card, makeZip } from "./cards/fixtures.ts";
 import type { LibraryItem } from "./cards/types.ts";
-import { getItem, importFile, listLibrary } from "./library.ts";
+import { getItem, importFile, listLibrary, MAX_IMPORT_BYTES } from "./library.ts";
 import { type AppPaths, resolveAppPaths } from "./paths.ts";
 
 let home: string;
@@ -298,3 +307,23 @@ it.each([[{}], [[]]])(
     expect(item.raw).toEqual(raw);
   },
 );
+
+it("rejects directories before content parsing", () => {
+  expect(importFile(paths, home)).toMatchObject({ ok: false, reason: "not a regular file" });
+});
+
+it("rejects oversized sparse files and still imports a normal card", () => {
+  const file = source("large.json", Buffer.from("{}"));
+  truncateSync(file, MAX_IMPORT_BYTES + 1);
+  expect(importFile(paths, file)).toMatchObject({ ok: false, reason: "larger than 20 MB" });
+  expect(
+    importFile(paths, source("normal.json", Buffer.from(JSON.stringify(makeV3Card())))).ok,
+  ).toBe(true);
+});
+
+it.skipIf(process.platform === "win32")("rejects a FIFO without opening it", () => {
+  const fifo = join(home, "pipe.json");
+  const result = spawnSync("mkfifo", [fifo]);
+  if (result.status !== 0) throw new Error("Could not create test FIFO");
+  expect(importFile(paths, fifo)).toMatchObject({ ok: false, reason: "not a regular file" });
+});

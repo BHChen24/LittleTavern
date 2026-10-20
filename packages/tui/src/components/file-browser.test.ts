@@ -19,9 +19,9 @@ it("sorts folders first, filters supported files and navigates up and through sy
   mkdirSync(join(home, "a-folder"));
   symlinkSync(join(home, "a-folder"), join(home, "linked"));
   for (const name of ["a.json", "b.PNG", "ignored.txt"]) writeFileSync(join(home, name), "{}");
-  const browser = new FileBrowser(home);
+  const browser = new FileBrowser(home, home);
   const rendered = browser.render(120).join("\n");
-  expect(rendered).toContain("..");
+  expect(rendered).not.toContain("Go up");
   const positions = ["a-folder/", "linked/", "z-folder/", "a.json", "b.PNG"].map((name) =>
     rendered.indexOf(name),
   );
@@ -40,7 +40,7 @@ it("filters non-Latin filenames, selects a file and cancels without selecting", 
   const home = fixture();
   writeFileSync(join(home, "角色.json"), "{}");
   writeFileSync(join(home, "other.json"), "{}");
-  const browser = new FileBrowser(home);
+  const browser = new FileBrowser(home, home);
   let selected = "";
   let cancelled = false;
   browser.onSelect = (path) => {
@@ -60,7 +60,7 @@ it("shows an unreadable directory error and stays put when a folder disappears",
   const home = fixture();
   const folder = join(home, "disappearing");
   mkdirSync(folder);
-  const browser = new FileBrowser(home);
+  const browser = new FileBrowser(home, home);
   rmSync(folder, { recursive: true });
   browser.handleInput("disappearing");
   browser.handleInput("\r");
@@ -68,7 +68,7 @@ it("shows an unreadable directory error and stays put when a folder disappears",
   expect(browser.render(120).join("\n")).toContain("Could not read");
 });
 it("hides the go-up entry at the filesystem root", () => {
-  const browser = new FileBrowser("/");
+  const browser = new FileBrowser("/", "/");
   expect(browser.render(120).join("\n")).not.toContain("Go up");
 });
 
@@ -76,7 +76,7 @@ it("filters a folder with hundreds of files without losing a supported match", (
   const home = fixture();
   for (let i = 0; i < 250; i++)
     writeFileSync(join(home, `card-${i.toString().padStart(3, "0")}.json`), "{}");
-  const browser = new FileBrowser(home);
+  const browser = new FileBrowser(home, home);
   browser.handleInput("card-249");
   expect(browser.render(100).join("\n")).toContain("card-249.json");
   let selected = "";
@@ -85,4 +85,19 @@ it("filters a folder with hundreds of files without losing a supported match", (
   };
   browser.handleInput("\r");
   expect(selected).toBe(join(home, "card-249.json"));
+});
+
+it("stops navigation at the configured import root", () => {
+  const home = fixture();
+  const root = join(home, "import");
+  mkdirSync(join(root, "characters"), { recursive: true });
+  const browser = new FileBrowser(root, root);
+  expect(browser.render(120).join("\n")).not.toContain("Go up");
+  browser.handleInput("characters");
+  browser.handleInput("\r");
+  expect(browser.directory).toBe(join(root, "characters"));
+  expect(browser.render(120).join("\n")).toContain("Go up");
+  browser.handleInput("\r");
+  expect(browser.directory).toBe(root);
+  expect(browser.render(120).join("\n")).not.toContain("Go up");
 });

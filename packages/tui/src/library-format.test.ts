@@ -57,6 +57,9 @@ it("formats success, duplicate, failure and warning report lines", () => {
 });
 it("groups items and formats the empty-library hint", () => {
   expect(formatLibraryList([])).toEqual([EMPTY_LIBRARY_HINT]);
+  expect(EMPTY_LIBRARY_HINT).toBe(
+    'Library is empty. Put cards in the import folders and use /import, or run "littletavern import <file>".',
+  );
   expect(formatLibraryList([item])).toEqual([
     "Characters (0)",
     "Lorebooks (1)",

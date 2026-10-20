@@ -1,7 +1,7 @@
 import type { ImportReport, LibraryItem, LorebookEntry } from "@littletavern/engine";
 
 export const EMPTY_LIBRARY_HINT =
-  'Library is empty. Import a card with /import <path> or "littletavern import <file>".';
+  'Library is empty. Put cards in the import folders and use /import, or run "littletavern import <file>".';
 
 function entries(item: LibraryItem): LorebookEntry[] {
   return item.kind === "character"

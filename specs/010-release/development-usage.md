@@ -81,3 +81,30 @@ in the session transcript. No environment file or real credentials are read or u
 48. `exec_command`: inspect import handlers, regressions and pinned pi faux/native references.
     Outcome: migration points confirmed; brace-expanded optional search included nonexistent paths.
 49. `exec_command`: mark T003-T005 and update usage. Outcome: examples phase ready to commit.
+
+## Import boundaries
+
+50. `exec_command` (escalated): commit examples phase. Outcome: 9af2bda; hooks passed.
+51. `write_stdin`: collect examples commit. Outcome: committed.
+52. `exec_command`: add file checks, root navigation and no-completion tests; run targeted red
+    cases (not the FIFO before implementation). Outcome: three expected failures.
+53. `write_stdin`: collect red cases. Outcome: expected failures confirmed.
+54. `exec_command`: add app path-refusal and file/directory link tests. Outcome: expected failures.
+55. `write_stdin`: collect app red cases. Outcome: expected failures confirmed.
+56. `exec_command`: implement stat checks, browser root, realpath selection validation, updated
+    messages/completion and prior command contract; run full gate. Outcome: build/lint passed;
+    one dispatcher regression remained.
+57. `write_stdin`: collect gate progress. Outcome: failing app assertion observed.
+58. `exec_command`: search obsolete import hints. Outcome: none in source; no-match exit stopped
+    optional subsequent reads.
+59. `write_stdin`: collect gate. Outcome: 337 passed, one path-refusal test failed.
+60. `exec_command`: inspect failed assertion and diff. Outcome: dispatcher returned Unknown command.
+61. `exec_command`: inspect dispatch validation. Outcome: no-hint commands rejected arguments
+    before reaching the new handler.
+62. `exec_command`: permit import arguments through dispatch solely for the refusal message,
+    add browser and CLI oversized cases and exact empty hint assertion; run gate. Outcome:
+    build/lint and 340 tests passed.
+63. `write_stdin`: collect successful gate. Outcome: 340 passed in 60 files.
+64. `exec_command`: search source hints, inspect installed esbuild types and check diff. Outcome:
+    no obsolete hints; diff clean; bundler options confirmed locally.
+65. `exec_command`: mark T006-T008 and update usage. Outcome: import phase ready to commit.

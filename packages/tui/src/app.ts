@@ -1,7 +1,15 @@
 import { randomUUID } from "node:crypto";
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, isAbsolute, join, relative, sep } from "node:path";
 import {
   CombinedAutocompleteProvider,
   Container,
@@ -770,13 +778,27 @@ export function createApp(options: AppOptions = {}) {
       },
       import: async () => {
         const file = text.slice("/import".length).trim();
-        if (file) showImportReport(file);
+        if (file)
+          notice(
+            "Choose a file from the import folders. To import from elsewhere, run: littletavern import <file>",
+          );
         else {
-          const browser = new FileBrowser(paths.importRoot);
+          const browser = new FileBrowser(paths.importRoot, paths.importRoot);
           browser.onCancel = closeOverlay;
           browser.onSelect = (selected) => {
             closeOverlay();
-            showImportReport(selected);
+            try {
+              const location = relative(realpathSync(paths.importRoot), realpathSync(selected));
+              if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) {
+                errorNotice(`${basename(selected)} is outside the import folders.`);
+                return;
+              }
+              showImportReport(selected);
+            } catch (error) {
+              errorNotice(
+                `Could not import ${basename(selected)}: ${error instanceof Error ? error.message : String(error)}`,
+              );
+            }
           };
           tui.showOverlay(browser, { width: "90%" });
         }
@@ -870,9 +892,9 @@ export function createApp(options: AppOptions = {}) {
       detach: changeLorebooks,
     };
     if (text.startsWith("/")) {
-      const name = text.slice(1).split(" ", 1)[0];
+      const name = text.slice(1).split(/\s+/, 1)[0];
       const command = commands.find((entry) => entry.name === name);
-      if (!command || (!command.argumentHint && text !== `/${name}`)) {
+      if (!command || (!command.argumentHint && command.name !== "import" && text !== `/${name}`)) {
         errorNotice("Unknown command. Use /help.");
         return;
       }

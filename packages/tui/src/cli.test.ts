@@ -1,4 +1,12 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  truncateSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -201,3 +209,19 @@ it.each(["list", "show", "import", "dry-run", "create"])(
     }
   },
 );
+
+it("refuses oversized explicit CLI imports with the shared limit", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-cli-large-"));
+  vi.stubEnv("LITTLETAVERN_HOME", home);
+  try {
+    const file = join(home, "large.json");
+    writeFileSync(file, "{}");
+    truncateSync(file, 20 * 1024 * 1024 + 1);
+    const output: string[] = [];
+    expect(await runCli(["import", file], (line) => output.push(line))).toBe(1);
+    expect(output.join("\n")).toContain("larger than 20 MB");
+    expect(listLibrary(resolveAppPaths())).toEqual([]);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

@@ -1,5 +1,5 @@
 import { readdirSync, statSync } from "node:fs";
-import { dirname, extname, join, resolve } from "node:path";
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { type Component, Text } from "@earendil-works/pi-tui";
 import { stripControls } from "../sanitize.ts";
 import { ListPicker, type PickerItem } from "./list-picker.ts";
@@ -11,15 +11,17 @@ interface Entry {
 
 export class FileBrowser implements Component {
   private currentDirectory: string;
+  private root: string;
   private picker = new ListPicker<Entry>("", []);
   private empty = false;
   private error = "";
   onSelect?: (path: string) => void;
   onCancel?: () => void;
 
-  constructor(directory: string) {
-    this.currentDirectory = resolve(directory);
-    this.open(this.currentDirectory);
+  constructor(directory: string, root: string) {
+    this.root = resolve(root);
+    this.currentDirectory = this.root;
+    this.open(resolve(directory));
   }
   get directory(): string {
     return this.currentDirectory;
@@ -32,6 +34,8 @@ export class FileBrowser implements Component {
   }
 
   private open(directory: string): void {
+    const location = relative(this.root, directory);
+    if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) return;
     try {
       const items: PickerItem<Entry>[] = [];
       for (const name of readdirSync(directory)) {
@@ -54,7 +58,7 @@ export class FileBrowser implements Component {
           Number(b.value.directory) - Number(a.value.directory) || a.label.localeCompare(b.label),
       );
       this.empty = items.length === 0;
-      if (dirname(directory) !== directory)
+      if (directory !== this.root)
         items.unshift({
           value: { path: dirname(directory), directory: true },
           label: "..",

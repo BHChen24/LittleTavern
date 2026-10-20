@@ -48,6 +48,6 @@ export function ensureImportFolders(paths: AppPaths): string | null {
     mkdirSync(paths.importPersonasDir, { recursive: true });
     return null;
   } catch {
-    return `Could not create import folders under ${paths.importRoot}. You can still use /import <path>.`;
+    return `Could not create import folders under ${paths.importRoot}. You can still import with: littletavern import <file>`;
   }
 }

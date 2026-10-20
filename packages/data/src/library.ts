@@ -8,6 +8,7 @@ import {
   renameSync,
   rmdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { basename, extname, join } from "node:path";
@@ -16,9 +17,18 @@ import { isRecord, preservedUnusedFields, toCharacter, toLorebook } from "./card
 import type { ImportReport, LibraryItem } from "./cards/types.ts";
 import type { AppPaths } from "./paths.ts";
 
+export const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+
 export function importFile(paths: AppPaths, filePath: string): ImportReport {
   let bytes: Buffer;
   try {
+    const info = statSync(filePath);
+    const reason = !info.isFile()
+      ? "not a regular file"
+      : info.size > MAX_IMPORT_BYTES
+        ? "larger than 20 MB"
+        : null;
+    if (reason) return { ok: false, file: filePath, detected: "unreadable file", reason };
     bytes = readFileSync(filePath);
   } catch {
     return {

@@ -94,9 +94,9 @@ oversized files.
 **Independent test**: `/import foo` is refused, the browser has no `..` at the root, an outside
 link is refused, and an oversized file is refused by both the app and the CLI.
 
-- [ ] T006 [P] [US2] In `packages/data/src/library.ts`, export `MAX_IMPORT_BYTES = 20 * 1024 * 1024` and make `importFile` `statSync` the path before reading: "not a regular file" for anything but a regular file, "larger than 20 MB" above the limit (research R6, contract messages). Write tests T-a in `packages/data/src/library.test.ts`: a directory, a FIFO (skip on Windows), a sparse file one byte over the limit, and a normal card that still imports
-- [ ] T007 [P] [US2] In `packages/tui/src/components/file-browser.ts`, add a `root` (constructor argument) per research R6: no `..` entry at the root, and never a directory outside it. Write tests T-b
-- [ ] T008 [US2] In `packages/tui/src/app.ts`, `packages/tui/src/commands.ts` and `packages/data/src/paths.ts` (research R6, contract):
+- [X] T006 [P] [US2] In `packages/data/src/library.ts`, export `MAX_IMPORT_BYTES = 20 * 1024 * 1024` and make `importFile` `statSync` the path before reading: "not a regular file" for anything but a regular file, "larger than 20 MB" above the limit (research R6, contract messages). Write tests T-a in `packages/data/src/library.test.ts`: a directory, a FIFO (skip on Windows), a sparse file one byte over the limit, and a normal card that still imports
+- [X] T007 [P] [US2] In `packages/tui/src/components/file-browser.ts`, add a `root` (constructor argument) per research R6: no `..` entry at the root, and never a directory outside it. Write tests T-b
+- [X] T008 [US2] In `packages/tui/src/app.ts`, `packages/tui/src/commands.ts` and `packages/data/src/paths.ts` (research R6, contract):
   - `/import` with any argument shows the contract message and imports nothing;
   - the browser is created with the import root as its root;
   - a selected file whose real path is outside the real import root is refused with `<file name> is outside the import folders.`;

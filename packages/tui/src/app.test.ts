@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
@@ -6,6 +6,7 @@ import {
   ChatSession,
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
+  importFile,
   listLibrary,
   resolveAppPaths,
 } from "@littletavern/engine";
@@ -145,7 +146,7 @@ it("preserves input and sends nothing when Ctrl+R is pressed without a key", asy
   }
 });
 
-it("survives an import root that is a file and still imports an explicit path", async () => {
+it("survives an import root that is a file and refuses app path arguments", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-broken-import-root-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   writeFileSync(paths.importRoot, "existing file");
@@ -163,9 +164,10 @@ it("survives an import root that is a file and still imports an explicit path", 
     browser?.handleInput?.("\x1b");
     expect(app.tui.hasOverlay()).toBe(false);
     await app.submit(`/import ${card}`);
-    expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
+    expect(listLibrary(paths)).toEqual([]);
+    expect(importFile(paths, card).ok).toBe(true);
     expect(app.tui.children.flatMap((component) => component.render(120)).join("\n")).toContain(
-      "Imported",
+      "Choose a file from the import folders",
     );
   } finally {
     await app.quit();
@@ -203,6 +205,67 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
     app.tui.getFocusedComponent()?.handleInput?.("\r");
     await app.submit("hello");
     expect(screen()).toMatch(/Error: .*Provider/);
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it.each(["file", "directory"])(
+  "refuses a selected file outside the import root through a %s link",
+  async (kind) => {
+    const home = mkdtempSync(join(tmpdir(), "lt-import-boundary-"));
+    const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+    const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
+    app.enterChat();
+    try {
+      const outside = join(home, "outside.json");
+      writeFileSync(outside, JSON.stringify({ spec: "chara_card_v3", data: { name: "Outside" } }));
+      if (kind === "file") symlinkSync(outside, join(paths.importRoot, "linked.json"));
+      else symlinkSync(home, join(paths.importRoot, "linked"), "dir");
+      await app.submit("/import");
+      let browser = app.tui.getFocusedComponent();
+      browser?.handleInput?.("linked");
+      browser?.handleInput?.("\r");
+      if (kind === "directory") {
+        browser = app.tui.getFocusedComponent();
+        browser?.handleInput?.("outside");
+        browser?.handleInput?.("\r");
+      }
+      expect(listLibrary(paths)).toEqual([]);
+      expect(app.tui.children.flatMap((component) => component.render(160)).join("\n")).toContain(
+        "is outside the import folders.",
+      );
+    } finally {
+      await app.quit();
+      rmSync(home, { recursive: true, force: true });
+    }
+  },
+);
+
+it("imports a regular card from the browser and refuses an oversized selection", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-import-browser-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
+  app.enterChat();
+  try {
+    writeFileSync(
+      join(paths.importRoot, "card.json"),
+      JSON.stringify({ spec: "chara_card_v3", data: { name: "Mira" } }),
+    );
+    const large = join(paths.importRoot, "large.json");
+    writeFileSync(large, "{}");
+    truncateSync(large, 20 * 1024 * 1024 + 1);
+    for (const name of ["card", "large"]) {
+      await app.submit("/import");
+      const browser = app.tui.getFocusedComponent();
+      browser?.handleInput?.(name);
+      browser?.handleInput?.("\r");
+    }
+    expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
+    expect(app.tui.children.flatMap((component) => component.render(160)).join("\n")).toContain(
+      "larger than 20 MB",
+    );
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

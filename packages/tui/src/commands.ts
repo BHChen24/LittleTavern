@@ -1,6 +1,3 @@
-import { readdirSync, statSync } from "node:fs";
-import { homedir } from "node:os";
-import { basename, dirname, extname, join, resolve } from "node:path";
 import type { AutocompleteItem, SlashCommand } from "@earendil-works/pi-tui";
 import { type AppPaths, type CharacterChat, listLibrary } from "@littletavern/engine";
 import { stripControls } from "./sanitize.ts";
@@ -13,40 +10,6 @@ export interface CommandContext {
 function matching(items: AutocompleteItem[], prefix: string): AutocompleteItem[] {
   const lower = prefix.toLowerCase();
   return items.filter((item) => `${item.label} ${item.value}`.toLowerCase().includes(lower));
-}
-
-function importCompletions(root: string, prefix: string): AutocompleteItem[] {
-  const expanded = prefix.startsWith("~/") ? join(homedir(), prefix.slice(2)) : prefix;
-  const path = resolve(root, expanded);
-  const directory = !prefix || prefix.endsWith("/") ? path : dirname(path);
-  const filter = !prefix || prefix.endsWith("/") ? "" : basename(prefix);
-  try {
-    return readdirSync(directory)
-      .flatMap((name) => {
-        const file = join(directory, name);
-        try {
-          const info = statSync(file);
-          if (!info.isDirectory() && (!info.isFile() || !/^(\.json|\.png)$/i.test(extname(name))))
-            return [];
-          return [
-            {
-              value: file + (info.isDirectory() ? "/" : ""),
-              label: stripControls(name) + (info.isDirectory() ? "/" : ""),
-            },
-          ];
-        } catch {
-          return [];
-        }
-      })
-      .sort(
-        (a, b) =>
-          Number(b.value.endsWith("/")) - Number(a.value.endsWith("/")) ||
-          a.label.localeCompare(b.label),
-      )
-      .filter((item) => item.label.toLowerCase().includes(filter.toLowerCase()));
-  } catch {
-    return [];
-  }
 }
 
 /** The single command definition used by completion, dispatch and help. */
@@ -103,10 +66,7 @@ export function COMMANDS(context?: CommandContext): SlashCommand[] {
     { name: "innkeeper", description: "Talk to the innkeeper" },
     {
       name: "import",
-      argumentHint: "[path]",
-      description: "Import a card or lorebook; without a path, browse the import folders",
-      getArgumentCompletions: (prefix) =>
-        context ? importCompletions(context.paths.importRoot, prefix) : [],
+      description: "Import a card or lorebook from the import folders",
     },
     { name: "library", description: "List the library" },
     {

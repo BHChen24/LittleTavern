@@ -16,7 +16,7 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/detach <id>` | attached lorebooks | Detach a lorebook |
 | `/lorebooks` | — | List the active lorebooks |
 | `/innkeeper` | — | Talk to the innkeeper |
-| `/import [path]` | file paths | Import a card or lorebook; without a path, browse the import folders |
+| `/import` | — | Import a card or lorebook from the import folders (changed by 010) |
 | `/library` | — | List the library |
 | `/show <id>` | library items | Inspect an item |
 | `/persona` | — | Choose who you are in the story (added by 008) |
