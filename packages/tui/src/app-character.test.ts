@@ -62,11 +62,18 @@ it("starts a character chat, regenerates the reply and records usage under the c
     await app.submit(`/chat ${report.item.id.slice(0, 6)}`);
     expect(screen()).toContain("Welcome to the lighthouse.");
     expect(screen()).toContain("Mira |");
+    expect(screen()).toContain("Mira:");
     await app.submit("hello");
     await vi.waitFor(() => expect(screen()).toContain("First reply."));
     await app.submit("/regenerate");
     await vi.waitFor(() => expect(screen()).toContain("Second reply."));
     expect(screen()).not.toContain("First reply.");
+    expect(screen()).toContain("You:");
+    await app.submit("/lorebooks");
+    expect(screen()).toContain("· No lorebooks.");
+    const lines = app.tui.render(80);
+    expect(lines.at(-1)).toContain("Mira |");
+    expect(lines.filter((line) => /^─{4}/.test(line))).toHaveLength(2);
     const records = readUsageRecords(paths.usageLedgerFile);
     expect(records).toHaveLength(2);
     expect(records.every((record) => record.sessionId === app.chat?.sessionId)).toBe(true);

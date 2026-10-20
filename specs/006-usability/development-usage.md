@@ -43,3 +43,12 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Close each key-flow overlay before advancing and verify overlay cleanup | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Wait for strengthened Phase 5 validation | functions.exec → write_stdin | Build, lint and 237 tests passed, including overlay cleanup |
 | Mark Phase 5 complete and document the safe manual-check command | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Write label and status-layout tests before polish (T011) | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Commit Phase 5 | functions.exec → exec_command (escalated Git) | Committed a4dcc81 |
+| Wait for label test baseline | functions.exec → write_stdin | Expected missing-label failures |
+| Apply message styles and compact transcript spacing (T011) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for Phase 6 automated checkpoint | functions.exec → write_stdin | Build, lint and 237 tests passed |
+| Prepare isolated terminal smoke check and read convergence workflow | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Launch isolated built CLI in a PTY | functions.exec → exec_command | Home screen displayed; no environment file loaded |
+| Exercise Enter, suggestions, browser import, chat greeting, no-key send and Ctrl+C | functions.exec → write_stdin × 9 | Expected layout and notices observed; exit 0; no requests |
+| Record terminal observations and mark Phase 6 complete | functions.exec → exec_command (including this recorder) | Exit 0 |

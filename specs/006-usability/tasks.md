@@ -130,7 +130,7 @@ quickstart.md
 
 ## Phase 6: User Story 5 - Earlier polish notes (P3)
 
-- [ ] T011 [US5] Apply research R5 in `app.ts` and `theme.ts`:
+- [X] T011 [US5] Apply research R5 in `app.ts` and `theme.ts`:
   - the status bar is the last line;
   - labels `You:`, `<character name>:` (or `Assistant:` in plain chat) and a `·` prefix for
     notices, plus their styles;

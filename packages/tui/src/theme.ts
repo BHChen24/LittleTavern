@@ -27,3 +27,9 @@ export const markdownTheme: MarkdownTheme = {
   strikethrough: (text) => styleText("strikethrough", text),
   underline: (text) => styleText("underline", text),
 };
+
+export const messageStyles = {
+  user: dim,
+  character: (text: string) => styleText("bold", text),
+  notice: (text: string) => styleText("italic", text),
+};

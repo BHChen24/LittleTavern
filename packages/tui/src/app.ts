@@ -50,7 +50,7 @@ import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
-import { editorTheme, markdownTheme } from "./theme.ts";
+import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
 
@@ -123,7 +123,7 @@ export function createApp(options: AppOptions = {}) {
   /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
   const display = (text: string) => stripControls(scrubSecrets(text, secrets));
   const notice = (text: string) => {
-    transcript.addChild(new Text(display(text)));
+    transcript.addChild(new Text(messageStyles.notice(`· ${display(text)}`)));
     tui.requestRender();
   };
   function promptForKey(): void {
@@ -222,11 +222,20 @@ export function createApp(options: AppOptions = {}) {
   }
   updateStatus();
 
+  function addMessage(role: "user" | "character", text: string): Markdown {
+    const label = role === "user" ? "You:" : `${display(chat?.character.name ?? "Assistant")}:`;
+    transcript.addChild(
+      new Text(role === "user" ? messageStyles.user(label) : messageStyles.character(label)),
+    );
+    const message = new Markdown(text, 1, 0, markdownTheme);
+    transcript.addChild(message);
+    return message;
+  }
   function renderHistory(items: ChatHistoryItem[]): void {
     transcript.clear();
     for (const item of items) {
       const text = display(item.text) + (item.interrupted ? " [interrupted]" : "");
-      transcript.addChild(new Markdown(text, 1, 1, markdownTheme));
+      addMessage(item.role, text);
     }
     tui.requestRender();
   }
@@ -310,8 +319,7 @@ export function createApp(options: AppOptions = {}) {
     await stream(() => (chat ? chat.regenerate() : Promise.resolve(null)));
   }
   async function stream(run: () => Promise<unknown>): Promise<void> {
-    reply = new Markdown("", 1, 1, markdownTheme);
-    transcript.addChild(reply);
+    reply = addMessage("character", "");
     response = "";
     editor.disableSubmit = true;
     running = run();
@@ -570,7 +578,7 @@ export function createApp(options: AppOptions = {}) {
       return;
     }
     if (interceptMissingKey(value)) return;
-    transcript.addChild(new Markdown(display(value), 1, 1, markdownTheme));
+    addMessage("user", display(value));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));
   }
