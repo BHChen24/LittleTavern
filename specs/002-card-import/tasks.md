@@ -83,18 +83,18 @@ to T-h). Keep them lightweight.
 
 **Independent Test**: T-d passes for character cards.
 
-- [ ] T006 [US1] Implement `importFile(paths, filePath): ImportReport` in `packages/data/src/library.ts` per research R5.
+- [X] T006 [US1] Implement `importFile(paths, filePath): ImportReport` in `packages/data/src/library.ts` per research R5.
   - **Order of work**: read the bytes, run `detectFile`, normalize, compute `sha256` and `id = sha256.slice(0, 12)`.
   - **Already imported**: if `<dataDir>/library/<characters|lorebooks>/<id>/` exists, return `already-imported` with the existing item.
   - **Writing**: otherwise write `original.<png|json>` (the exact bytes) and `item.json` (a `LibraryItem` with `raw`, the normalized value, `warnings`, `preservedUnused` and `sourceFileName`) into `<library>/.tmp-<random>/`, then `rename` that folder to the final one.
   - **Errors**: a path that is missing or unreadable returns `ok: false` with "file not found or not readable". Nothing is written before validation passes.
-- [ ] T007 [US1] Write the library tests T-d in `packages/data/src/library.test.ts`, using a temporary `LITTLETAVERN_HOME`:
+- [X] T007 [US1] Write the library tests T-d in `packages/data/src/library.test.ts`, using a temporary `LITTLETAVERN_HOME`:
   - The original is byte-identical to the source (compare with `Buffer.equals`).
   - Every key path in the source JSON, recursively, exists in `item.raw` (SC-003).
   - A PNG with both chunks gets `"Character card V3 (PNG)"`, and `raw` is the V3 object.
   - A second import of the same bytes gives `already-imported`.
   - Different bytes with the same name produce a new item.
-- [ ] T008 [US1] Export the card types and `importFile` from `packages/data/src/index.ts`, and re-export them from the `@littletavern/data` block in `packages/engine/src/index.ts`. The tui reaches data only through the engine barrel, as 001 does.
+- [X] T008 [US1] Export the card types and `importFile` from `packages/data/src/index.ts`, and re-export them from the `@littletavern/data` block in `packages/engine/src/index.ts`. The tui reaches data only through the engine barrel, as 001 does.
 
 **Checkpoint**: checks pass. Commit.
 

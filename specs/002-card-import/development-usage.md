@@ -33,3 +33,8 @@ expected missing-module failures. It then implemented T003–T005, formatted and
 One diagnostic test incorrectly assumed every Node JSON.parse error includes line/column;
 the fixture was corrected to a syntax error with location data, preserving the required
 verbatim JSON.parse message. Final build/lint and all 76 tests in 18 files passed.
+
+Phase 3: `exec_command` added library tests before importFile, then implemented validated
+imports through a temporary folder and rename, SHA-256 identity, duplicate reporting,
+original-byte storage, raw preservation and public exports. Build/lint and 80 tests in
+19 files passed; unknown nested fields and both PNG chunks remain available in storage.
