@@ -51,6 +51,14 @@ names things explicitly, often from scripts.
     be detached;
   - it still requires a character chat.
 - Q: What does `/library` show? → A: Unchanged: everything that has been imported.
+- Q: Is a chat that has only its greeting saved? → A: No (owner, 2026-10-20, from implementation
+  question Q1). As in pi, a chat is saved once it has a message. `/new` keeps every previous chat
+  that has at least one message; a greeting-only chat is simply replaced, and with several
+  greetings the new chat may open with a different one.
+- Q: What happens when a panel is taller than the terminal? → A: (owner, 2026-10-20, from
+  implementation question Q2) `/help` scrolls like `/trace`, using the arrow keys, PgUp and PgDn.
+  Any other panel taller than the terminal is clipped to fit: the border stays complete, and the
+  last visible line inside it is `…`.
 - Q: Is the duplicate CI run fixed here? → A: Yes (owner, 2026-10-20). Continuous integration
   runs once per change: on pull requests, and on pushes to `main` only.
 - Q: Which overlays get a border? → A: Every overlay the app opens (pickers, help, trace, the file
@@ -134,15 +142,19 @@ the next message is sent without the old exchange, and `/sessions` lists both ch
 
 **Acceptance Scenarios**:
 
-1. **Given** a character chat, **When** the user enters `/new`, **Then** a new chat with the same
-   character starts and shows its greeting; the previous chat is kept and appears in `/sessions`.
-2. **Given** innkeeper mode, **When** the user enters `/new`, **Then** the innkeeper conversation
+1. **Given** a character chat with at least one message, **When** the user enters `/new`,
+   **Then** a new chat with the same character starts and shows its greeting; the previous chat
+   is kept and appears in `/sessions`.
+2. **Given** a character chat that has only its greeting, **When** the user enters `/new`,
+   **Then** a new chat starts and the greeting-only chat is not saved and does not appear in
+   `/sessions`.
+3. **Given** innkeeper mode, **When** the user enters `/new`, **Then** the innkeeper conversation
    is cleared and the user stays in innkeeper mode.
-3. **Given** neither a character chat nor innkeeper mode, **When** the user enters `/new`, **Then**
+4. **Given** neither a character chat nor innkeeper mode, **When** the user enters `/new`, **Then**
    the app says to choose a character with `/characters` or use `/innkeeper`.
-4. **Given** a reply is still streaming, **When** the user enters `/new`, **Then** nothing changes
+5. **Given** a reply is still streaming, **When** the user enters `/new`, **Then** nothing changes
    and the app says to wait for the reply or press Esc to stop it.
-5. **Given** any version of the app after this feature, **When** the user types `/chat`, **Then**
+6. **Given** any version of the app after this feature, **When** the user types `/chat`, **Then**
    it is an unknown command, and nothing in the app suggests `/chat <id>`.
 
 ---
@@ -165,6 +177,9 @@ checked manually by the owner.
    and contents still fit without broken lines.
 3. **Given** `NO_COLOR` is set, **When** an overlay opens, **Then** the border is still visible
    (it does not rely on colour alone).
+4. **Given** a terminal of 24 rows, **When** `/help` opens, **Then** all four border sides are
+   visible and the help text scrolls; **When** any other panel would be taller than the
+   terminal, **Then** it is clipped with `…` and its border stays complete.
 
 ---
 
@@ -228,12 +243,15 @@ and `/new` as pickers or actions without ids, and no longer list `/chat`, `/atta
   already imported.
 - **FR-006**: Attachment changes made through `/lorebooks` MUST be saved like the existing
   attachments and MUST apply to the next request.
-- **FR-007**: `/new` MUST start a new chat with the current character, showing its greeting; the
-  previous chat MUST remain saved and resumable from `/sessions`. In innkeeper mode it MUST clear
+- **FR-007**: `/new` MUST start a new chat with the current character, showing its greeting; every
+  previous chat that has at least one message MUST remain saved and resumable from `/sessions`; a
+  chat with only its greeting is not saved. In innkeeper mode it MUST clear
   the innkeeper conversation. Otherwise it MUST point to `/characters` and `/innkeeper`.
 - **FR-008**: Every overlay MUST be drawn with a visible border and its title, MUST fit the
   terminal width with all content inside the border (entries truncated, long titles wrapped
-  inside the frame), and MUST stay visible without colour (`NO_COLOR`).
+  inside the frame), MUST keep all four border sides visible within the terminal height
+  (`/help` scrolls; other panels are clipped, with `…` as the last visible line), and MUST stay
+  visible without colour (`NO_COLOR`).
 - **FR-009**: No message, hint, help text, README section or command contract MAY suggest typing
   an id inside the app. The shell subcommands keep their ids.
 - **FR-010**: The command-line subcommands (`import`, `list`, `show`, `create`, `dry-run`) MUST
@@ -258,8 +276,8 @@ and `/new` as pickers or actions without ids, and no longer list `/chat`, `/atta
   lorebook) can be done without typing an id.
 - **SC-002**: A user can attach a newly downloaded lorebook to the current character in one
   command and at most three choices (the import entry, the file, confirmation if any).
-- **SC-003**: `/new` gives a fresh chat in one command, and the previous chat is still listed in
-  `/sessions` in 100% of cases.
+- **SC-003**: `/new` gives a fresh chat in one command, and a previous chat with at least one
+  message is still listed in `/sessions` in 100% of cases.
 - **SC-004**: All overlays show a border and title, checked by the owner in a 60-column and a
   normal-width terminal, with and without `NO_COLOR`.
 - **SC-005**: A search of the app's messages, help, README and contracts finds no suggestion of an

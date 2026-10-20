@@ -50,3 +50,9 @@ Every overlay is drawn inside a one-character box border (`┌─┐ │ │ └
 on each side. The component's own title line stays as the first line inside the frame. Lines are
 truncated, never wrapped across the border. The border characters are present with and without
 `NO_COLOR`.
+
+Height: a panel never exceeds the terminal height.
+
+- `/help` scrolls (↑↓, PgUp, PgDn, Home, End), with the same footer line as `/trace`.
+- Any other panel that would be taller is clipped: the border stays complete, and the last
+  visible line inside it is `…`.

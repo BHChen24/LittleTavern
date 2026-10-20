@@ -49,3 +49,12 @@ border, or use another overflow policy. Each option affects what the user can re
 The plan only specifies a height adjustment for the trace, which has been implemented. No new
 height or scrolling policy is chosen here. The reproduced check used a temporary home, no key
 and no network.
+
+## Owner decisions (2026-10-20)
+
+- **Q1**: greeting-only chats are not saved, as pi does. FR-007, SC-003 and US3 now apply to chats
+  with at least one message; a greeting-only chat is replaced by `/new`. No engine change. See
+  T018.
+- **Q2**: `/help` scrolls like `/trace`. Other panels taller than the terminal are clipped, with a
+  complete border and `…` as the last visible line. See research R1 "Height", the contract's
+  frame section, and T019.

@@ -38,6 +38,16 @@ Verified on 2026-10-20 against `main` at `827e8ef` (branch `011-tui-pickers`) an
     child lines that come out wider than the inner width.
   - Every `tui.showOverlay(x, options)` call in `app.ts` goes through one helper,
     `showPanel(x, options)`, which wraps `x` in a `Frame`. No other call opens an overlay.
+- **Height (implementation Q2, owner decision)**:
+  - pi's overlay compositor crops an overlay taller than the terminal, which loses the bottom
+    border. At 60×24, `/help` is 32 rows.
+  - `/help` therefore uses the existing scrollable `TraceOverlay`, with height
+    `max(3, rows - 8)` as `/trace` uses. Its lines come from `helpText()` wrapped to the panel's
+    inner width with pi-tui's `wrapTextWithAnsi`. Esc closes it through `onClose`, like the
+    trace, which replaces the separate `helpOpen` Esc path.
+  - `Frame` takes an optional maximum height (a function returning the terminal rows). When the
+    child's lines plus the two border rows exceed it, the content is cut to fit and its last
+    visible line becomes `…`. `showPanel` passes `() => tui.terminal.rows`.
 - **Alternatives**:
   - Draw the border inside each component: 8 places to change, and they would drift apart.
   - Put the title inside the top border: nicer, but every component would need its title
@@ -118,8 +128,12 @@ Verified on 2026-10-20 against `main` at `827e8ef` (branch `011-tui-pickers`) an
 ## R6. `/new`
 
 - **Facts**:
-  - `startChat(item)` always calls `CharacterChat.start`, which creates a new session file with
-    the character entry and greeting. Older sessions are untouched and listed by `/sessions`.
+  - `startChat(item)` always calls `CharacterChat.start`, which starts a new session with the
+    character entry and greeting. **Correction (implementation Q1)**: pi's `SessionManager` writes
+    the file only once the session has a user or assistant message
+    (`../pi/packages/coding-agent/src/core/session-manager.ts:1160–1190`). A greeting-only chat is
+    therefore never saved. The owner accepted this (spec clarification): no storage change.
+    Older sessions with messages are untouched and listed by `/sessions`.
   - `CharacterChat` exposes `libraryId`.
   - **Innkeeper mode**: the innkeeper conversation lives in `ChatSession`'s agent messages.
     `/innkeeper` clears only the on-screen transcript, so the agent still holds earlier innkeeper
