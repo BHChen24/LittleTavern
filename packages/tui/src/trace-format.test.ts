@@ -183,3 +183,19 @@ describe("formatAssembledPrompt", () => {
     ]);
   });
 });
+
+it.each([
+  [{ maxTokens: 4096 }, "Requested: max 4096 output tokens"],
+  [
+    {
+      maxTokens: 30,
+      temperature: 1.5,
+      samplingParams: { top_p: 0.9, top_k: 40, min_p: 0.05, repetition_penalty: 1.05 },
+    },
+    "Requested: max 30 output tokens · temperature 1.5 · top_p 0.9 · top_k 40 · min_p 0.05 · repetition_penalty 1.05",
+  ],
+  [{ temperature: 0 }, "Requested: model's maximum output · temperature 0"],
+  [{}, "Requested: model defaults"],
+])("shows only configured request parameters: %j", (request, expected) => {
+  expect(formatTraceReport({ ...trace([]), request }, meta)[1]).toBe(expected);
+});

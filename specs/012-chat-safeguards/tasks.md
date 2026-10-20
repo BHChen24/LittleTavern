@@ -192,7 +192,7 @@ Phase 1.
 
 **Independent test**: with `generation.temperature` set, `/trace` shows it on the request line.
 
-- [ ] T012 [US5] Add `request?` to `AssemblyTrace` and set it from `session.request` in `CharacterChat.generate()` (research R9). In `packages/tui/src/trace-format.ts`, add the contract's `Requested:` line after the header (it reports what LittleTavern requested; research R9). Write T-i in the existing trace-format tests
+- [X] T012 [US5] Add `request?` to `AssemblyTrace` and set it from `session.request` in `CharacterChat.generate()` (research R9). In `packages/tui/src/trace-format.ts`, add the contract's `Requested:` line after the header (it reports what LittleTavern requested; research R9). Write T-i in the existing trace-format tests
 
 **Checkpoint**: checks pass. Commit.
 

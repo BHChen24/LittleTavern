@@ -96,4 +96,20 @@ see conversation output for completion of the final refresh.
 | 87 | exec_command | Seed returning-user legacy fixtures and fix the prefilled input cursor | completed; see conversation output |
 | 88 | write_stdin | Collect name-prompt regression checks | exit 0 |
 | 89 | exec_command | Review phase-five results and trace insertion point | exit 0 |
+| 90 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 91 | exec_command | Commit validated phase five | completed; see conversation output |
+| 92 | exec_command | Add requested-parameter trace tests before phase-six implementation | completed; see conversation output |
+| 93 | apply_patch | Record and format the configured request options in trace output | completed; see conversation output |
+| 94 | exec_command | Format and validate requested-parameter tracing | completed; see conversation output |
+| 95 | write_stdin | Collect player-name commit result | exit 0 |
+| 96 | exec_command | Inspect documentation and happy-path fixture extension points | exit 0 |
+| 97 | write_stdin | Collect phase-six validation | completed; see conversation output |
+| 98 | exec_command | Inspect trace parity regression | exit 0 |
+| 99 | exec_command | Align preview parity assertion with the new request-only trace field | completed; see conversation output |
+| 100 | exec_command | Update existing assembly-trace comparisons while retaining exact request-field tests | completed; see conversation output |
+| 101 | exec_command | Verify all affected trace comparisons | completed; see conversation output |
+| 102 | write_stdin | Collect phase-six full validation | exit 1 |
+| 103 | write_stdin | Collect affected trace tests | exit 0 |
+| 104 | exec_command | Confirm trace checks and request fixture setup | exit 0 |
+| 105 | exec_command | Run the phase-six checkpoint after all trace regressions are corrected | completed; see conversation output |
 

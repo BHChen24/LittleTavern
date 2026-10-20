@@ -1,3 +1,4 @@
+import type { RequestOptions } from "../chat-session.ts";
 import type { Character, Lorebook, Persona } from "../index.ts";
 
 export interface HistoryMessage {
@@ -62,6 +63,7 @@ export interface LoreDecision {
 }
 
 export interface AssemblyTrace {
+  request?: RequestOptions;
   tokensAreEstimates: true;
   parts: TracePart[];
   lore: LoreDecision[];

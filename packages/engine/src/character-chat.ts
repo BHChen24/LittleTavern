@@ -357,6 +357,7 @@ export class CharacterChat {
       this.onNotice?.(notice);
     }
     this.lastTrace = trace;
+    this.lastTrace.request = this.session.request;
     const turn = await this.session.generate({
       system: prompt.system,
       messages: prompt.history,

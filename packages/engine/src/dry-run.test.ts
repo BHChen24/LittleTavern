@@ -135,7 +135,7 @@ it("produces the same trace as a real request with the same history (SC-003)", a
     message: "Tell me about the lighthouse.",
   });
   if (!result.ok) throw new Error(result.error);
-  expect(result.trace).toEqual(chat.lastTrace);
+  expect(chat.lastTrace).toMatchObject(result.trace);
 });
 
 it("dry-runs and chats with a created character whose lore is always on or keyword-triggered (T-h)", async () => {
@@ -178,5 +178,5 @@ The tea is smoky.
   expect(chat.history()[0]?.text).toBe("Welcome Traveler.");
   await chat.send("May I have tea?");
   expect(chat.history().at(-1)?.text).toBe("Here is your tea.");
-  expect(chat.lastTrace).toEqual(result.trace);
+  expect(chat.lastTrace).toMatchObject(result.trace);
 });

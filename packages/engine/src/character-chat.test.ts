@@ -137,14 +137,14 @@ it("sends the active persona through the faux provider and matches the dry-run t
   );
   expect(system).toContain("Traveller visits Mira.");
   expect(system).not.toContain("Parker");
-  expect(chat.lastTrace).toEqual(assembled.trace);
+  expect(chat.lastTrace).toMatchObject(assembled.trace);
   expect(chat.lastTrace?.parts.map((part) => part.source)).toContain("persona");
   const preview = await dryRun({ paths, characterId: item.id, message: "Hello" });
   if (!preview.ok) throw new Error(preview.error);
   expect(preview.prompt.system).toContain("Traveller visits Mira.");
   expect(preview.prompt.history[0]?.text).toContain("Traveller");
   expect(preview.trace.parts.map((part) => part.source)).toContain("persona");
-  expect(preview.trace).toEqual(chat.lastTrace);
+  expect(chat.lastTrace).toMatchObject(preview.trace);
   writeFileSync(join(paths.importPersonasDir, "traveller.md"), "## Name\nChanged\n");
   expect(greetingFor(paths, item)).toContain("Changed");
 });
@@ -409,4 +409,18 @@ it("keeps an interrupted regenerate as the current reply and allows restoring it
   expect(chat.history().at(-1)?.text).toBe("A");
   chat.prev();
   expect(chat.history().at(-1)?.interrupted).toBe(true);
+});
+
+it("records the session's configured options in the last-request trace", async () => {
+  const request = { maxTokens: 30, temperature: 1.5, samplingParams: { top_p: 0.9 } };
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => "synthetic-key",
+    request,
+    simulated: { replies: ["reply"] },
+  });
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("hello");
+  expect(chat.lastTrace?.request).toEqual(request);
 });
