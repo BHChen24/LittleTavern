@@ -17,3 +17,7 @@
   in the raw source. Normalized-only values do not invent a raw-source feature note.
 - Numeric placement takes precedence over string placement, including an unsupported numeric
   value: it goes after and receives the required ignored-feature note.
+- T014's scripted greetings do not necessarily activate Seraphina's entries. To avoid a
+  vacuous placement check, the local test checks placementOf for all four imported entries,
+  as well as the placement of any included trace decisions. Excluded decisions retain the
+  data model's optional placement field rather than claiming they were placed in the prompt.

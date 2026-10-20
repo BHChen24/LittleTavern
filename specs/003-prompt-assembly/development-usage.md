@@ -51,3 +51,17 @@ keys/probability, CJK and macro keyword integration. A new explicit-undefined se
 exposed spread-based defaults being overwritten; the implementation now defaults each value
 with nullish coalescing. The test failed before the fix and passed afterwards. Build/lint
 (75 files) and all 164 tests in 26 files passed. T013 was marked complete for commit.
+
+Phase 7: exec_command inspected only placement/enabled/constant metadata for the local PNG
+sample to resolve the greeting/placement test case. apply_patch added the local-only sample
+suite with seven imports through 002 into temporary libraries. Every sample passed, every
+entry was accounted for, and all four Seraphina entries resolved before. The missing-directory
+run skipped all seven tests. No external sample content was added to the repository.
+
+Final build, lint (76 files) and all 171 tests in 27 files passed. A separate node invocation
+tested the compiled engine's public exports, assembly/trace, defaults, macro replacement and
+determinism without calling any provider. exec_command reviewed source boundaries, task
+states and diffs; apply_patch wrote the report. The final checkpoint marks T014–T016 complete,
+checks that no before/after implementation hooks are present and commits the completed phase.
+Platform-reported total development tokens remain **unknown**; the transcript records every
+tool invocation, including validation, review and commit operations.

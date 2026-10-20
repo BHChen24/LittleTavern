@@ -113,9 +113,9 @@ Most of the trace was built in Phases 3 to 5. This phase checks that it is compl
 
 ## Phase 7: Polish
 
-- [ ] T014 [P] Add the local sample test T-h in `packages/engine/src/assembly/samples.local.test.ts`. The directory is `process.env.LITTLETAVERN_TEST_CARDS ?? path.resolve(<repo root>, "../test-cards")`, and the suite is skipped with `describe.skipIf(!existsSync(dir))`. For each sample character card, call 002's `importFile` into a temporary `LITTLETAVERN_HOME`, then assemble with `chat("你好", "……")`, and assert that `trace.lore.length` equals the card's entry count. Seraphina's entries should all be placed `before`
-- [ ] T015 Run `pnpm build && pnpm lint && pnpm test` and fix any failures
-- [ ] T016 Write `specs/003-prompt-assembly/report.md` with the same sections as the 001 and 002 reports, including "Development tool and token usage". Commit
+- [X] T014 [P] Add the local sample test T-h in `packages/engine/src/assembly/samples.local.test.ts`. The directory is `process.env.LITTLETAVERN_TEST_CARDS ?? path.resolve(<repo root>, "../test-cards")`, and the suite is skipped with `describe.skipIf(!existsSync(dir))`. For each sample character card, call 002's `importFile` into a temporary `LITTLETAVERN_HOME`, then assemble with `chat("你好", "……")`, and assert that `trace.lore.length` equals the card's entry count. Seraphina's entries should all be placed `before`
+- [X] T015 Run `pnpm build && pnpm lint && pnpm test` and fix any failures
+- [X] T016 Write `specs/003-prompt-assembly/report.md` with the same sections as the 001 and 002 reports, including "Development tool and token usage". Commit
 
 ---
 
