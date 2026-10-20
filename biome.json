@@ -6,7 +6,16 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*.ts", "**/*.json", "!**/dist", "!.claude", "!.agents", "!.specify", "!.omo"]
+    "includes": [
+      "**/*.ts",
+      "**/*.mjs",
+      "**/*.json",
+      "!**/dist",
+      "!.claude",
+      "!.agents",
+      "!.specify",
+      "!.omo"
+    ]
   },
   "formatter": {
     "enabled": true,

@@ -67,6 +67,15 @@ All run from the repository root:
 
 Every commit must pass `pnpm build`, `pnpm lint` and `pnpm test`.
 
+Git hooks (husky, installed by `pnpm install`) enforce this:
+
+- **pre-commit**: `gitleaks` on the staged changes, then `pnpm lint`. gitleaks must be installed.
+- **commit-msg**: a conventional prefix and English only (`scripts/check-commit-msg.mjs`).
+- **pre-push**: `pnpm build` and `pnpm test`.
+
+Never bypass them with `--no-verify`. If gitleaks flags something, report it instead of
+silencing it; only the owner adds entries to `.gitleaksignore`.
+
 ## Layout
 
 pnpm workspace with three packages: `packages/data`, `packages/engine` and `packages/tui` (which

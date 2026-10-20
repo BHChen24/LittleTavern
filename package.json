@@ -14,12 +14,14 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
+    "prepare": "husky",
     "dev": "pnpm build && node --env-file-if-exists=.env packages/tui/dist/cli.js",
     "test:live": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --config vitest.live.config.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",
     "@types/node": "^26.6.5",
+    "husky": "9.1.7",
     "pino-pretty": "^13.2.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
