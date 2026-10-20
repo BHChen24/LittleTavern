@@ -86,8 +86,8 @@ quickstart.md
     It returns the `TurnResult`.
   - **Usage records**: they use `sessionId` (the pi session id).
 - [X] T005 [US1] Write tests T-c and T-d in `packages/engine/src/character-chat.test.ts`, using a temporary `LITTLETAVERN_HOME`, a character imported with 002's `importFile` from a fixture card that has a lorebook, and the simulated model
-- [ ] T006 [P] [US1] Create `packages/tui/src/components/character-picker.ts`, an overlay with an `Input` filter and a `SelectList` filtered by `fuzzyFilter`, following `model-picker.ts`. Each item shows the name and the id prefix. Enter emits the item, Esc cancels. If it duplicates more than about 30 lines of `model-picker.ts`, extract a small shared `ListPicker` instead (research R4)
-- [ ] T007 [US1] In `packages/tui/src/app.ts`, add character mode:
+- [X] T006 [P] [US1] Create `packages/tui/src/components/character-picker.ts`, an overlay with an `Input` filter and a `SelectList` filtered by `fuzzyFilter`, following `model-picker.ts`. Each item shows the name and the id prefix. Enter emits the item, Esc cancels. If it duplicates more than about 30 lines of `model-picker.ts`, extract a small shared `ListPicker` instead (research R4)
+- [X] T007 [US1] In `packages/tui/src/app.ts`, add character mode:
   - **`/characters`** opens the picker; **`/chat <id>`** starts a chat directly (`getItem` by prefix; ambiguous or not found → notice).
   - **On start**: clear the transcript and render `history()`, so the greeting is the first character message.
   - **Status bar**: prefixed with the character name.
@@ -102,7 +102,7 @@ quickstart.md
 ## Phase 4: User Story 2 - Regenerate the last reply (P1)
 
 - [X] T008 [US2] Add `regenerate()` to `CharacterChat`, following the research R2 regenerate rules. If the leaf is an assistant message, call `branch(parentId)` and then generate. If the leaf is a user message, generate directly. Otherwise return `"nothing-to-regenerate"`. Do nothing while streaming. Each generation writes its own usage record. Tests T-e in `character-chat.test.ts`
-- [ ] T009 [US2] In `app.ts`, add `/regenerate` and Ctrl+R (in the input listener, next to Esc). Remove the last reply's component and stream the new one in its place. When the result is `"nothing-to-regenerate"`, show a notice. Without a character, show "Start a character chat first (/characters)."
+- [X] T009 [US2] In `app.ts`, add `/regenerate` and Ctrl+R (in the input listener, next to Esc). Remove the last reply's component and stream the new one in its place. When the result is `"nothing-to-regenerate"`, show a notice. Without a character, show "Start a character chat first (/characters)."
 
 **Checkpoint**: checks pass. Commit.
 
@@ -115,8 +115,8 @@ quickstart.md
   - **`resume`** calls `SessionManager.open` and reads `littletavern.character`. If the character is no longer in the library, it throws or returns an error saying so. It ignores unknown entry types.
 
   Tests T-f.
-- [ ] T011 [P] [US3] Create `packages/tui/src/components/session-picker.ts`, which lists the character name, last activity (local time) and message count, newest first. Enter resumes the selected chat and Esc cancels. Reuse the picker pattern or the `ListPicker`
-- [ ] T012 [US3] In `app.ts`, add `/sessions`: open the picker, resume the selected chat, and rebuild the transcript from `history()`. Mark interrupted replies the same way 001 does
+- [X] T011 [P] [US3] Create `packages/tui/src/components/session-picker.ts`, which lists the character name, last activity (local time) and message count, newest first. Enter resumes the selected chat and Esc cancels. Reuse the picker pattern or the `ListPicker`
+- [X] T012 [US3] In `app.ts`, add `/sessions`: open the picker, resume the selected chat, and rebuild the transcript from `history()`. Mark interrupted replies the same way 001 does
 
 **Checkpoint**: checks pass. Commit.
 
@@ -128,7 +128,7 @@ quickstart.md
   - **Storage**: attachments live in the settings field `lorebookAttachments[libraryId]`, written through the merging `writeSettings`. Only lorebook items can be attached.
   - **Missing lorebooks**: `send` resolves the attachments on every request and skips any that are missing, emitting a one-time notice through an `onNotice` callback.
   - **Tests**: T-g.
-- [ ] T014 [US4] In `app.ts`, add the commands `/attach <id>`, `/detach <id>` and `/lorebooks`, all with prefix lookup. `/lorebooks` lists the embedded lorebook first, then the attached ones, each with its name and entry count
+- [X] T014 [US4] In `app.ts`, add the commands `/attach <id>`, `/detach <id>` and `/lorebooks`, all with prefix lookup. `/lorebooks` lists the embedded lorebook first, then the attached ones, each with its name and entry count
 
 **Checkpoint**: checks pass. Commit.
 
@@ -136,8 +136,8 @@ quickstart.md
 
 ## Phase 7: Polish
 
-- [ ] T015 Try T-h in `packages/tui/src/app-character.test.ts` with 001's app test harness. If the harness grows beyond about 60 lines, delete the attempt and record T-h as deferred
-- [ ] T016 Run `pnpm build && pnpm lint && pnpm test`. Fix any failures
+- [X] T015 Try T-h in `packages/tui/src/app-character.test.ts` with 001's app test harness. If the harness grows beyond about 60 lines, delete the attempt and record T-h as deferred
+- [X] T016 Run `pnpm build && pnpm lint && pnpm test`. Fix any failures
 - [ ] T017 Write `specs/004-character-chat/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
 
 ---

@@ -12,6 +12,9 @@ import {
 import {
   type AppPaths,
   appendUsageRecord,
+  CharacterChat,
+  type CharacterItem,
+  type ChatHistoryItem,
   ChatSession,
   createLogger,
   DEFAULT_MODEL_ID,
@@ -21,6 +24,7 @@ import {
   forgetKey,
   getItem,
   importFile,
+  listChats,
   listLibrary,
   readSavedKey,
   readSettings,
@@ -34,13 +38,22 @@ import {
   writeSettings,
 } from "@littletavern/engine";
 import { KeyPrompt } from "./components/key-prompt.ts";
+import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { VERSION } from "./version.ts";
 
-export const APP_HELP = `/import <path>  Import a card or lorebook
+export const APP_HELP = `/characters     Choose a character and start a chat
+/chat <id>      Start a chat with a character
+/sessions       Resume a saved chat
+/regenerate     Regenerate the last reply (Ctrl+R)
+/attach <id>    Attach a lorebook to the current character
+/detach <id>    Detach a lorebook
+/lorebooks      List the active lorebooks
+/plain          Leave the character chat
+/import <path>  Import a card or lorebook
 /library        List the library
 /show <id>      Inspect an item
 /help        Show commands and key bindings
@@ -90,6 +103,7 @@ export function createApp(options: AppOptions = {}) {
   tui.addChild(status);
   tui.setFocus(editor);
   let reply: Markdown | undefined;
+  let chat: CharacterChat | null = null;
   let response = "";
   let running: Promise<unknown> | undefined;
   let closing: Promise<void> | undefined;
@@ -153,9 +167,113 @@ export function createApp(options: AppOptions = {}) {
       modelId,
       activeKey?.source ?? "none",
       `${totals.inputTokens}/${totals.outputTokens} | $${totals.cost.toFixed(4)}${totals.incomplete ? "~" : ""}`,
+      chat?.character.name,
     );
   }
   updateStatus();
+
+  function renderHistory(items: ChatHistoryItem[]): void {
+    transcript.clear();
+    for (const item of items) {
+      const text = scrubSecrets(item.text, secrets) + (item.interrupted ? " [interrupted]" : "");
+      transcript.addChild(new Markdown(text, 1, 1, markdownTheme));
+    }
+    tui.requestRender();
+  }
+  function enterChat(next: CharacterChat): void {
+    chat = next;
+    chat.onNotice = notice;
+    renderHistory(chat.history());
+    updateStatus();
+  }
+  function closeOverlay(): void {
+    tui.hideOverlay();
+    tui.setFocus(editor);
+    tui.requestRender();
+  }
+  function startChat(item: CharacterItem): void {
+    try {
+      enterChat(CharacterChat.start({ paths, session, item }));
+    } catch (error) {
+      logger.error(error instanceof Error ? error : { error: String(error) }, "Chat start failed");
+      notice("Could not start the chat. See the diagnostic log.");
+    }
+  }
+  function openCharacterPicker(): void {
+    const characters = listLibrary(paths).filter(
+      (item): item is CharacterItem => item.kind === "character",
+    );
+    const picker = new ListPicker(
+      "Choose a character (Enter starts a chat, Esc cancels)",
+      characters.map((item) => ({
+        value: item,
+        label: item.name,
+        description: item.id,
+        search: `${item.name} ${item.id}`,
+      })),
+      "Filter characters",
+    );
+    picker.onCancel = closeOverlay;
+    picker.onSelect = (item) => {
+      closeOverlay();
+      startChat(item);
+    };
+    tui.showOverlay(picker, { width: "90%" });
+  }
+  async function openSessionPicker(): Promise<void> {
+    const chats = await listChats(paths);
+    const picker = new ListPicker(
+      "Resume a chat (Enter resumes, Esc cancels)",
+      chats.map((entry) => ({
+        value: entry.path,
+        label: entry.characterName,
+        description: `${entry.modified.toLocaleString()} · ${entry.messageCount} messages`,
+        search: entry.characterName,
+      })),
+      "Filter chats",
+    );
+    picker.onCancel = closeOverlay;
+    picker.onSelect = (path) => {
+      closeOverlay();
+      try {
+        enterChat(CharacterChat.resume({ paths, session, sessionPath: path }));
+      } catch (error) {
+        notice(error instanceof Error ? error.message : "Could not resume the chat.");
+      }
+    };
+    tui.showOverlay(picker, { width: "90%" });
+  }
+  async function regenerate(): Promise<void> {
+    if (!chat) {
+      notice("Start a character chat first (/characters).");
+      return;
+    }
+    if (closing || chat.isStreaming || needsKey) return;
+    const target = chat.regenerateTarget();
+    if (!target) {
+      notice("Nothing to regenerate yet: send a message first.");
+      return;
+    }
+    const history = chat.history();
+    renderHistory(target === "reply" ? history.slice(0, -1) : history);
+    await stream(() => (chat ? chat.regenerate() : Promise.resolve(null)));
+  }
+  async function stream(run: () => Promise<unknown>): Promise<void> {
+    reply = new Markdown("", 1, 1, markdownTheme);
+    transcript.addChild(reply);
+    response = "";
+    editor.disableSubmit = true;
+    running = run();
+    try {
+      await running;
+    } catch (error) {
+      logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
+      notice("Chat request failed. See the diagnostic log.");
+    } finally {
+      editor.disableSubmit = needsKey;
+      tui.requestRender();
+    }
+  }
   const onDelta = session.onDelta((delta) => {
     response += delta;
     reply?.setText(scrubSecrets(response, secrets));
@@ -163,7 +281,7 @@ export function createApp(options: AppOptions = {}) {
   });
   const onFinish = session.onFinish((turn) => {
     const record = toUsageRecord(turn, {
-      sessionId,
+      sessionId: chat?.sessionId ?? sessionId,
       modelPrice: findAllowedModel(turn.model)?.price ?? null,
       secrets,
     });
@@ -273,8 +391,68 @@ export function createApp(options: AppOptions = {}) {
       );
       return;
     }
+    if (text === "/characters") {
+      openCharacterPicker();
+      return;
+    }
+    if (text === "/chat" || text.startsWith("/chat ")) {
+      const id = text.slice("/chat".length).trim();
+      const item = id ? getItem(paths, id) : null;
+      if (!id) notice("Usage: /chat <id>");
+      else if (item === "ambiguous") notice(`Ambiguous item prefix: ${id}`);
+      else if (item?.kind !== "character") notice(`Character not found: ${id}`);
+      else startChat(item);
+      return;
+    }
+    if (text === "/sessions") {
+      await openSessionPicker();
+      return;
+    }
+    if (text === "/plain") {
+      chat = null;
+      transcript.clear();
+      notice("Plain chat. Use /characters to start a character chat.");
+      updateStatus();
+      return;
+    }
+    if (text === "/lorebooks" || text.startsWith("/attach") || text.startsWith("/detach")) {
+      if (!chat) {
+        notice("Start a character chat first (/characters).");
+        return;
+      }
+      if (text === "/lorebooks") {
+        const books = chat.activeLorebooks();
+        notice(
+          books.length === 0
+            ? "No lorebooks. Attach one with /attach <id>."
+            : books
+                .map(
+                  (book) =>
+                    `${book.attached ? `attached ${book.id ?? ""}` : "card"} · ${book.name} · ${book.entries} entries`,
+                )
+                .join("\n"),
+        );
+        return;
+      }
+      const id = text.replace(/^\/(attach|detach)/, "").trim();
+      if (!id) {
+        notice(`Usage: ${text.startsWith("/attach") ? "/attach" : "/detach"} <id>`);
+        return;
+      }
+      try {
+        if (text.startsWith("/attach")) notice(`Attached ${chat.attachLorebook(id).name}.`);
+        else notice(chat.detachLorebook(id) ? "Detached." : `Not attached: ${id}`);
+      } catch (error) {
+        notice(error instanceof Error ? error.message : "Could not change lorebooks.");
+      }
+      return;
+    }
     if (needsKey) {
       promptForKey();
+      return;
+    }
+    if (text === "/regenerate") {
+      await regenerate();
       return;
     }
     if (text === "/model") {
@@ -315,20 +493,8 @@ export function createApp(options: AppOptions = {}) {
     }
     if (!activeKey) return;
     transcript.addChild(new Markdown(scrubSecrets(value, secrets), 1, 1, markdownTheme));
-    reply = new Markdown("", 1, 1, markdownTheme);
-    transcript.addChild(reply);
-    response = "";
-    editor.disableSubmit = true;
-    running = session.send(value);
-    try {
-      await running;
-    } catch (error) {
-      logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
-      notice("Chat request failed. See the diagnostic log.");
-    } finally {
-      editor.disableSubmit = needsKey;
-      tui.requestRender();
-    }
+    const current = chat;
+    await stream(() => (current ? current.send(value) : session.send(value)));
   }
   editor.onSubmit = (value) => {
     void submit(value);
@@ -336,6 +502,10 @@ export function createApp(options: AppOptions = {}) {
   tui.addInputListener((data) => {
     if (matchesKey(data, "ctrl+c")) {
       void quit();
+      return { consume: true };
+    }
+    if (matchesKey(data, "ctrl+r")) {
+      void regenerate();
       return { consume: true };
     }
     if (matchesKey(data, "escape") && session.isStreaming) {
@@ -353,6 +523,9 @@ export function createApp(options: AppOptions = {}) {
     tui,
     editor,
     session,
+    get chat() {
+      return chat;
+    },
     submit,
     quit,
     done,

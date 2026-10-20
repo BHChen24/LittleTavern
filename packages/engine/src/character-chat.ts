@@ -226,13 +226,23 @@ export class CharacterChat {
    */
   async regenerate(): Promise<TurnResult | null | "nothing-to-regenerate"> {
     if (this.isStreaming) return null;
+    const target = this.regenerateTarget();
     const leaf = this.manager.getLeafEntry();
-    if (leaf?.type === "message" && leaf.message.role === "assistant" && leaf.parentId) {
+    if (target === "reply" && leaf?.parentId) {
       this.manager.branch(leaf.parentId);
       return this.generate();
     }
-    if (leaf?.type === "message" && leaf.message.role === "user") return this.generate();
+    if (target === "user") return this.generate();
     return "nothing-to-regenerate";
+  }
+
+  /** What regenerate() would act on: the last reply, a reply-less user message, or nothing. */
+  regenerateTarget(): "reply" | "user" | null {
+    const leaf = this.manager.getLeafEntry();
+    if (leaf?.type !== "message") return null;
+    if (leaf.message.role === "assistant" && leaf.parentId) return "reply";
+    if (leaf.message.role === "user") return "user";
+    return null;
   }
 
   attachLorebook(id: string): LorebookItem {
