@@ -27,6 +27,18 @@ features consume what it produces: 003 (prompt assembly) reads card fields and l
 004 (character chat) starts conversations with an imported character. This feature does not
 change how chat works.
 
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: Is "lossless write-back" in v1 satisfied by returning the stored original, or must
+  LittleTavern regenerate a valid card from its parsed data? → A: Neither. v1 provides import
+  only, with no export of any kind. The original stays in the library folder, where the owner can
+  copy it with ordinary file tools.
+- Q: What happens when the same file content is imported again? → A: Byte-identical content is
+  skipped with an "already imported" message that names the existing item. Different content is
+  imported as a new item, even when the name is the same.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Import a character card (Priority: P1)
@@ -150,8 +162,9 @@ greeting and lorebook entries.
 
 ### Edge Cases
 
-- The same file imported twice. See FR-012 for the default; the owner may revisit it during
-  clarification.
+- The same file imported twice: the second import changes nothing and reports "already imported"
+  with the existing item's name (FR-012). The same card edited and saved is new content, so it is
+  imported as a new item.
 - Two different characters with the same name: both are kept and can be told apart by import
   date and identifier.
 - A very large card or lorebook (hundreds of entries, several megabytes of text) imports without
@@ -201,9 +214,10 @@ greeting and lorebook entries.
 - **FR-011**: Imported items MUST be stored in LittleTavern's own data directory, one folder per
   item, holding the original file and a readable parsed copy, so the owner can browse, back up or
   delete them with ordinary file tools.
-- **FR-012**: Importing a file whose content is identical to an item already in the library MUST
-  NOT create a duplicate; the user is told it is already imported. A different file with the same
-  character name is imported as a separate item.
+- **FR-012**: Importing a file whose bytes are identical to an item already in the library MUST
+  NOT create a duplicate or change anything; the user is told it is already imported, with the
+  existing item's name. A file with different bytes is imported as a separate item, even when the
+  character name is the same.
 - **FR-013**: Each item MUST have a stable identifier, a display name, a kind (character or
   lorebook), a format label, and its import date.
 
@@ -284,9 +298,9 @@ written.
 
 - There is a single user and a single library. Items are not shared or synced.
 - Import is by file path. A file browser is out of scope.
-- Editing, deleting from inside the app, and exporting are out of scope for this feature. Because
-  the original file is kept byte for byte (FR-007), it is the lossless export for now. The owner
-  can delete an item by removing its folder.
+- v1 provides import only. Export, editing and deleting from inside the app are out of scope. The
+  original file is kept byte for byte (FR-007) in the item's library folder; the owner can copy it
+  or delete the folder with ordinary file tools.
 - Embedded lorebooks stay attached to their character and are not listed as separate lorebooks.
   Linking standalone lorebooks to characters is part of 004.
 - Images inside PNG cards are not displayed (text-only terminal); the PNG is kept as the original

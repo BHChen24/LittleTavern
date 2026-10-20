@@ -34,6 +34,5 @@
 - The spec names format identifiers on purpose (`chara_card_v3`, `ccv3`/`chara` text chunks,
   `character_book`). They are the public ecosystem formats the user must supply, not
   implementation choices.
-- Reasonable defaults were taken for duplicate handling (FR-012), keeping embedded lorebooks
-  attached to their card, and treating the stored original as the export. These are the best
-  candidates for `/speckit-clarify`.
+- Clarified on 2026-10-19: no export in v1; byte-identical re-import is skipped (FR-012). Default
+  kept: embedded lorebooks stay attached to their card.
