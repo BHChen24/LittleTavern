@@ -144,3 +144,51 @@ it.each([
   expect(!report.ok && report.reason).toContain(reason);
   expect(readdirSync(library, { recursive: true }).sort()).toEqual(before);
 });
+it("imports world-info lorebooks, retains disabled entries, and uses file-name fallback", () => {
+  const report = importFile(
+    paths,
+    source(
+      "world.json",
+      Buffer.from(
+        JSON.stringify({
+          entries: {
+            "0": { key: ["rain"], content: "雨", disable: true },
+            "1": { content: "sun" },
+          },
+        }),
+      ),
+    ),
+  );
+  expect(report).toMatchObject({
+    ok: true,
+    item: { kind: "lorebook", format: "Lorebook (SillyTavern world info)", name: "world" },
+  });
+  if (!report.ok || report.item.kind !== "lorebook") throw new Error("Expected lorebook");
+  expect(report.item.lorebook.entries).toHaveLength(2);
+  expect(report.item.lorebook.entries[0]?.enabled).toBe(false);
+  expect(
+    readFileSync(join(paths.dataDir, "library", "lorebooks", report.item.id, "original.json"))
+      .length,
+  ).toBeGreaterThan(0);
+});
+it("imports a standalone card-format lorebook", () => {
+  const report = importFile(
+    paths,
+    source(
+      "book.json",
+      Buffer.from(
+        JSON.stringify({
+          name: "Card book",
+          entries: [{ keys: ["key"], content: "content", enabled: false }],
+        }),
+      ),
+    ),
+  );
+  expect(report).toMatchObject({
+    ok: true,
+    item: { kind: "lorebook", format: "Lorebook (card format)", name: "Card book" },
+  });
+  if (!report.ok || report.item.kind !== "lorebook") throw new Error("Expected lorebook");
+  expect(report.item.lorebook.entries).toHaveLength(1);
+  expect(report.item.lorebook.entries[0]?.enabled).toBe(false);
+});

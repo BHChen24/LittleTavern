@@ -116,7 +116,7 @@ to T-h). Keep them lightweight.
 
 **Goal**: Lorebooks in world-info and card format are imported as lorebooks.
 
-- [ ] T010 [US3] Make sure `importFile` handles the lorebook results from `detectFile`. Lorebooks go to `library/lorebooks/<id>/`; the name falls back to the file's base name without extension. Extend `packages/data/src/library.test.ts`:
+- [X] T010 [US3] Make sure `importFile` handles the lorebook results from `detectFile`. Lorebooks go to `library/lorebooks/<id>/`; the name falls back to the file's base name without extension. Extend `packages/data/src/library.test.ts`:
   - a world-info file imports as `"Lorebook (SillyTavern world info)"` with the right entry count, and a disabled entry is kept with `enabled: false`;
   - a card-format lorebook imports as `"Lorebook (card format)"`;
   - a file with no name uses the file-name fallback.

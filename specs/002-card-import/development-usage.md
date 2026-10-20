@@ -42,3 +42,7 @@ original-byte storage, raw preservation and public exports. Build/lint and 80 te
 Phase 4: `exec_command` added nine rejection/library-invariance cases. The first run
 found a missing readdirSync test import; it was corrected before committing. Build/lint
 and all 89 tests in 19 files passed. No rejected input creates or changes library entries.
+
+Phase 5: `exec_command` verified the importer already handles both lorebook branches and
+extended library tests for world-info/card-format books, disabled entries, correct storage
+and source-file name fallback. Build/lint and all 91 tests in 19 files passed.
