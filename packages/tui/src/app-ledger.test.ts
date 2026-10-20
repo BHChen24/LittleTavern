@@ -34,7 +34,7 @@ function terminal(): Terminal {
   };
 }
 
-it("records a rejected key, preserves the transcript, and returns to the key prompt", async () => {
+it("records a rejected key, preserves the transcript, and points to /apikey without opening a prompt", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-error-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const key = "synthetic-key-1234";
@@ -51,7 +51,8 @@ it("records a rejected key, preserves the transcript, and returns to the key pro
     const rendered = app.tui.render(80).join("\n");
     expect(rendered).toContain("hello");
     expect(rendered).toContain("OpenRouter rejected the key");
-    expect(app.tui.getFocusedComponent()?.render(80).join("\n")).toContain("OpenRouter API key");
+    expect(rendered).toContain("Type /apikey to replace it.");
+    expect(app.tui.getFocusedComponent()).toBe(app.editor);
     expect(rendered).not.toContain(key);
     expect(readUsageRecords(paths.usageLedgerFile)).toHaveLength(1);
     expect(readFileSync(paths.usageLedgerFile, "utf8")).not.toContain(key);

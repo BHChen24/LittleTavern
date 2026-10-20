@@ -26,24 +26,18 @@ it("rejects blank input and asks consent with the full destination path", () => 
   prompt.handleInput("\r");
   expect(result).toBeUndefined();
   expect(prompt.render(100).join("")).toContain("/tmp/lt-test/config/credentials.json");
-  expect(prompt.render(100).join("")).toContain("This session only");
-  prompt.handleInput("\x1b[B");
+  expect(prompt.render(100).join("")).toContain("Use for this session only");
   prompt.handleInput("\r");
   expect(result).toEqual({ key: "synthetic-key", save: false });
 });
 
-it("hands library commands back without accepting them as keys", () => {
+it("cancels without accepting a key", () => {
   const prompt = new KeyPrompt("/tmp/synthetic/credentials.json");
-  let command = "";
-  let keyAccepted = false;
-  prompt.onCommand = (value) => {
-    command = value;
+  let cancelled = false;
+  prompt.onCancel = () => {
+    cancelled = true;
   };
-  prompt.onResult = () => {
-    keyAccepted = true;
-  };
-  prompt.handleInput("/library");
-  prompt.handleInput("\r");
-  expect(command).toBe("/library");
-  expect(keyAccepted).toBe(false);
+  prompt.handleInput("synthetic");
+  prompt.handleInput("\x1b");
+  expect(cancelled).toBe(true);
 });

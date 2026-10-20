@@ -105,7 +105,6 @@ export function createApp(options: AppOptions = {}) {
     tui.addChild(editor);
     tui.addChild(status);
     tui.setFocus(editor);
-    if (needsKey) promptForKey();
     tui.requestRender();
   }
   let reply: Markdown | undefined;
@@ -121,8 +120,6 @@ export function createApp(options: AppOptions = {}) {
   });
   let started = false;
   let helpOpen = false;
-  let needsKey = !activeKey;
-  let keyPrompt: KeyPrompt | undefined;
   /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
   const display = (text: string) => stripControls(scrubSecrets(text, secrets));
   const notice = (text: string) => {
@@ -130,17 +127,10 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   };
   function promptForKey(): void {
-    needsKey = true;
-    editor.disableSubmit = true;
-    keyPrompt = new KeyPrompt(paths.credentialsFile);
-    keyPrompt.onCommand = (command) => {
-      tui.hideOverlay();
-      keyPrompt = undefined;
-      tui.setFocus(editor);
-      editor.disableSubmit = false;
-      void submit(command);
-    };
+    const keyPrompt = new KeyPrompt(paths.credentialsFile);
+    keyPrompt.onCancel = closeOverlay;
     keyPrompt.onResult = ({ key, save }) => {
+      const replacedEnvironment = Boolean(env.OPENROUTER_API_KEY?.trim());
       secrets.push(key);
       let source: "saved" | "session" = "session";
       if (save) {
@@ -151,18 +141,67 @@ export function createApp(options: AppOptions = {}) {
           notice("Could not save the key; using it for this session only.");
         }
       }
-      // Explicit replacement must supersede a rejected environment key for this run.
       activeKey = { value: key, source, masked: `••••${key.slice(-4)}` };
-      needsKey = false;
-      keyPrompt = undefined;
-      tui.hideOverlay();
-      tui.setFocus(editor);
-      editor.disableSubmit = false;
+      closeOverlay();
       updateStatus();
-      tui.requestRender();
+      if (replacedEnvironment)
+        notice("OPENROUTER_API_KEY in the environment will be used again next launch.");
     };
     tui.showOverlay(keyPrompt, { width: "90%" });
     tui.requestRender();
+  }
+  function openApiKeyPicker(): void {
+    const provider = new ListPicker("Choose a provider", [
+      {
+        value: "openrouter",
+        label: "OpenRouter",
+        search: "OpenRouter",
+        description: activeKey ? `API key: ${activeKey.source}` : "No API key yet",
+      },
+    ]);
+    provider.onCancel = closeOverlay;
+    provider.onSelect = () => {
+      closeOverlay();
+      if (!activeKey) {
+        promptForKey();
+        return;
+      }
+      const actions = new ListPicker("OpenRouter API key", [
+        { value: "replace", label: "Enter a new key", search: "Enter a new key" },
+        ...(readSavedKey(paths).key
+          ? [{ value: "forget", label: "Forget saved key", search: "Forget saved key" }]
+          : []),
+      ]);
+      actions.onCancel = closeOverlay;
+      actions.onSelect = (action) => {
+        closeOverlay();
+        if (action === "replace") {
+          promptForKey();
+          return;
+        }
+        try {
+          forgetKey(paths);
+          if (activeKey?.source !== "environment") activeKey = null;
+          notice(
+            activeKey?.source === "environment"
+              ? "Saved key forgotten; the environment key remains active."
+              : "Saved key forgotten.",
+          );
+          updateStatus();
+        } catch {
+          notice("Could not forget the saved key; check the credentials file.");
+        }
+        closeOverlay();
+      };
+      tui.showOverlay(actions, { width: "90%" });
+    };
+    tui.showOverlay(provider, { width: "90%" });
+  }
+  function interceptMissingKey(value: string): boolean {
+    if (activeKey) return false;
+    editor.setText(value);
+    notice("No API key yet. Type /apikey to add your OpenRouter key.");
+    return true;
   }
   const importNotice = ensureImportFolders(paths);
   if (importNotice) notice(importNotice);
@@ -254,12 +293,13 @@ export function createApp(options: AppOptions = {}) {
     };
     tui.showOverlay(picker, { width: "90%" });
   }
-  async function regenerate(): Promise<void> {
+  async function regenerate(value = editor.getText()): Promise<void> {
+    if (interceptMissingKey(value)) return;
     if (!chat) {
       notice("Start a character chat first (/characters).");
       return;
     }
-    if (closing || chat.isStreaming || needsKey) return;
+    if (closing || chat.isStreaming) return;
     const target = chat.regenerateTarget();
     if (!target) {
       notice("Nothing to regenerate yet: send a message first.");
@@ -281,7 +321,7 @@ export function createApp(options: AppOptions = {}) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
       notice("Chat request failed. See the diagnostic log.");
     } finally {
-      editor.disableSubmit = needsKey;
+      editor.disableSubmit = false;
       tui.requestRender();
     }
   }
@@ -310,11 +350,15 @@ export function createApp(options: AppOptions = {}) {
     response = turn.text;
     reply?.setText(display(response) + (turn.outcome === "interrupted" ? " [interrupted]" : ""));
     if (turn.outcome === "error") {
-      notice(
-        describeProviderError(scrubSecrets(turn.errorMessage ?? "Unknown error", secrets)).text,
+      const error = describeProviderError(
+        scrubSecrets(turn.errorMessage ?? "Unknown error", secrets),
       );
+      if (error.kind === "key-rejected") {
+        activeKey = null;
+        updateStatus();
+        notice("OpenRouter rejected the key. Type /apikey to replace it.");
+      } else notice(error.text);
       logger.error({ error: turn.errorMessage }, "Provider request failed");
-      if (describeProviderError(turn.errorMessage ?? "").kind === "key-rejected") promptForKey();
     }
     tui.requestRender();
   });
@@ -351,22 +395,8 @@ export function createApp(options: AppOptions = {}) {
     const text = value.trim();
     if (closing || session.isStreaming || !text) return;
     editor.setText("");
-    if (text === "/key") {
-      promptForKey();
-      return;
-    }
-    if (text === "/forget-key") {
-      try {
-        forgetKey(paths);
-      } catch {
-        notice("Could not forget the saved key; check the credentials file.");
-        return;
-      }
-      if (activeKey?.source !== "environment") {
-        activeKey = null;
-        updateStatus();
-        promptForKey();
-      } else notice("Saved key forgotten; the environment key remains active.");
+    if (text === "/key" || text === "/forget-key") {
+      notice(`${text} was replaced by /apikey.`);
       return;
     }
     const changeLorebooks = () => {
@@ -489,7 +519,7 @@ export function createApp(options: AppOptions = {}) {
         return;
       },
       regenerate: async () => {
-        await regenerate();
+        await regenerate(value);
         return;
       },
       model: async () => {
@@ -524,7 +554,7 @@ export function createApp(options: AppOptions = {}) {
         helpOpen = true;
         return;
       },
-      apikey: promptForKey,
+      apikey: openApiKeyPicker,
       lorebooks: changeLorebooks,
       attach: changeLorebooks,
       detach: changeLorebooks,
@@ -536,18 +566,10 @@ export function createApp(options: AppOptions = {}) {
         notice("Unknown command. Use /help.");
         return;
       }
-      if (needsKey && ["regenerate", "model", "help"].includes(command.name)) {
-        promptForKey();
-        return;
-      }
       await handlers[command.name]?.();
       return;
     }
-    if (needsKey) {
-      promptForKey();
-      return;
-    }
-    if (!activeKey) return;
+    if (interceptMissingKey(value)) return;
     transcript.addChild(new Markdown(display(value), 1, 1, markdownTheme));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));

@@ -33,3 +33,13 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Fix chat-entry test placement and validate Phase 4 | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Wait for corrected Phase 4 checkpoint | functions.exec → write_stdin | Build, lint and 231 tests passed |
 | Mark Phase 4 complete and inspect key/error interfaces for Phase 5 | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Inspect editor submit order and write key-flow tests (T010) | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Commit Phase 4 | functions.exec → exec_command (escalated Git) | Committed b9d61d4 |
+| Wait for key-flow baseline | functions.exec → write_stdin | Expected old-flow failures |
+| Inspect pi overlay lifecycle and editor submission order | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Implement explicit API-key flow and missing-key interception (T010) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for initial key-flow checks (two polls) | functions.exec → write_stdin × 2 | Build, lint and 237 tests passed; inspected pi overlay stacking and strengthened cleanup |
+| Correct usage outcome and review message roles and terminal startup | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Close each key-flow overlay before advancing and verify overlay cleanup | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for strengthened Phase 5 validation | functions.exec → write_stdin | Build, lint and 237 tests passed, including overlay cleanup |
+| Mark Phase 5 complete and document the safe manual-check command | functions.exec → exec_command (including this recorder) | Exit 0 |

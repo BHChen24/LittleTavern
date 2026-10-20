@@ -113,7 +113,7 @@ quickstart.md
 
 ## Phase 5: User Story 4 - API key only through `/apikey` (P1)
 
-- [ ] T010 [US4] Rework the key flow in `app.ts` and `components/key-prompt.ts`, following the table in research R4:
+- [X] T010 [US4] Rework the key flow in `app.ts` and `components/key-prompt.ts`, following the table in research R4:
   - no prompt at startup;
   - interception that restores the editor text;
   - the rejected-key notice points to `/apikey`;

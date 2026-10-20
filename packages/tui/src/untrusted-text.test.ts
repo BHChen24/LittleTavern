@@ -100,6 +100,7 @@ it("never renders escape sequences from a card or a reply in the app", async () 
       simulated: { replies: [`reply${EVIL}`] },
     }),
   });
+  app.enterChat();
   const screen = () => app.tui.render(100).join("\n");
   try {
     await app.submit("/characters");

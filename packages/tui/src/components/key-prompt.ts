@@ -1,4 +1,4 @@
-import { type Component, SelectList, Text } from "@earendil-works/pi-tui";
+import { type Component, matchesKey, SelectList, Text } from "@earendil-works/pi-tui";
 import { isBlank } from "@littletavern/engine";
 import { selectListTheme } from "../theme.ts";
 import { MaskedKeyInput } from "./masked-key-input.ts";
@@ -13,15 +13,11 @@ export class KeyPrompt implements Component {
   private key = "";
   private error = "";
   private credentialsFile: string;
-  onCommand?: (command: string) => void;
+  onCancel?: () => void;
   onResult?: (result: KeyPromptResult) => void;
   constructor(credentialsFile: string) {
     this.credentialsFile = credentialsFile;
     this.input.onSubmit = (key) => {
-      if (this.onCommand && /^(?:\/library$|\/(?:import|show)(?: |$))/.test(key.trim())) {
-        this.onCommand(key.trim());
-        return;
-      }
       if (isBlank(key)) {
         this.error = "Key cannot be empty";
         return;
@@ -30,8 +26,8 @@ export class KeyPrompt implements Component {
       this.error = "";
       this.choice = new SelectList(
         [
-          { value: "save", label: "Save" },
-          { value: "session", label: "This session only" },
+          { value: "session", label: "Use for this session only" },
+          { value: "save", label: `Save to ${this.credentialsFile} (readable only by you)` },
         ],
         2,
         selectListTheme,
@@ -47,7 +43,8 @@ export class KeyPrompt implements Component {
     this.input.focused = value;
   }
   handleInput(data: string): void {
-    (this.choice ?? this.input).handleInput(data);
+    if (matchesKey(data, "escape")) this.onCancel?.();
+    else (this.choice ?? this.input).handleInput(data);
   }
   invalidate(): void {
     this.input.invalidate();
@@ -55,15 +52,10 @@ export class KeyPrompt implements Component {
   }
   render(width: number): string[] {
     const explanation = this.choice
-      ? `The key will be saved to ${this.credentialsFile}, readable only by your user account`
+      ? "Choose how to use this key:"
       : "An OpenRouter API key is needed. Get one at https://openrouter.ai/keys";
     return [
       ...new Text(explanation).render(width),
-      ...(!this.choice && this.onCommand
-        ? new Text("Library commands also work here: /import <path>, /library, /show <id>").render(
-            width,
-          )
-        : []),
       ...(this.error ? new Text(this.error).render(width) : []),
       ...(this.choice ?? this.input).render(width),
     ];
