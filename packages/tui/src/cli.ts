@@ -24,6 +24,12 @@ export async function runCli(
     out(CLI_HELP);
     return 0;
   }
+  if (!process.env.OPENROUTER_API_KEY?.trim()) {
+    out("Set OPENROUTER_API_KEY to start chatting.");
+    return 1;
+  }
+  const { startApp } = await import("./app.ts");
+  await startApp();
   return 0;
 }
 

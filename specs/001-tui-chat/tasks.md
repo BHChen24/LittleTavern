@@ -77,14 +77,14 @@ T-k). Keep them lightweight: our own code only, never pi's behaviour.
 **Independent Test**: The simulated happy path passes (T-h, and T-i if not deferred). The owner
 then checks quickstart steps 3–5 with a real key.
 
-- [ ] T014 [US1] Write `packages/engine/src/chat-session.test.ts` (T-h): using `simulated: { replies: ["Hello there.", "You said hi before."] }`, `send()` emits text deltas and then a finish result with `outcome: "completed"`, and on the second `send()` the request includes the first exchange. Also cover `abort()` during streaming, which gives `outcome: "interrupted"` and keeps the partial text
-- [ ] T015 [US1] Implement `ChatSession` in `packages/engine/src/chat-session.ts`: wrap pi-agent-core `Agent` (research R1) with `initialState: { systemPrompt, model }`, `streamFn: models.streamSimple.bind(models)` and `getApiKey: () => options.getApiKey()`.
+- [X] T014 [US1] Write `packages/engine/src/chat-session.test.ts` (T-h): using `simulated: { replies: ["Hello there.", "You said hi before."] }`, `send()` emits text deltas and then a finish result with `outcome: "completed"`, and on the second `send()` the request includes the first exchange. Also cover `abort()` during streaming, which gives `outcome: "interrupted"` and keeps the partial text
+- [X] T015 [US1] Implement `ChatSession` in `packages/engine/src/chat-session.ts`: wrap pi-agent-core `Agent` (research R1) with `initialState: { systemPrompt, model }`, `streamFn: models.streamSimple.bind(models)` and `getApiKey: () => options.getApiKey()`.
   - **Options**: `{ modelId, systemPrompt, getApiKey, simulated? }`. When `simulated` is given, build a pi-ai `fauxProvider` with the scripted replies instead of OpenRouter (research R7). An optional `simulated.price` sets the faux model cost.
   - **API**: `send(text)`, `abort()`, `isStreaming`, `setModel(modelId)`, `onDelta(cb)`, `onFinish(cb)`. `setModel` keeps the history: assign `agent.state.model = model`, which is mutable per `../pi/packages/agent/src/types.ts:391`.
   - **`onFinish` payload**: our own `TurnResult { outcome: "completed" | "interrupted" | "error", text, errorMessage?, model, startedAt, durationMs, usage: { input, output, cacheRead, cacheWrite, reasoning?, totalTokens, cost: { input, output, cacheRead, cacheWrite, total } } }`, mapped from the final `AssistantMessage`. Map `stopReason`: `stop` and `length` → completed, `aborted` → interrupted, `error` → error.
   - Ignore thinking deltas; show text deltas only.
-- [ ] T016 [P] [US1] Implement `packages/tui/src/components/status-bar.ts`: a one-line `Text` showing the model id, `key: <source>`, and a usage slot that US3 fills in (show `—` until then)
-- [ ] T017 [US1] Implement `packages/tui/src/app.ts` following `chat-simple.ts`:
+- [X] T016 [P] [US1] Implement `packages/tui/src/components/status-bar.ts`: a one-line `Text` showing the model id, `key: <source>`, and a usage slot that US3 fills in (show `—` until then)
+- [X] T017 [US1] Implement `packages/tui/src/app.ts` following `chat-simple.ts`:
   - **Layout**: `TuiMainScreen(new ProcessTerminal())` (or an injected terminal for tests); header `Text` "LittleTavern <version>"; transcript of `Markdown` blocks; `Editor`; status bar.
   - **State**: `ready` / `streaming` (data-model.md state machine). Enter sends non-blank input, and blank input does nothing.
   - **Streaming**: show deltas with `Markdown.setText` and `tui.requestRender()`.
@@ -92,8 +92,8 @@ then checks quickstart steps 3–5 with a real key.
   - **Errors** become a readable transcript line from `describeProviderError`.
   - **Commands and keys**: `/help` opens an overlay listing the commands from `contracts/cli-and-files.md`. `/quit` and Ctrl+C quit (via `tui.addInputListener`).
   - **Terminal restore**: always call `tui.stop()` on exit, including from `uncaughtException`, `SIGINT` and `SIGTERM` handlers.
-- [ ] T018 [US1] Make the no-flag path of `runCli` in `packages/tui/src/cli.ts` read `OPENROUTER_API_KEY`, the saved settings model (default for now) and `DEFAULT_SYSTEM_PROMPT`, then start `app.ts`. Until US2 lands, a missing key prints a one-line message telling the user to set `OPENROUTER_API_KEY` and exits with code 1
-- [ ] T019 [US1] Try T-i in `packages/tui/src/app.test.ts`: build the app with a stub `Terminal` (never call `tui.start()`) and the simulated session, then assert that `render(80)` lines contain "LittleTavern", feed keystrokes into the editor, and assert that the reply text renders. **If the harness exceeds about 60 lines, delete the attempt and record T-i as deferred** in the report
+- [X] T018 [US1] Make the no-flag path of `runCli` in `packages/tui/src/cli.ts` read `OPENROUTER_API_KEY`, the saved settings model (default for now) and `DEFAULT_SYSTEM_PROMPT`, then start `app.ts`. Until US2 lands, a missing key prints a one-line message telling the user to set `OPENROUTER_API_KEY` and exits with code 1
+- [X] T019 [US1] Try T-i in `packages/tui/src/app.test.ts`: build the app with a stub `Terminal` (never call `tui.start()`) and the simulated session, then assert that `render(80)` lines contain "LittleTavern", feed keystrokes into the editor, and assert that the reply text renders. **If the harness exceeds about 60 lines, delete the attempt and record T-i as deferred** in the report
 
 **Checkpoint**: checks pass. US1 works with a real key (owner, in the morning). Commit.
 

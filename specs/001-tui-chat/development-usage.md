@@ -25,3 +25,8 @@ modules, run Biome formatting and all checks, inspect pi APIs, and mark tasks co
 Git switch initially failed because .git is sandbox read-only; escalation succeeded after
 preserving changes in a temporary stash. pnpm auto-install initially failed on its external
 store; checks now disable automatic dependency verification without installing anything.
+
+Phase 3: `exec_command` wrote the chat test first (expected missing-module failure), then
+implemented the adapter, UI and terminal cleanup. The first typecheck identified callback
+narrowing and Text input-handler errors; both were corrected. Final build/lint and 24 tests
+in 8 files passed, including T-i with a 54-line test file.
