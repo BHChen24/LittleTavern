@@ -168,7 +168,11 @@ export function buildV3Card(fields: CharacterFields, entries: TemplateEntry[], v
   };
 }
 
-export function safeCardFileName(name: string, existingNames: readonly string[]): string {
+export function safeCardFileName(
+  name: string,
+  existingNames: readonly string[],
+  extension = ".json",
+): string {
   const base =
     Array.from(
       name
@@ -179,8 +183,8 @@ export function safeCardFileName(name: string, existingNames: readonly string[])
       .slice(0, 60)
       .join("")
       .replace(/^-+|-+$/g, "") || "character";
-  let candidate = `${base}.json`;
+  let candidate = `${base}${extension}`;
   for (let suffix = 2; existingNames.includes(candidate); suffix++)
-    candidate = `${base}-${suffix}.json`;
+    candidate = `${base}-${suffix}${extension}`;
   return candidate;
 }

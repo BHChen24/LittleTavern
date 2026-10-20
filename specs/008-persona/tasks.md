@@ -56,7 +56,7 @@ description: "Task list for 008-persona"
 
 ## Phase 2: User Story 1 - Write a persona once (P1)
 
-- [ ] T004 [US1] Create `packages/data/src/personas.ts` with:
+- [X] T004 [US1] Create `packages/data/src/personas.ts` with:
   - `PERSONA_TEMPLATE`, the exact text in `contracts/persona.md`;
   - `parsePersona(text)`;
   - `listPersonas(paths)` (research R4);
