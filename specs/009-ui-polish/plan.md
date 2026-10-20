@@ -32,9 +32,11 @@ from 008's final commit (research R1–R7).
 - `TuiAltScreen`;
 - `ScrollView`, through the alt screen's primary scroll view;
 - `Loader`;
-- `getNativeClipboard`;
 - `Markdown`, `Text`, `Editor`;
 - `queryTerminalColors` (optional).
+
+From `@earendil-works/pi-coding-agent@1.3.0`, already an engine dependency: `copyToClipboard`,
+wrapped by the engine's `copyText` adapter (research R1).
 
 **Storage**: `settings.json` gains `mouse?: boolean`, default `true`.
 
