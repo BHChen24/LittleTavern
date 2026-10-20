@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { stripControls } from "../sanitize.ts";
 import { KeyPrompt, type KeyPromptResult } from "./key-prompt.ts";
 import { MaskedKeyInput } from "./masked-key-input.ts";
 
@@ -40,4 +41,15 @@ it("cancels without accepting a key", () => {
   prompt.handleInput("synthetic");
   prompt.handleInput("\x1b");
   expect(cancelled).toBe(true);
+});
+
+it("shows the whole save path on a narrow terminal", () => {
+  const destination = `/tmp/${"nested-folder/".repeat(12)}credentials.json`;
+  const prompt = new KeyPrompt(destination);
+  prompt.handleInput("synthetic");
+  prompt.handleInput("\r");
+  const text = prompt.render(45).join("\n");
+  const withoutLayoutWhitespace = stripControls(text).replace(/\s/g, "");
+  expect(withoutLayoutWhitespace).toContain(destination);
+  expect(withoutLayoutWhitespace).toContain("readableonlybyyou");
 });

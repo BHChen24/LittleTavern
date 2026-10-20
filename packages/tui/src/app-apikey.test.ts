@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -38,7 +38,7 @@ function fixture(envKey?: string, savedKey?: string) {
   const input = (data: string) => app.tui.getFocusedComponent()?.handleInput?.(data);
   const overlay = () => app.tui.getFocusedComponent()?.render(200).join("\n") ?? "";
   const screen = () => app.tui.render(200).join("\n");
-  return { app, paths, input, overlay, screen };
+  return { app, paths, home, input, overlay, screen };
 }
 it("has no startup prompt and restores messages and regenerate commands without sending", async () => {
   const { app, paths, screen } = fixture();
@@ -57,7 +57,7 @@ it("has no startup prompt and restores messages and regenerate commands without 
   expect(app.tui.getFocusedComponent()).toBe(app.editor);
 });
 it("offers only OpenRouter, masks the key and defaults to session only without writing credentials", async () => {
-  const { app, paths, input, overlay, screen } = fixture();
+  const { app, paths, home, input, overlay, screen } = fixture();
   app.enterChat();
   await app.submit("/apikey");
   expect(overlay()).toContain("OpenRouter");
@@ -79,6 +79,13 @@ it("offers only OpenRouter, masks the key and defaults to session only without w
   await app.submit("hello");
   expect(screen()).toContain("Hello.");
   expect(readFileSync(paths.usageLedgerFile, "utf8")).not.toContain("synthetic-new-key");
+  await app.quit();
+  for (const name of readdirSync(home, { recursive: true })) {
+    const file = join(home, name);
+    if (statSync(file).isFile())
+      expect(readFileSync(file, "utf8")).not.toContain("synthetic-new-key-1234");
+  }
+  expect(readSavedKey(paths).key).toBeNull();
 });
 it("writes a saved key only when explicitly selected, with mode 0600, and can forget it", async () => {
   const { app, paths, input, overlay, screen } = fixture();
@@ -94,6 +101,7 @@ it("writes a saved key only when explicitly selected, with mode 0600, and can fo
   await app.submit("/apikey");
   expect(overlay()).toContain("saved");
   input("\r");
+  expect(overlay()).toContain("API key (saved)");
   expect(overlay()).toContain("Enter a new key");
   expect(overlay()).toContain("Forget saved key");
   input("\x1b[B");

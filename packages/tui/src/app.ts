@@ -166,7 +166,7 @@ export function createApp(options: AppOptions = {}) {
         promptForKey();
         return;
       }
-      const actions = new ListPicker("OpenRouter API key", [
+      const actions = new ListPicker(`OpenRouter API key (${activeKey.source})`, [
         { value: "replace", label: "Enter a new key", search: "Enter a new key" },
         ...(readSavedKey(paths).key
           ? [{ value: "forget", label: "Forget saved key", search: "Forget saved key" }]

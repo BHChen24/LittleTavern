@@ -71,3 +71,18 @@ it("hides the go-up entry at the filesystem root", () => {
   const browser = new FileBrowser("/");
   expect(browser.render(120).join("\n")).not.toContain("Go up");
 });
+
+it("filters a folder with hundreds of files without losing a supported match", () => {
+  const home = fixture();
+  for (let i = 0; i < 250; i++)
+    writeFileSync(join(home, `card-${i.toString().padStart(3, "0")}.json`), "{}");
+  const browser = new FileBrowser(home);
+  browser.handleInput("card-249");
+  expect(browser.render(100).join("\n")).toContain("card-249.json");
+  let selected = "";
+  browser.onSelect = (path) => {
+    selected = path;
+  };
+  browser.handleInput("\r");
+  expect(selected).toBe(join(home, "card-249.json"));
+});

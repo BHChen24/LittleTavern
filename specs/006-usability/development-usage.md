@@ -52,3 +52,18 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Launch isolated built CLI in a PTY | functions.exec → exec_command | Home screen displayed; no environment file loaded |
 | Exercise Enter, suggestions, browser import, chat greeting, no-key send and Ctrl+C | functions.exec → write_stdin × 9 | Expected layout and notices observed; exit 0; no requests |
 | Record terminal observations and mark Phase 6 complete | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Inspect acceptance automation for run-rule compatibility | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Commit Phase 6 | functions.exec → exec_command (escalated Git) | Committed 68d3e47 |
+| Prepare acceptance wrappers so the unchanged external script tests this checkout | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Initialize convergence and assess final source against all feature artifacts | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Append traceable convergence tasks (T015–T017) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Write convergence regression tests before fixes | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Run external acceptance with checkout wrappers | functions.exec → exec_command (escalated), write_stdin | 19 passed, 0 failed; tested 006 checkout; external script unchanged |
+| Wait for Phase 7 initial checks | functions.exec → write_stdin | Build, lint and 237 tests passed |
+| Wait for convergence test baseline | functions.exec → write_stdin | Edge/lifecycle tests passed; expected narrow-path and source-text failures |
+| Fix complete save-path display and active-source text (T015) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Make narrow-path assertion ignore terminal formatting and finish validation | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for convergence checks | functions.exec → write_stdin | Build/lint and 241 tests passed; then removed a lint advisory and made path assertion formatting-independent |
+| Wait for clean convergence checkpoint | functions.exec → write_stdin | Build, lint and 241 tests passed with no lint findings |
+| Initial sandboxed Git commit attempt during Phase 2 preparation | exec_command (recorded earlier in the combined invocation) | Git metadata was read-only; retried with authorized filesystem escalation and committed Phase 1 |
+| Mark convergence corrections complete and document verified outcomes | functions.exec → exec_command (including this recorder) | Exit 0 |

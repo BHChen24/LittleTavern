@@ -1,8 +1,14 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
-import { ChatSession, DEFAULT_MODEL_ID, DEFAULT_SYSTEM_PROMPT } from "@littletavern/engine";
+import {
+  ChatSession,
+  DEFAULT_MODEL_ID,
+  DEFAULT_SYSTEM_PROMPT,
+  listLibrary,
+  resolveAppPaths,
+} from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
@@ -87,6 +93,53 @@ it("quits from the home screen on Ctrl+C", async () => {
     app.start();
     input?.("\x03");
     await app.done;
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("preserves input and sends nothing when Ctrl+R is pressed without a key", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-no-key-regenerate-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  const terminal = stubTerminal();
+  let input: ((data: string) => void) | undefined;
+  terminal.start = (onInput) => {
+    input = onInput;
+  };
+  const app = createApp({ terminal, paths, env: { LITTLETAVERN_HOME: home } });
+  try {
+    app.start();
+    input?.("\r");
+    app.editor.setText("keep this draft");
+    input?.("\x12");
+    expect(app.editor.getText()).toBe("keep this draft");
+    expect(app.tui.render(100).join("\n")).toContain("No API key yet. Type /apikey");
+    expect(existsSync(paths.usageLedgerFile)).toBe(false);
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("survives an import root that is a file and still imports an explicit path", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-broken-import-root-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  writeFileSync(paths.importRoot, "existing file");
+  const card = join(home, "mira.json");
+  writeFileSync(card, JSON.stringify({ spec: "chara_card_v3", data: { name: "Mira" } }));
+  const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
+  app.enterChat();
+  try {
+    expect(app.tui.render(120).join("\n")).toContain("Could not create import folders");
+    await app.submit("/import");
+    const browser = app.tui.getFocusedComponent();
+    expect(browser?.render(120).join("\n")).toContain("Could not read");
+    browser?.handleInput?.("\x1b");
+    expect(app.tui.hasOverlay()).toBe(false);
+    await app.submit(`/import ${card}`);
+    expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
+    expect(app.tui.render(120).join("\n")).toContain("Imported");
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

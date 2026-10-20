@@ -163,3 +163,9 @@ T007.
 2. Phase 3 adds importing without typing paths.
 3. Phases 4–5 add the home screen and the key flow the owner asked for.
 4. Phase 6 adds the polish, which is lowest priority and can be trimmed if time runs short.
+
+## Phase 8: Convergence
+
+- [X] T015 Show the complete save destination with wrapping text in `components/key-prompt.ts`, so narrow terminals do not hide part of the path; retain the session-only default. Show the active source in the provider action picker and test it. Per FR-012 and FR-011 (partial, HIGH).
+- [X] T016 Add focused tests for filtering hundreds of import files, and for app startup/browser failure when the import root is a file while explicit `/import <path>` still works. Per spec Edge Cases and Constitution testing policy (partial, MEDIUM).
+- [X] T017 Verify Ctrl+R without a key preserves editor text and sends nothing, and scan the isolated home after quitting a session-only key flow to confirm no key material was persisted. Per FR-010 and SC-004 (partial, MEDIUM).

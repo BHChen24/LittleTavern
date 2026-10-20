@@ -52,7 +52,7 @@ export class KeyPrompt implements Component {
   }
   render(width: number): string[] {
     const explanation = this.choice
-      ? "Choose how to use this key:"
+      ? `Choose how to use this key. Saving writes to ${this.credentialsFile} (readable only by you).`
       : "An OpenRouter API key is needed. Get one at https://openrouter.ai/keys";
     return [
       ...new Text(explanation).render(width),
