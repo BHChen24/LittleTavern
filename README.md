@@ -39,6 +39,11 @@ npm install -g littletavern
 `littletavern` is now available in any directory. Remove it with
 `npm uninstall -g littletavern`.
 
+npm may print warnings during the install: that `node-domexception` is deprecated, and that
+`@google/genai` and `protobufjs` have install scripts that were not run. Both come from
+dependencies of pi's Google provider. LittleTavern does not need those scripts, so you can
+ignore the warnings and do not need `--allow-scripts`.
+
 ## Quick start
 
 1. Run `littletavern` and press Enter. On the first interactive start, Alice and the Wonderland
