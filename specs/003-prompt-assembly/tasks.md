@@ -37,8 +37,8 @@ invariants).
 
 ## Phase 1: Setup
 
-- [ ] T001 Create `packages/engine/src/assembly/types.ts` with every type in data-model.md, verbatim, plus `DEFAULT_ASSEMBLY_SETTINGS = { scanDepth: 2, loreBudget: 4000, replyReserve: 4000 }`, `DEFAULT_USER_NAME = "User"`, `DEFAULT_CONTEXT_WINDOW = 128000`, and `DEFAULT_MAIN_INSTRUCTION = "Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}."`
-- [ ] T002 [P] Create `packages/engine/src/assembly/fixtures.ts`, used by tests only. It provides `makeCharacter(overrides)`, which returns a full 002 `Character` with empty defaults; `makeEntry(overrides)`, which returns a `LorebookEntry` with `source` defaulting to `{}`; `makeLorebook(name, entries)`; and `chat(...texts)`, which alternates user and character messages starting with user
+- [X] T001 Create `packages/engine/src/assembly/types.ts` with every type in data-model.md, verbatim, plus `DEFAULT_ASSEMBLY_SETTINGS = { scanDepth: 2, loreBudget: 4000, replyReserve: 4000 }`, `DEFAULT_USER_NAME = "User"`, `DEFAULT_CONTEXT_WINDOW = 128000`, and `DEFAULT_MAIN_INSTRUCTION = "Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}."`
+- [X] T002 [P] Create `packages/engine/src/assembly/fixtures.ts`, used by tests only. It provides `makeCharacter(overrides)`, which returns a full 002 `Character` with empty defaults; `makeEntry(overrides)`, which returns a `LorebookEntry` with `source` defaulting to `{}`; `makeLorebook(name, entries)`; and `chat(...texts)`, which alternates user and character messages starting with user
 
 **Checkpoint**: checks pass. Commit.
 
