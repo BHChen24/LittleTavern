@@ -44,6 +44,10 @@ unless the owner asks.
 - Ask before running a local LLM or anything GPU-heavy.
 - Never commit secrets. `.env` and `.env.*` are ignored; `.env.example` is allowed and documents
   variable names without values.
+- **Do not read, print or use `.env`.** It holds the owner's real API key. Tests use the
+  simulated provider and never load it.
+- Write code the owner can explain line by line. When a planned test turns out too complex,
+  record it as deferred in the feature's report and move on; do not let it block the feature.
 
 ## Commands
 
