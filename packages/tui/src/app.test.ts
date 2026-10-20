@@ -54,7 +54,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
     await vi.waitFor(() => expect(app.tui.render(80).join("\n")).toContain("Hello there."));
     expect(app.tui.render(80).join("\n")).toContain("You:");
     expect(app.tui.render(80).join("\n")).toContain("Assistant:");
-    expect(app.tui.render(80).at(-1)).toContain("key: environment");
+    expect(app.tui.render(80).at(-1)).toContain("Key: environment");
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

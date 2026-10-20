@@ -56,7 +56,7 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
     expect(terminal.start).toHaveBeenCalledTimes(2);
     expect(app.tui.getFocusedComponent()).toBe(app.editor);
     expect(existsSync(paths.credentialsFile)).toBe(false);
-    expect(screen()).toContain("key: none");
+    expect(screen()).toContain("Key: none");
     expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
     expect(screen()).toContain("Start chatting with /chat");
     await app.submit("/library");
@@ -79,7 +79,7 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
     const item = listLibrary(paths).find((entry) => entry.name === "Mira");
     await app.submit(`/chat ${item?.id}`);
     expect(screen()).toContain("Welcome!");
-    expect(screen()).toContain("key: none");
+    expect(screen()).toContain("Key: none");
     expect(existsSync(paths.credentialsFile)).toBe(false);
   } finally {
     await app.quit();

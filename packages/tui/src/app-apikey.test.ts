@@ -75,7 +75,7 @@ it("offers only OpenRouter, masks the key and defaults to session only without w
   expect(app.tui.getFocusedComponent()).toBe(app.editor);
   expect(app.tui.hasOverlay()).toBe(false);
   expect(existsSync(paths.credentialsFile)).toBe(false);
-  expect(screen()).toContain("key: session");
+  expect(screen()).toContain("Key: session");
   await app.submit("hello");
   expect(screen()).toContain("Hello.");
   expect(readFileSync(paths.usageLedgerFile, "utf8")).not.toContain("synthetic-new-key");
@@ -107,7 +107,7 @@ it("writes a saved key only when explicitly selected, with mode 0600, and can fo
   input("\x1b[B");
   input("\r");
   expect(readSavedKey(paths).key).toBeNull();
-  expect(screen()).toContain("key: none");
+  expect(screen()).toContain("Key: none");
   await app.submit("/apikey");
   input("\r");
   expect(overlay()).not.toContain("Forget saved key");
@@ -132,7 +132,7 @@ it("keeps environment keys active when forgetting a saved key and explains repla
   input("synthetic-replacement");
   input("\r");
   input("\r");
-  expect(screen()).toContain("key: session");
+  expect(screen()).toContain("Key: session");
   expect(screen()).toContain(
     "OPENROUTER_API_KEY in the environment will be used again next launch.",
   );
@@ -163,5 +163,5 @@ it("cancels both the provider list and masked input without changing the active 
   input("\r");
   input("\x1b");
   expect(app.tui.getFocusedComponent()).toBe(app.editor);
-  expect(screen()).toContain("key: environment");
+  expect(screen()).toContain("Key: environment");
 });

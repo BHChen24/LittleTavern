@@ -81,6 +81,8 @@ it("sums known values and flags incomplete records", () => {
     requests: 2,
     inputTokens: 20,
     outputTokens: 10,
+    cacheReadTokens: 4,
+    cacheWriteTokens: 2,
     cost: 0.74,
     incomplete: false,
   });
@@ -88,6 +90,8 @@ it("sums known values and flags incomplete records", () => {
     requests: 2,
     inputTokens: 10,
     outputTokens: 5,
+    cacheReadTokens: 2,
+    cacheWriteTokens: 1,
     cost: 0.37,
     incomplete: true,
   });
@@ -95,6 +99,8 @@ it("sums known values and flags incomplete records", () => {
     requests: 0,
     inputTokens: 0,
     outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
     cost: 0,
     incomplete: false,
   });

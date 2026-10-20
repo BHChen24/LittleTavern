@@ -90,7 +90,7 @@ export function createApp(options: AppOptions = {}) {
   const tui = new TuiMainScreen(options.terminal ?? new ProcessTerminal());
   const transcript = new Container();
   const editor = new Editor(tui, editorTheme);
-  const status = new StatusBar(modelId, activeKey?.source ?? "none");
+  const status = new StatusBar({ model: modelId, keySource: activeKey?.source ?? "none" });
   const homeScreen = new HomeScreen({
     version: VERSION,
     keyStatus: activeKey?.source ?? "none",
@@ -217,13 +217,12 @@ export function createApp(options: AppOptions = {}) {
   if (saved.error) notice(saved.error);
 
   function updateStatus(): void {
-    const totals = sumUsage(records);
-    status.update(
-      modelId,
-      activeKey?.source ?? "none",
-      `${totals.inputTokens}/${totals.outputTokens} | $${totals.cost.toFixed(4)}${totals.incomplete ? "~" : ""}`,
-      chat?.character.name,
-    );
+    status.update({
+      model: modelId,
+      keySource: activeKey?.source ?? "none",
+      character: chat?.character.name,
+      totals: sumUsage(records),
+    });
   }
   updateStatus();
 

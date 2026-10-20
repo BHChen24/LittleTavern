@@ -6,6 +6,8 @@ export interface SessionTotals {
   requests: number;
   inputTokens: number;
   outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
   cost: number;
   incomplete: boolean;
 }
@@ -46,6 +48,8 @@ export function sumUsage(records: readonly UsageRecord[]): SessionTotals {
     requests: 0,
     inputTokens: 0,
     outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
     cost: 0,
     incomplete: false,
   };
@@ -53,6 +57,8 @@ export function sumUsage(records: readonly UsageRecord[]): SessionTotals {
     totals.requests++;
     totals.inputTokens += record.inputTokens ?? 0;
     totals.outputTokens += record.outputTokens ?? 0;
+    totals.cacheReadTokens += record.cacheReadTokens ?? 0;
+    totals.cacheWriteTokens += record.cacheWriteTokens ?? 0;
     totals.cost += record.cost?.total ?? 0;
     totals.incomplete ||=
       record.cost === null ||
