@@ -63,7 +63,7 @@ quickstart.md
 
 ## Phase 3: User Story 1 - Chat with an imported character (P1) 🎯 MVP
 
-- [ ] T004 [US1] Create `CharacterChat` in `packages/engine/src/character-chat.ts` with `start(...)`, `history()`, `send(text)`, `abort()`, `setModel(id)`, `isStreaming`, `lastTrace`, `sessionId`, `character` and `libraryId`, as listed in data-model.md.
+- [X] T004 [US1] Create `CharacterChat` in `packages/engine/src/character-chat.ts` with `start(...)`, `history()`, `send(text)`, `abort()`, `setModel(id)`, `isStreaming`, `lastTrace`, `sessionId`, `character` and `libraryId`, as listed in data-model.md.
   - **`start`**: writes `custom "littletavern.character" { libraryId, name }`, `appendSessionInfo(name)`, and `custom "littletavern.greeting" { text }` (the greeting with macros replaced; only written when the greeting is non-empty).
   - **`send`**: does the following, in order:
     1. Re-read the settings.
@@ -85,7 +85,7 @@ quickstart.md
 
     It returns the `TurnResult`.
   - **Usage records**: they use `sessionId` (the pi session id).
-- [ ] T005 [US1] Write tests T-c and T-d in `packages/engine/src/character-chat.test.ts`, using a temporary `LITTLETAVERN_HOME`, a character imported with 002's `importFile` from a fixture card that has a lorebook, and the simulated model
+- [X] T005 [US1] Write tests T-c and T-d in `packages/engine/src/character-chat.test.ts`, using a temporary `LITTLETAVERN_HOME`, a character imported with 002's `importFile` from a fixture card that has a lorebook, and the simulated model
 - [ ] T006 [P] [US1] Create `packages/tui/src/components/character-picker.ts`, an overlay with an `Input` filter and a `SelectList` filtered by `fuzzyFilter`, following `model-picker.ts`. Each item shows the name and the id prefix. Enter emits the item, Esc cancels. If it duplicates more than about 30 lines of `model-picker.ts`, extract a small shared `ListPicker` instead (research R4)
 - [ ] T007 [US1] In `packages/tui/src/app.ts`, add character mode:
   - **`/characters`** opens the picker; **`/chat <id>`** starts a chat directly (`getItem` by prefix; ambiguous or not found → notice).
@@ -101,7 +101,7 @@ quickstart.md
 
 ## Phase 4: User Story 2 - Regenerate the last reply (P1)
 
-- [ ] T008 [US2] Add `regenerate()` to `CharacterChat`, following the research R2 regenerate rules. If the leaf is an assistant message, call `branch(parentId)` and then generate. If the leaf is a user message, generate directly. Otherwise return `"nothing-to-regenerate"`. Do nothing while streaming. Each generation writes its own usage record. Tests T-e in `character-chat.test.ts`
+- [X] T008 [US2] Add `regenerate()` to `CharacterChat`, following the research R2 regenerate rules. If the leaf is an assistant message, call `branch(parentId)` and then generate. If the leaf is a user message, generate directly. Otherwise return `"nothing-to-regenerate"`. Do nothing while streaming. Each generation writes its own usage record. Tests T-e in `character-chat.test.ts`
 - [ ] T009 [US2] In `app.ts`, add `/regenerate` and Ctrl+R (in the input listener, next to Esc). Remove the last reply's component and stream the new one in its place. When the result is `"nothing-to-regenerate"`, show a notice. Without a character, show "Start a character chat first (/characters)."
 
 **Checkpoint**: checks pass. Commit.
@@ -110,7 +110,7 @@ quickstart.md
 
 ## Phase 5: User Story 3 - Chats are saved and can be resumed (P2)
 
-- [ ] T010 [US3] Add `listChats(paths)` and `CharacterChat.resume({ sessionPath, … })` to `character-chat.ts`.
+- [X] T010 [US3] Add `listChats(paths)` and `CharacterChat.resume({ sessionPath, … })` to `character-chat.ts`.
   - **`listChats`** calls `SessionManager.list(dataDir, <dataDir>/sessions)` and returns the chat-list entries from data-model.md, newest first.
   - **`resume`** calls `SessionManager.open` and reads `littletavern.character`. If the character is no longer in the library, it throws or returns an error saying so. It ignores unknown entry types.
 
@@ -124,7 +124,7 @@ quickstart.md
 
 ## Phase 6: User Story 4 - Use standalone lorebooks with a character (P2)
 
-- [ ] T013 [US4] In `character-chat.ts`, add `attachLorebook(id)`, `detachLorebook(id)` and `activeLorebooks()`.
+- [X] T013 [US4] In `character-chat.ts`, add `attachLorebook(id)`, `detachLorebook(id)` and `activeLorebooks()`.
   - **Storage**: attachments live in the settings field `lorebookAttachments[libraryId]`, written through the merging `writeSettings`. Only lorebook items can be attached.
   - **Missing lorebooks**: `send` resolves the attachments on every request and skips any that are missing, emitting a one-time notice through an `onNotice` callback.
   - **Tests**: T-g.

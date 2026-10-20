@@ -19,6 +19,9 @@ export interface TurnResult {
   text: string;
   errorMessage?: string;
   model: string;
+  /** Provider and API that produced the reply, so it can be stored as a session message. */
+  provider?: string;
+  api?: string;
   startedAt: string;
   durationMs: number;
   usage: TurnUsage;
@@ -223,6 +226,8 @@ export class ChatSession {
           .join(""),
         errorMessage: message.errorMessage,
         model: message.model,
+        provider: message.provider,
+        api: message.api,
         startedAt: new Date(started).toISOString(),
         durationMs: message.durationMs ?? Date.now() - started,
         usage: { ...message.usage, cost: { ...message.usage.cost } },
