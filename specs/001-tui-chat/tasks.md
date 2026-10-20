@@ -182,9 +182,9 @@ relaunch in step 9.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T033 [P] Add the opt-in live test (T-k) in `packages/engine/src/chat-session.live.test.ts`: `describe.skipIf(!process.env.OPENROUTER_API_KEY)`, one short message to `openai/gpt-4o-mini`, then assert a non-empty reply and a record with non-null cost. **Write it; do not run it.**
-- [ ] T034 Run `pnpm build && pnpm lint && pnpm test` and `node packages/tui/dist/cli.js --version` (quickstart "Automated"). Fix failures
-- [ ] T035 Write `specs/001-tui-chat/report.md`. Sections:
+- [X] T033 [P] Add the opt-in live test (T-k) in `packages/engine/src/chat-session.live.test.ts`: `describe.skipIf(!process.env.OPENROUTER_API_KEY)`, one short message to `openai/gpt-4o-mini`, then assert a non-empty reply and a record with non-null cost. **Write it; do not run it.**
+- [X] T034 Run `pnpm build && pnpm lint && pnpm test` and `node packages/tui/dist/cli.js --version` (quickstart "Automated"). Fix failures
+- [X] T035 Write `specs/001-tui-chat/report.md`. Sections:
   - Summary: what works.
   - Tasks completed and not completed.
   - Test results: the counts and the command output tail.
@@ -220,3 +220,11 @@ relaunch in step 9.
 
 If time or quota runs out, stop at a checkpoint boundary, commit, and write the report with what
 remains.
+
+## Phase 8: Convergence
+
+- [X] T036 Keep `packages/tui/src/components/status-bar.ts` to one rendered terminal line by truncating long model/source/usage text to the available width with pi-tui's width-aware utility, per FR-002 / T016 (partial, LOW).
+
+## Phase 9: Convergence
+
+- [X] T037 Disable automatic environment-file loading with `envDir: false` in both root Vitest configurations so default tests cannot load `.env`, per plan: technical constraints / T003–T004 (partial, HIGH). The live script still explicitly loads `.env` only when the owner runs it.
