@@ -153,3 +153,6 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Generated release package
+release/

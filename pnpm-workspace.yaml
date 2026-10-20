@@ -9,3 +9,5 @@ packages:
 allowBuilds:
   "@google/genai": false
   protobufjs: false
+  # The platform optional dependency supplies esbuild without its install script.
+  esbuild: false

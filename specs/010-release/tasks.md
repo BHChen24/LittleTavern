@@ -57,7 +57,7 @@ quickstart.md
 
 ## Phase 1: Setup
 
-- [ ] T001 Add `esbuild` `0.28.2` as a root devDependency (`pnpm add -D -w esbuild@0.28.2`) and add `release/` to `.gitignore`. Check `pnpm exec esbuild --version`. Only if it fails because the install script was denied, add `esbuild: true` under `allowBuilds` in `pnpm-workspace.yaml`, with a one-line comment like the existing entries (research R1)
+- [X] T001 Add `esbuild` `0.28.2` as a root devDependency (`pnpm add -D -w esbuild@0.28.2`) and add `release/` to `.gitignore`. Check `pnpm exec esbuild --version`. Only if it fails because the install script was denied, add `esbuild: true` under `allowBuilds` in `pnpm-workspace.yaml`, with a one-line comment like the existing entries (research R1)
 
 **Checkpoint**: checks pass. Commit.
 
