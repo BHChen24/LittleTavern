@@ -1,0 +1,132 @@
+# Implementation Plan: Release v0.1
+
+**Branch**: `010-release` (stacked on `009-ui-polish`) | **Date**: 2026-10-20 | **Spec**: [spec.md](./spec.md)
+
+**Input**: Feature specification from `specs/010-release/spec.md`
+
+## Summary
+
+Make v0.1 deliverable as the npm package `littletavern`:
+
+- esbuild bundles our three workspace packages into one `cli.js`; pi and the other libraries stay
+  ordinary dependencies;
+- generated release folder and manifest, a content allowlist check and a secret scan of the
+  package, runnable locally;
+- first interactive start adds the Alice and Wonderland examples once;
+- `/import` in the app is limited to the import root, and every import refuses non-regular files
+  and files over 20 MB;
+- GitHub Actions run the checks on Node 22.19, 24 and 26, and publish from a version tag;
+- the README switches to the npm install.
+
+## Technical Context
+
+**Language/Version**: TypeScript 7, built with `tsc -b`; runtime Node.js `>=22.19.0` (R7).
+
+**Primary Dependencies**: one new devDependency, `esbuild` `0.28.2` (R1). No new runtime
+dependency.
+
+**Storage**: `settings.json` gains `examplesAdded?: boolean`. The release folder `release/` is
+generated and ignored by git.
+
+**Testing**: Vitest for our code. The package content check is unit-tested through its exported
+comparison function. The install smoke test and the workflows run in CI.
+
+**Target Platform**: Linux, macOS and Windows terminals with Node.js 22.19 or later. CI runs on
+Linux.
+
+**Project Type**: pnpm workspace (`data`, `engine`, `tui`), plus repository scripts in
+`scripts/` and workflows in `.github/workflows/`.
+
+**Constraints**:
+
+- Build only what `tasks.md` asks for.
+- No dependency besides esbuild.
+- Install scripts stay denied unless esbuild proves to need its own (R1).
+- English only.
+
+**Scale/Scope**: about 6 new files (2 scripts, 2 workflows, 2 small modules) and edits to about
+10 existing ones.
+
+## Constitution Check
+
+*GATE: Must pass before Phase 0 research. Re-checked after Phase 1 design.*
+
+Checked against constitution 3.1.0.
+
+| Principle | Status | How |
+|---|---|---|
+| I. Build on pi, own the context | Pass | No change to how pi is used; pi stays a normal dependency of the package |
+| II. Wrap pi behind our types | Pass | No new pi imports. The pi packages stay exactly `1.3.0` in the published manifest |
+| III. Mechanism, not policy | Pass | The examples are added once and are the user's to delete. Import limits are fixed safety bounds, not content policy |
+| IV. Lossless ecosystem data | Pass | Imported bytes are unchanged; the limits only refuse files before reading them |
+| V. SDD development usage accounting | Pass | Recorded in `specs/010-release/development-usage.md` |
+| VI. MVP first | Pass | One registry, one bundler, one CI provider; spend limits and the innkeeper stay out (spec) |
+| VII. Understandable over clever | Pass | Two small scripts with one job each; a fixed allowlist rather than pattern rules |
+| Licensing | Pass | The examples are original, based on public-domain text, CC0; no AGPL file can enter the package (exact allowlist) |
+| Secrets | Pass | gitleaks in hooks (existing), in CI on full history, and on the package contents |
+| Dependencies | Pass, justified | esbuild is needed by FR-001/FR-002 (R1); alternatives are in R1 |
+| Language | Pass | All new text is English |
+| Testing policy | Pass | See the Test Plan |
+
+## Project Structure
+
+### Documentation (this feature)
+
+```text
+specs/010-release/
+├── spec.md
+├── plan.md              # this file
+├── research.md          # R1–R8
+├── data-model.md        # settings marker, examples, release package
+├── contracts/
+│   └── release-package.md   # package contents, manifest fields, commands, messages
+├── quickstart.md        # validation guide and the owner's release checklist
+└── tasks.md             # $speckit-tasks output
+```
+
+### Source Code (repository root)
+
+```text
+package.json                              # + esbuild devDependency; release:build, release:check scripts
+.gitignore                                # + release/
+scripts/build-release.mjs                 # bundle, manifest, copies, npm pack (R1, R2)
+scripts/check-release.mjs                 # allowlist, gitleaks on contents, tag check (R3)
+scripts/check-release.test.ts             # unit test of the allowlist comparison (vitest)
+.github/workflows/ci.yml                  # matrix checks, secret scan, package job (R7)
+.github/workflows/release.yml             # tag-driven publish (R7)
+packages/data/src/settings.ts             # + examplesAdded
+packages/data/src/library.ts              # MAX_IMPORT_BYTES, regular-file and size checks (R6)
+packages/data/src/examples.ts             # addExamplesOnce (R5)
+packages/data/src/paths.ts                # ensureImportFolders message (R6)
+packages/tui/src/examples-dir.ts          # examplesDir() (R5)
+packages/tui/src/cli.ts                   # call addExamplesOnce on the interactive path; pass the notice
+packages/tui/src/app.ts                   # show the notice; /import without argument; realpath check
+packages/tui/src/components/file-browser.ts  # root boundary
+packages/tui/src/commands.ts              # /import: no argumentHint, no completion
+specs/006-usability/contracts/commands.md # /import row
+README.md                                 # npm install, Node versions, Alice, developer section
+AGENTS.md                                 # release commands in the Commands table
+```
+
+**Structure Decision**: keep the existing three-package workspace. Release tooling lives in
+`scripts/` and `.github/`, outside the packages, because it is not part of the app.
+
+## Test Plan (complexity-assessed)
+
+| # | Test | Complexity | Decision |
+|---|---|---|---|
+| T-a | `importFile` refuses a directory, a FIFO (skip on Windows) and a file over `MAX_IMPORT_BYTES` without reading it; a normal card still imports | low | **write** (sparse file for the size case) |
+| T-b | `FileBrowser` with a root: no `..` at the root; `..` works inside a sub-folder and stops at the root | low | **write** |
+| T-c | App: `/import foo` shows the message and imports nothing; selecting a link that points outside the root is refused; the `/import` command has no completion | low–medium | **write** through the app harness |
+| T-d | `addExamplesOnce`: first run copies, imports, attaches and sets the marker; the second run does nothing; a deleted example stays deleted; an existing same-named file is not overwritten; an unwritable folder gives one notice and sets the marker; missing example files do nothing and set no marker | low | **write** with temporary homes |
+| T-e | `examplesDir()` finds the repository's `examples/` from the built dev layout | low | **write** |
+| T-f | Allowlist comparison: an exact list passes; an extra file and a missing file each fail and are named | low | **write** |
+| T-g | **Happy path**: in a temporary home, `addExamplesOnce` with the real `examples/`, then a simulated `CharacterChat` with Alice sends "Have you seen the Cheshire Cat?". The trace includes the Wonderland entry "The Cheshire Cat" | low–medium | **write** |
+| T-h | `pnpm release:check` on a clean build passes; the tarball lists exactly the allowed files | medium (real build) | **run** by the implementer, recorded in the report, not a vitest test |
+| T-i | Install smoke test (R4) and the workflows | high (needs network and GitHub) | **CI and owner**; the implementer records it as deferred if offline |
+
+## Complexity Tracking
+
+| Item | Why needed | Simpler alternative rejected because |
+|---|---|---|
+| New devDependency `esbuild` | FR-001/FR-002: the package must run without our unpublished workspace packages | Separate packages or `bundleDependencies` are harder to publish and explain (R1) |
