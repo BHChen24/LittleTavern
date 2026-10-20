@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { pathToFileURL } from "node:url";
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import {
   DEFAULT_ASSEMBLY_SETTINGS,
   dryRun,
@@ -121,6 +122,20 @@ async function runDryRun(args: string[], out: (text: string) => void): Promise<n
   return 0;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/**
+ * True when this file is the program being run. An installed `littletavern` command reaches
+ * this file through a symlink, so compare real paths, not the path as typed.
+ */
+function isEntryPoint(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return realpathSync(entry) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) {
   process.exitCode = await runCli(process.argv.slice(2));
 }
