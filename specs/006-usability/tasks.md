@@ -46,16 +46,16 @@ quickstart.md
 
 ## Phase 1: Foundational
 
-- [ ] T001 [P] Add `importRoot`, `importCharactersDir` and `importLorebooksDir` to `AppPaths` in `packages/data/src/paths.ts`:
+- [X] T001 [P] Add `importRoot`, `importCharactersDir` and `importLorebooksDir` to `AppPaths` in `packages/data/src/paths.ts`:
   - by default, `join(os.homedir(), ".littletavern")`;
   - when `LITTLETAVERN_HOME` is set, `join(LITTLETAVERN_HOME, "import")`.
 
   Add `ensureImportFolders(paths): string | null`. It creates both folders recursively, never
   touches existing files, and returns a notice instead of throwing on failure. Write tests T-c in
   `paths.test.ts`.
-- [ ] T002 [P] Add the language test T-i in `packages/tui/src/language.test.ts`, per research R6.
+- [X] T002 [P] Add the language test T-i in `packages/tui/src/language.test.ts`, per research R6.
   It must pass on the current tree.
-- [ ] T003 Create `packages/tui/src/commands.ts`:
+- [X] T003 Create `packages/tui/src/commands.ts`:
   - a `COMMANDS` table with exactly the entries and descriptions in `contracts/commands.md`, in
     pi-tui `SlashCommand` shape;
   - argument completions per research R1, with sources injected through a small context object

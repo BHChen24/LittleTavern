@@ -3,6 +3,7 @@ export {
   appendUsageRecord,
   type Character,
   createLogger,
+  ensureImportFolders,
   type FormatLabel,
   forgetKey,
   getItem,
