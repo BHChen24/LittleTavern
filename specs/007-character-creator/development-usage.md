@@ -24,5 +24,7 @@ Each numbered row records one `functions.exec` invocation and all nested tool in
 | 16 | functions.exec; exec_command; write_stdin; exec_command | Read overlay harness and path consumers; confirmed expected red create test; implemented minimal missing import paths, create pipeline, exports, creator metadata and CLI. |
 | 17 | functions.exec; exec_command | Added app draft picker and editor lifecycle, fake-VISUAL app test, formatted Phase 2 changes and started full gate. |
 | 18 | functions.exec; write_stdin; exec_command | Collected Phase 2 gate progress and updated this ledger. |
-| 19 | functions.exec; exec_command | Phase 2 passed build/lint and all 231 tests in 39 files; marked T004–T007 and recorded the gate. |
-| 20 | functions.exec; exec_command (escalated) | Committed the validated Phase 2 implementation and task markers. |
+| 19 | functions.exec; exec_command ×2 (second escalated) | Phase 2 passed build/lint and all 231 tests in 39 files; marked T004–T007 and committed as 6a357d7. |
+| 20 | functions.exec; exec_command | Added T-h created-card lore dry-run and faux-provider chat round trip; formatted and started Phase 3 full gate. |
+| 21 | functions.exec; write_stdin; exec_command | Phase 3 passed build/lint and all 232 tests in 39 files; reviewed creator source ahead of convergence. |
+| 22 | functions.exec; exec_command ×2 (second escalated) | Marked T008 complete and committed the validated lore dry-run/faux-provider round trip. |

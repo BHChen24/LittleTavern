@@ -1,7 +1,12 @@
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type AppPaths, importFile, resolveAppPaths } from "@littletavern/data";
+import {
+  type AppPaths,
+  createCharacterFromDraft,
+  importFile,
+  resolveAppPaths,
+} from "@littletavern/data";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { CharacterChat, type CharacterItem, sessionsDir } from "./character-chat.ts";
 import { ChatSession, type SimulatedReply } from "./chat-session.ts";
@@ -131,4 +136,47 @@ it("produces the same trace as a real request with the same history (SC-003)", a
   });
   if (!result.ok) throw new Error(result.error);
   expect(result.trace).toEqual(chat.lastTrace);
+});
+
+it("dry-runs and chats with a created character whose lore is always on or keyword-triggered (T-h)", async () => {
+  const draft = join(home, "created.md");
+  writeFileSync(
+    draft,
+    `## Name
+Creator Mira
+## First message
+Welcome {{user}}.
+## Lorebook
+### World
+Always on: yes
+The coast is quiet.
+### Tea
+Keys: tea
+Always on: no
+The tea is smoky.
+`,
+  );
+  const created = createCharacterFromDraft(paths, draft, "0.1.0");
+  if (!("ok" in created) || created.item.kind !== "character") throw new Error("Creation failed");
+  expect(created.item.character.lorebook?.entries).toMatchObject([
+    { name: "World", constant: true, enabled: true, insertionOrder: 0 },
+    { name: "Tea", keys: ["tea"], constant: false, enabled: true, insertionOrder: 1 },
+  ]);
+  const result = await dryRun({ paths, characterId: created.item.id, message: "May I have tea?" });
+  if (!result.ok) throw new Error(result.error);
+  expect(result.trace.lore).toMatchObject([
+    { entry: "World", included: true, reason: { kind: "constant" } },
+    { entry: "Tea", included: true, reason: { kind: "keyword", key: "tea", message: 2 } },
+  ]);
+  expect(result.prompt.system).toContain("The coast is quiet.");
+  expect(result.prompt.system).toContain("The tea is smoky.");
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated(["Here is your tea."]),
+    item: created.item,
+  });
+  expect(chat.history()[0]?.text).toBe("Welcome User.");
+  await chat.send("May I have tea?");
+  expect(chat.history().at(-1)?.text).toBe("Here is your tea.");
+  expect(chat.lastTrace).toEqual(result.trace);
 });

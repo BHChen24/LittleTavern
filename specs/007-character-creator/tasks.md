@@ -83,7 +83,7 @@ description: "Task list for 007-character-creator"
 
 ## Phase 3: User Story 4 - Simple lore while creating (P3)
 
-- [ ] T008 [US4] Make sure the lorebook `###` blocks flow through to `character_book`, and that entries without keys that are not always on give the warning. Write test T-h: create a character with two entries, then `dryRun` it with a keyword message. The trace shows one entry `always on` and one entry fired by the keyword
+- [X] T008 [US4] Make sure the lorebook `###` blocks flow through to `character_book`, and that entries without keys that are not always on give the warning. Write test T-h: create a character with two entries, then `dryRun` it with a keyword message. The trace shows one entry `always on` and one entry fired by the keyword
 
 **Checkpoint**: checks pass. Commit.
 
