@@ -24,6 +24,7 @@ import {
 } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
+import { VERSION } from "./version.ts";
 
 function stubTerminal(): Terminal {
   return {
@@ -62,7 +63,7 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
   });
   try {
     expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
-      "v0.1.0 · Terminal roleplay with character cards and lorebooks",
+      `v${VERSION} · Terminal roleplay with character cards and lorebooks`,
     );
     app.enterChat();
     await app.submit("/model");
