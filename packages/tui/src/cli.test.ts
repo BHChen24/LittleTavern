@@ -88,6 +88,11 @@ it("dry-runs a character request as text or JSON without a key, and rejects unkn
     expect(output).toContain("── Request ──");
     expect(output).toContain("the lighthouse");
     output.length = 0;
+    expect(await runCli(["dry-run", id], out)).toBe(0);
+    expect(output).toContain(
+      "(No message given: this is the opening of a new chat, greeting only.)",
+    );
+    output.length = 0;
     expect(await runCli(["dry-run", id, "--json"], out)).toBe(0);
     const parsed = JSON.parse(output.join("\n"));
     expect(Object.keys(parsed)).toEqual(["prompt", "trace"]);

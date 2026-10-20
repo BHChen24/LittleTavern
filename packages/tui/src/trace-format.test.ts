@@ -78,6 +78,18 @@ describe("formatTraceReport", () => {
     expect(lines).toContain("  no keywords defined (1):");
   });
 
+  it("contains no terminal escape codes, so piped output stays clean", () => {
+    const longName = decision(9, {
+      entry: "[mvu_update] a very long entry name that must be cut short",
+      included: true,
+      reason: { kind: "constant" },
+      tokens: 1,
+    });
+    const text = formatTraceReport(trace([longName]), meta, 60).join("\n");
+    expect(text).toContain("…");
+    expect(text).not.toContain("\x1b");
+  });
+
   it("shows every entry exactly once", () => {
     for (const name of ["Entry 0", "Entry 1", "entry #3", "Entry 3", "Entry 4", "Entry 5"])
       expect(countOccurrences(lines, name)).toBe(1);

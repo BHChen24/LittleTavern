@@ -89,6 +89,27 @@ it("continues a saved chat from its current branch after a regeneration", async 
   expect(texts).toEqual(["Welcome, User.", "hello", "Second.", "next"]);
 });
 
+it("rejects a saved chat that belongs to another or a missing character", async () => {
+  const otherFile = join(home, "other.json");
+  writeFileSync(
+    otherFile,
+    JSON.stringify({ spec: "chara_card_v3", data: { name: "Other", first_mes: "Hi." } }),
+  );
+  const other = importFile(paths, otherFile);
+  if (!other.ok || other.item.kind !== "character") throw new Error("import failed");
+  const chat = CharacterChat.start({ paths, session: simulated(["Hello."]), item: other.item });
+  await chat.send("hi");
+  expect(await dryRun({ paths, characterId: item.id, session: chat.sessionId })).toEqual({
+    ok: false,
+    error: `Saved chat ${chat.sessionId} belongs to Other, not Mira.`,
+  });
+  rmSync(join(paths.dataDir, "library", "characters", other.item.id), { recursive: true });
+  expect(await dryRun({ paths, characterId: item.id, session: chat.sessionId })).toEqual({
+    ok: false,
+    error: "The character for this chat (Other) is no longer in the library.",
+  });
+});
+
 it("reports unknown characters and sessions", async () => {
   expect(await dryRun({ paths, characterId: "zzzz" })).toEqual({
     ok: false,

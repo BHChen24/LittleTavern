@@ -1,10 +1,27 @@
-import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
+import { visibleWidth } from "@earendil-works/pi-tui";
 import type { AssembledPrompt, AssemblyTrace, LoreDecision } from "@littletavern/engine";
 
 export interface ReportMeta {
   characterName: string;
   modelId: string;
   loreBudget: number;
+}
+
+/**
+ * Cuts or pads text to a display width (CJK counts double) without adding escape codes,
+ * so dry-run output stays clean when piped to a file.
+ */
+function fitWidth(text: string, width: number, ellipsis = ""): string {
+  let result = text;
+  if (visibleWidth(text) > width) {
+    result = "";
+    for (const character of Array.from(text)) {
+      if (visibleWidth(result + character + ellipsis) > width) break;
+      result += character;
+    }
+    result += ellipsis;
+  }
+  return result + " ".repeat(Math.max(0, width - visibleWidth(result)));
 }
 
 /** Not-fired groups, in the order they are shown. */
@@ -69,7 +86,7 @@ export function formatTraceReport(trace: AssemblyTrace, meta: ReportMeta, width 
   lines.push("Parts (estimated tokens)");
   for (const part of trace.parts)
     lines.push(
-      `  ${truncateToWidth(part.source, 13, "", true)} ~${part.tokens}${part.detail ? `   ${part.detail}` : ""}`,
+      `  ${fitWidth(part.source, 13)} ~${part.tokens}${part.detail ? `   ${part.detail}` : ""}`,
     );
   if (trace.lore.length === 0) {
     lines.push("No lorebooks.");
@@ -80,7 +97,7 @@ export function formatTraceReport(trace: AssemblyTrace, meta: ReportMeta, width 
   const nameWidth = Math.max(12, Math.min(32, width - 40));
   for (const decision of fired)
     lines.push(
-      `  ${truncateToWidth(entryName(decision), nameWidth, "…", true)}   ${reasonText(decision.reason)}   ~${decision.tokens ?? 0}`,
+      `  ${fitWidth(entryName(decision), nameWidth, "…")}   ${reasonText(decision.reason)}   ~${decision.tokens ?? 0}`,
     );
   lines.push(`Lore not fired (${notFired.length})`);
   for (const kind of GROUP_ORDER) {

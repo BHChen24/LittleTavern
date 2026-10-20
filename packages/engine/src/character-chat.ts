@@ -137,6 +137,18 @@ export function readChatHistory(paths: AppPaths, sessionPath: string): ChatHisto
   return historyFromEntries(SessionManager.open(sessionPath, sessionsDir(paths)).getBranch());
 }
 
+/** Which character a saved chat belongs to, read without writing anything. */
+export function readChatCharacter(
+  paths: AppPaths,
+  sessionPath: string,
+): { libraryId: string; name: string } | null {
+  return characterIdOf(SessionManager.open(sessionPath, sessionsDir(paths)));
+}
+
+export function missingCharacterMessage(name: string): string {
+  return `The character for this chat (${name}) is no longer in the library.`;
+}
+
 export function listChats(paths: AppPaths): Promise<ChatListEntry[]> {
   return SessionManager.list(paths.dataDir, sessionsDir(paths)).then((sessions) =>
     sessions
@@ -190,9 +202,7 @@ export class CharacterChat {
     if (!character) throw new Error("This session is not a LittleTavern character chat.");
     const item = getItem(options.paths, character.libraryId);
     if (!item || item === "ambiguous" || item.kind !== "character")
-      throw new Error(
-        `The character for this chat (${character.name || character.libraryId}) is no longer in the library.`,
-      );
+      throw new Error(missingCharacterMessage(character.name || character.libraryId));
     return new CharacterChat(options.paths, options.session, item, manager);
   }
 

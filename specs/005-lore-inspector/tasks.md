@@ -100,7 +100,7 @@ volume of entries.
 ## Phase 5: Polish
 
 - [X] T009 Run `pnpm build && pnpm lint && pnpm test`, plus the automated quickstart checks. Fix any failures
-- [ ] T010 Write `specs/005-lore-inspector/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
+- [X] T010 Write `specs/005-lore-inspector/report.md` with the same sections as the earlier reports, including "Development tool and token usage". Commit
 
 ---
 
@@ -115,3 +115,9 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5.
 1. **MVP** = Phases 1–2: a dry run that works without a key. It is already demoable.
 2. **US2** adds the live `/trace` overlay.
 3. **US3** checks that the report is readable at a realistic size.
+
+## Phase 6: Convergence
+
+- [X] T011 Print a note when the dry run assembles a new chat with no message (greeting only), in `packages/tui/src/cli.ts`, per US1/AC2 (partial)
+- [X] T012 Make `dryRun` with a saved chat reject a session that belongs to another character, and report a session whose character is no longer in the library with the same message as 004's resume, per spec Edge Cases (partial)
+- [X] T013 Record this run's tool invocations and total tokens ("unknown" when not exposed) in `specs/005-lore-inspector/development-usage.md` per Constitution V (missing)

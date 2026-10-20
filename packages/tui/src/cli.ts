@@ -113,6 +113,8 @@ async function runDryRun(args: string[], out: (text: string) => void): Promise<n
     loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
   };
   for (const notice of result.notices) out(notice);
+  if (!flag("--message") && !flag("--session"))
+    out("(No message given: this is the opening of a new chat, greeting only.)");
   for (const line of formatTraceReport(result.trace, meta)) out(line);
   out("── Request ──");
   for (const line of formatAssembledPrompt(result.prompt)) out(line);

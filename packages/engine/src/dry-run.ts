@@ -6,6 +6,8 @@ import {
   type CharacterItem,
   greetingFor,
   listChats,
+  missingCharacterMessage,
+  readChatCharacter,
   readChatHistory,
 } from "./character-chat.ts";
 import { DEFAULT_MODEL_ID, findAllowedModel } from "./models.ts";
@@ -41,6 +43,19 @@ export async function dryRun(options: {
   if (options.session) {
     const path = await findSessionPath(options.paths, options.session);
     if (!path) return { ok: false, error: `Saved chat not found: ${options.session}` };
+    const owner = readChatCharacter(options.paths, path);
+    if (!owner)
+      return { ok: false, error: "This saved chat is not a LittleTavern character chat." };
+    if (owner.libraryId !== item.id) {
+      const ownerItem = getItem(options.paths, owner.libraryId);
+      return {
+        ok: false,
+        error:
+          ownerItem && ownerItem !== "ambiguous"
+            ? `Saved chat ${options.session} belongs to ${owner.name}, not ${item.name}.`
+            : missingCharacterMessage(owner.name || owner.libraryId),
+      };
+    }
     history = readChatHistory(options.paths, path).map(({ role, text }) => ({ role, text }));
   } else {
     const greeting = greetingFor(options.paths, item);
