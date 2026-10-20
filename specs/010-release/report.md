@@ -239,3 +239,22 @@ Scoped completion review of FR-004 and T020 found no remaining notice-coordinati
 checklist still passes 16/16; all 20 tasks are checked. No extension configuration exists, so
 implementation hooks were skipped. No design artifact, dependency, environment file, real key,
 provider, editor, model/GPU or real user data changed or was used.
+
+## Release and owner acceptance (2026-10-20)
+
+Recorded after implementation; the sections above describe the state at the end of the run.
+
+- The CI workflow first failed in the secret-scan job: `actions/setup-node@v5` enables
+  package-manager caching by default and called pnpm, which that job never installs. The step was
+  removed (`a17ac6a`). CI then passed on Node 22.19.0, 24 and 26, together with the secret scan
+  and the package job.
+- `v0.1.0` was published to npm by `release.yml`, with provenance, and the GitHub release was
+  created. The first attempt failed with `EOTP` because the token could not bypass 2FA; a
+  re-run with a corrected token succeeded. npm showed a `0.0.0-stage` placeholder for about five
+  minutes while it processed the new package.
+- Publishing then moved to npm trusted publishing with stage-only permission (`72ec6d1`). The
+  token and the `NPM_TOKEN` secret were deleted. The staged flow is first exercised by 0.1.1.
+- **The owner accepted 010** after installing `littletavern` from npm on macOS and playing with
+  the examples. Follow-up items found in that test are tracked for later features: id-free
+  pickers, `/new`, overlay borders, error handling, `/prev`, the default user name, spend limits,
+  and lore keywords for non-English chat.
