@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { mkdirSync, readdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   CombinedAutocompleteProvider,
   Container,
@@ -13,10 +15,12 @@ import {
 import {
   type AppPaths,
   appendUsageRecord,
+  CHARACTER_TEMPLATE,
   CharacterChat,
   type CharacterItem,
   type ChatHistoryItem,
   ChatSession,
+  createCharacterFromDraft,
   createLogger,
   DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_MODEL_ID,
@@ -48,6 +52,7 @@ import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
+import { openInEditor } from "./editor-launch.ts";
 import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
@@ -278,6 +283,75 @@ export function createApp(options: AppOptions = {}) {
       startChat(item);
     };
     tui.showOverlay(picker, { width: "90%" });
+  }
+  function editCharacter(draftPath?: string): void {
+    let draft = draftPath;
+    try {
+      if (!draft) {
+        const folder = join(paths.importRoot, "drafts");
+        mkdirSync(folder, { recursive: true });
+        draft = join(folder, `new-character-${Date.now()}.md`);
+        writeFileSync(draft, CHARACTER_TEMPLATE, { flag: "wx" });
+      }
+      tui.stop();
+      try {
+        const result = openInEditor(draft, env.VISUAL || env.EDITOR);
+        if (!result.ok) {
+          notice(`${result.reason} Draft kept at ${draft}`);
+          return;
+        }
+      } finally {
+        tui.start();
+        tui.requestRender(true);
+      }
+      const result = createCharacterFromDraft(paths, draft, VERSION);
+      if ("error" in result) notice(`${result.error} Draft kept at ${result.draftPath}`);
+      else if ("cancelled" in result) notice("Cancelled — the template was not changed.");
+      else {
+        notice(formatImportReport(result).join("\n"));
+        notice(`Created with LittleTavern ${VERSION}.`);
+        for (const warning of result.warnings) notice(`Warning: ${warning}`);
+        notice(`Start chatting with /chat ${result.item.id}`);
+      }
+    } catch (error) {
+      notice(
+        `${error instanceof Error ? error.message : String(error)} Draft path: ${draft ?? join(paths.importRoot, "drafts")}`,
+      );
+    }
+  }
+  function newCharacter(): void {
+    const folder = join(paths.importRoot, "drafts");
+    try {
+      mkdirSync(folder, { recursive: true });
+      const drafts = readdirSync(folder, { withFileTypes: true })
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
+        .map((entry) => entry.name)
+        .sort();
+      if (!drafts.length) {
+        editCharacter();
+        return;
+      }
+      const picker = new ListPicker<string | undefined>(
+        "Continue a draft or start a new character (Esc cancels)",
+        [
+          ...drafts.map((name) => ({
+            value: join(folder, name),
+            label: `Continue ${display(name)}`,
+            search: name,
+          })),
+          { value: undefined, label: "Start a new character", search: "Start a new character" },
+        ],
+      );
+      picker.onCancel = closeOverlay;
+      picker.onSelect = (draft) => {
+        closeOverlay();
+        editCharacter(draft);
+      };
+      tui.showOverlay(picker, { width: "90%" });
+      tui.requestRender();
+    } catch (error) {
+      notice(`${error instanceof Error ? error.message : String(error)} Draft folder: ${folder}`);
+    }
   }
   async function openSessionPicker(): Promise<void> {
     const chats = await listChats(paths);

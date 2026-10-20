@@ -1,7 +1,10 @@
 export {
   type AppPaths,
   appendUsageRecord,
+  CHARACTER_TEMPLATE,
   type Character,
+  type CreateCharacterResult,
+  createCharacterFromDraft,
   createLogger,
   ensureImportFolders,
   type FormatLabel,

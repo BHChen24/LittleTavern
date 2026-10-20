@@ -15,6 +15,8 @@ afterEach(() => {
 });
 it("puts all application files and import folders under the explicit home", () => {
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: "/tmp/lt-path-test" });
+  expect(paths.importRoot).toBe("/tmp/lt-path-test/import");
+  expect(paths.importCharactersDir).toBe(join(paths.importRoot, "characters"));
   expect(paths.configDir).toBe("/tmp/lt-path-test/config");
   expect(paths.dataDir).toBe("/tmp/lt-path-test/data");
   expect(paths.logDir).toBe("/tmp/lt-path-test/log");

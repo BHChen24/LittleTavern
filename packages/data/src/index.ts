@@ -1,4 +1,6 @@
+export * from "./cards/template.ts";
 export * from "./cards/types.ts";
+export * from "./create-character.ts";
 export * from "./credentials.ts";
 export { getItem, importFile, listLibrary } from "./library.ts";
 export * from "./logger.ts";

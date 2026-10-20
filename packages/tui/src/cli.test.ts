@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { importFile, listLibrary, resolveAppPaths } from "@littletavern/engine";
@@ -99,6 +99,33 @@ it("dry-runs a character request as text or JSON without a key, and rejects unkn
     output.length = 0;
     expect(await runCli(["dry-run", "zzzz"], out)).toBe(1);
     expect(output).toEqual(["Character not found: zzzz"]);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("creates from Markdown, prints warnings and preserves the owner's source, including failures", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-cli-create-"));
+  vi.stubEnv("LITTLETAVERN_HOME", home);
+  const file = join(home, "draft.md");
+  const output: string[] = [];
+  const out = (text: string) => {
+    output.push(text);
+  };
+  try {
+    writeFileSync(file, "## Name\nCLI Creator\n## First message\nWelcome!\n");
+    expect(await runCli(["create", file], out)).toBe(0);
+    expect(output.join("\n")).toContain("CLI Creator");
+    expect(output.join("\n")).toContain("Created with LittleTavern");
+    expect(output.join("\n")).toContain("Warning: Missing section: Description");
+    expect(listLibrary(resolveAppPaths())).toHaveLength(1);
+    expect(readFileSync(file, "utf8")).toContain("CLI Creator");
+    writeFileSync(file, "## Description\nStill here.\n");
+    expect(await runCli(["create", file], out)).toBe(1);
+    expect(output.join("\n")).toContain("A character needs a name.");
+    expect(readFileSync(file, "utf8")).toContain("Still here.");
+    expect(await runCli(["create"], out)).toBe(1);
+    expect(await runCli(["create", file, "extra.md"], out)).toBe(1);
   } finally {
     rmSync(home, { recursive: true, force: true });
   }

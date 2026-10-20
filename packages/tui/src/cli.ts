@@ -2,6 +2,7 @@
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
+  createCharacterFromDraft,
   DEFAULT_ASSEMBLY_SETTINGS,
   dryRun,
   getItem,
@@ -19,6 +20,7 @@ export const CLI_HELP = `Usage:
   littletavern              Start the terminal chat
   littletavern --version    Print version
   littletavern --help       Print help
+  littletavern create <file.md>  Create and import a character from Markdown
   littletavern import <file…>  Import cards or lorebooks
   littletavern list            List the library
   littletavern show <id>       Inspect an item (unique prefix allowed)
@@ -42,6 +44,26 @@ export async function runCli(
   }
   if (argv.includes("--help")) {
     out(CLI_HELP);
+    return 0;
+  }
+  if (argv[0] === "create") {
+    if (argv.length !== 2 || !argv[1]) {
+      out("Usage: littletavern create <file.md>");
+      return 1;
+    }
+    const result = createCharacterFromDraft(resolveAppPaths(), argv[1], VERSION, {
+      keepSource: true,
+    });
+    if ("error" in result) {
+      out(`${result.error} Draft kept at ${result.draftPath}`);
+      return 1;
+    }
+    if ("cancelled" in result) out("Cancelled — the template was not changed.");
+    else {
+      for (const line of formatImportReport(result)) out(line);
+      out(`Created with LittleTavern ${VERSION}.`);
+      for (const warning of result.warnings) out(`Warning: ${warning}`);
+    }
     return 0;
   }
   if (argv[0] === "import") {

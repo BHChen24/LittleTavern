@@ -19,3 +19,10 @@ Each numbered row records one `functions.exec` invocation and all nested tool in
 | 11 | functions.exec; write_stdin; exec_command | Phase 1 build/lint passed; read import formatter and dry-run contracts/tests for Phase 2/3. |
 | 12 | functions.exec; write_stdin | Phase 1 gate passed: 37 test files, 225 tests. |
 | 13 | functions.exec; exec_command | Marked T001–T003 complete, recorded Phase 1 gate and committed Phase 1. |
+| 14 | functions.exec; exec_command (escalated) | Phase 1 commit succeeded as 1cf8df6. Call 13's first Git attempt failed because worktree metadata is read-only in the sandbox; automatic review approved the explicitly required commit. |
+| 15 | functions.exec; exec_command | Added create/import/source-preservation/failure tests and CLI create tests before implementation; started targeted red test. |
+| 16 | functions.exec; exec_command; write_stdin; exec_command | Read overlay harness and path consumers; confirmed expected red create test; implemented minimal missing import paths, create pipeline, exports, creator metadata and CLI. |
+| 17 | functions.exec; exec_command | Added app draft picker and editor lifecycle, fake-VISUAL app test, formatted Phase 2 changes and started full gate. |
+| 18 | functions.exec; write_stdin; exec_command | Collected Phase 2 gate progress and updated this ledger. |
+| 19 | functions.exec; exec_command | Phase 2 passed build/lint and all 231 tests in 39 files; marked T004–T007 and recorded the gate. |
+| 20 | functions.exec; exec_command (escalated) | Committed the validated Phase 2 implementation and task markers. |

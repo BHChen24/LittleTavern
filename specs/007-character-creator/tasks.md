@@ -59,7 +59,7 @@ description: "Task list for 007-character-creator"
 
 ## Phase 2: User Stories 1–3 - Write a character, keep drafts, standard card file (P1/P2) 🎯 MVP
 
-- [ ] T004 [US1] Create `createCharacterFromDraft(paths, draftPath, version)` in `packages/data/src/create-character.ts`. It:
+- [X] T004 [US1] Create `createCharacterFromDraft(paths, draftPath, version)` in `packages/data/src/create-character.ts`. It:
   1. reads the draft;
   2. treats an unchanged template as cancelled;
   3. parses the draft, and on an error keeps it;
@@ -69,13 +69,13 @@ description: "Task list for 007-character-creator"
 
   It returns the import report with the parse warnings attached, or `{ cancelled }`, or
   `{ error, draftPath }`. Export it through the engine barrel. Write tests T-d.
-- [ ] T005 [US1] Add `littletavern create <file.md>` to `packages/tui/src/cli.ts`. It uses `createCharacterFromDraft` on the given file, but **never deletes a file the owner passed in**: add an option that keeps the source. It prints the report and warnings, and returns 1 on error. Add it to `CLI_HELP`. Write tests T-f
-- [ ] T006 [US2] Add `/new-character` to `COMMANDS` and handle it in `app.ts`:
+- [X] T005 [US1] Add `littletavern create <file.md>` to `packages/tui/src/cli.ts`. It uses `createCharacterFromDraft` on the given file, but **never deletes a file the owner passed in**: add an option that keeps the source. It prints the report and warnings, and returns 1 on error. Add it to `CLI_HELP`. Write tests T-f
+- [X] T006 [US2] Add `/new-character` to `COMMANDS` and handle it in `app.ts`:
   - **existing drafts**: if there are drafts in `<importRoot>/drafts/`, show a `ListPicker` with "Continue <file name>" for each draft, plus "Start a new character";
   - **new draft**: write `CHARACTER_TEMPLATE` to `drafts/new-character-<timestamp>.md`;
   - **editing**: call `tui.stop()`, run `openInEditor`, then `tui.start()` and `tui.requestRender(true)` in a `finally`;
   - **result**: run `createCharacterFromDraft` and show the report, the warnings, or the error (with the draft path) as notices. On success, add a hint: `Start chatting with /chat <id>`.
-- [ ] T007 [US2] Try T-g in `packages/tui/src/app-create.test.ts` with a fake `VISUAL`. Defer it if the harness needs more than about 60 lines
+- [X] T007 [US2] Try T-g in `packages/tui/src/app-create.test.ts` with a fake `VISUAL`. Defer it if the harness needs more than about 60 lines
 
 **Checkpoint**: checks pass. Commit.
 
