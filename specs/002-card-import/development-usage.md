@@ -38,3 +38,7 @@ Phase 3: `exec_command` added library tests before importFile, then implemented 
 imports through a temporary folder and rename, SHA-256 identity, duplicate reporting,
 original-byte storage, raw preservation and public exports. Build/lint and 80 tests in
 19 files passed; unknown nested fields and both PNG chunks remain available in storage.
+
+Phase 4: `exec_command` added nine rejection/library-invariance cases. The first run
+found a missing readdirSync test import; it was corrected before committing. Build/lint
+and all 89 tests in 19 files passed. No rejected input creates or changes library entries.

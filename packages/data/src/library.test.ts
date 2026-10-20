@@ -1,8 +1,8 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it } from "vitest";
-import { makePng, makeV2Card, makeV3Card } from "./cards/fixtures.ts";
+import { makePng, makeV2Card, makeV3Card, makeZip } from "./cards/fixtures.ts";
 import type { LibraryItem } from "./cards/types.ts";
 import { importFile } from "./library.ts";
 import { type AppPaths, resolveAppPaths } from "./paths.ts";
@@ -87,4 +87,60 @@ it("does not rewrite identical content but keeps different content with the same
   );
   expect(edited.id).not.toBe(item.id);
   expect(edited.name).toBe(item.name);
+});
+
+it.each([
+  [
+    "v1.json",
+    Buffer.from('{"name":"old","description":"old"}'),
+    "V1 character card",
+    "V1 character cards are not supported in this version",
+  ],
+  [
+    "card.charx",
+    makeZip("card.json"),
+    "CharX archive",
+    "CharX archives are not supported in this version",
+  ],
+  [
+    "card.byaf",
+    makeZip("manifest.json"),
+    "BYAF archive",
+    "BYAF archives are not supported in this version",
+  ],
+  [
+    "card.yaml",
+    Buffer.from("name: synthetic"),
+    "YAML card",
+    "YAML cards are not supported in this version",
+  ],
+  [
+    "plain.png",
+    makePng({}),
+    "PNG image without a character card",
+    "PNG image without a character card",
+  ],
+  ["broken.json", Buffer.from("{broken}"), "damaged JSON", "damaged JSON:"],
+  [
+    "broken.png",
+    makePng({ ccv3: "not JSON" }),
+    "damaged PNG card",
+    "embedded card data could not be decoded",
+  ],
+  [
+    "missing-name.json",
+    Buffer.from(JSON.stringify(makeV3Card({ name: " " }))),
+    "Character card V3 (JSON)",
+    "a character must have a name",
+  ],
+  ["missing.json", null, "unreadable file", "file not found or not readable"],
+])("rejects %s without changing the existing library", (name, bytes, detected, reason) => {
+  imported(source("valid.json", Buffer.from(JSON.stringify(makeV3Card()))));
+  const library = join(paths.dataDir, "library");
+  const before = readdirSync(library, { recursive: true }).sort();
+  const file = bytes === null ? join(home, name) : source(name, bytes);
+  const report = importFile(paths, file);
+  expect(report).toMatchObject({ ok: false, file, detected });
+  expect(!report.ok && report.reason).toContain(reason);
+  expect(readdirSync(library, { recursive: true }).sort()).toEqual(before);
 });

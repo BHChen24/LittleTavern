@@ -106,7 +106,7 @@ to T-h). Keep them lightweight.
 
 **Independent Test**: the rejection cases in T-b, plus the "library unchanged" assertion below.
 
-- [ ] T009 [US2] Extend `packages/data/src/library.test.ts`. For each rejection case in spec User Story 2 (V1, CharX, BYAF, YAML, a plain PNG, damaged JSON, an undecodable PNG chunk, a missing name, a missing path), assert `ok: false`, the expected `detected` and `reason`, and that the library directory listing is identical before and after (FR-006). A leftover `.tmp-*` folder is ignored by `listLibrary`, which is tested in T012
+- [X] T009 [US2] Extend `packages/data/src/library.test.ts`. For each rejection case in spec User Story 2 (V1, CharX, BYAF, YAML, a plain PNG, damaged JSON, an undecodable PNG chunk, a missing name, a missing path), assert `ok: false`, the expected `detected` and `reason`, and that the library directory listing is identical before and after (FR-006). A leftover `.tmp-*` folder is ignored by `listLibrary`, which is tested in T012
 
 **Checkpoint**: checks pass. Commit.
 
