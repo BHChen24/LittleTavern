@@ -167,3 +167,30 @@ it("survives an import root that is a file and still imports an explicit path", 
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("prefixes failed commands and provider errors while keeping ordinary notices distinct", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-error-style-"));
+  const app = createApp({
+    terminal: stubTerminal(),
+    env: { LITTLETAVERN_HOME: home, OPENROUTER_API_KEY: "synthetic" },
+    session: new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      getApiKey: () => "synthetic",
+      simulated: { replies: [{ text: "", errorMessage: "Provider unavailable" }] },
+    }),
+  });
+  app.enterChat();
+  const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
+  try {
+    await app.submit("/invalid-command");
+    expect(screen()).toContain("Error: Unknown command");
+    await app.submit("/plain");
+    expect(screen()).toContain("· Plain chat.");
+    await app.submit("hello");
+    expect(screen()).toMatch(/Error: .*Provider/);
+  } finally {
+    await app.quit();
+    rmSync(home, { recursive: true, force: true });
+  }
+});

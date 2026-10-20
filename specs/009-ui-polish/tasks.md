@@ -73,9 +73,9 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 3: User Stories 2, 3 - Logo and messages (P1)
 
-- [ ] T005 [P] [US2] Add the logo and the narrow-terminal fallback to `components/home-screen.ts` (R2). Write tests T-c
-- [ ] T006 [P] [US3] Create `components/message-view.ts`: label, bar, body, maximum width 100 (R3, R7b). Write tests T-b
-- [ ] T007 [US3] In `app.ts`:
+- [X] T005 [P] [US2] Add the logo and the narrow-terminal fallback to `components/home-screen.ts` (R2). Write tests T-c
+- [X] T006 [P] [US3] Create `components/message-view.ts`: label, bar, body, maximum width 100 (R3, R7b). Write tests T-b
+- [X] T007 [US3] In `app.ts`:
   - render every message, including resumed history, with `MessageView`;
   - pass message text through `stripControls`, then `colourDialogue`, then Markdown;
   - add `notice(text, { kind: "error" })`, and use it for provider errors and failed commands.

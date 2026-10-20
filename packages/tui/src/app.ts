@@ -5,10 +5,10 @@ import {
   CombinedAutocompleteProvider,
   Container,
   Editor,
-  Markdown,
   matchesKey,
   ProcessTerminal,
   ScrollView,
+  Spacer,
   type Terminal,
   Text,
   TuiAltScreen,
@@ -57,6 +57,7 @@ import { FileBrowser } from "./components/file-browser.ts";
 import { HomeScreen } from "./components/home-screen.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker, type PickerItem } from "./components/list-picker.ts";
+import { MessageView } from "./components/message-view.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
@@ -138,7 +139,7 @@ export function createApp(options: AppOptions = {}) {
     tui.setFocus(editor);
     tui.requestRender();
   }
-  let reply: Markdown | undefined;
+  let reply: MessageView | undefined;
   let chat: CharacterChat | null = null;
   const commands = COMMANDS({ paths, getChat: () => chat });
   editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
@@ -153,10 +154,19 @@ export function createApp(options: AppOptions = {}) {
   let helpOpen = false;
   /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
   const display = (text: string) => stripControls(scrubSecrets(text, secrets));
-  const notice = (text: string) => {
-    transcript.addChild(new Text(messageStyles.notice(`· ${display(text)}`)));
+  const notice = (text: string, options: { kind?: "notice" | "error" } = {}) => {
+    const content =
+      options.kind === "error"
+        ? messageStyles.error(`${markdownTheme.bold("Error:")} ${display(text)}`)
+        : messageStyles.notice(`· ${display(text)}`);
+    transcript.addChild(new Text(content));
     tui.requestRender();
   };
+  const errorNotice = (text: string) => notice(text, { kind: "error" });
+  function showImportReport(file: string): void {
+    const report = importFile(paths, file);
+    notice(formatImportReport(report).join("\n"), { kind: report.ok ? "notice" : "error" });
+  }
   function promptForKey(): void {
     const keyPrompt = new KeyPrompt(paths.credentialsFile);
     keyPrompt.onCancel = closeOverlay;
@@ -169,7 +179,7 @@ export function createApp(options: AppOptions = {}) {
           saveKey(paths, key);
           source = "saved";
         } catch {
-          notice("Could not save the key; using it for this session only.");
+          errorNotice("Could not save the key; using it for this session only.");
         }
       }
       activeKey = { value: key, source, masked: `••••${key.slice(-4)}` };
@@ -220,7 +230,7 @@ export function createApp(options: AppOptions = {}) {
           );
           updateStatus();
         } catch {
-          notice("Could not forget the saved key; check the credentials file.");
+          errorNotice("Could not forget the saved key; check the credentials file.");
         }
         closeOverlay();
       };
@@ -240,7 +250,7 @@ export function createApp(options: AppOptions = {}) {
     notice(`Saved model ${settings.model} is unavailable; using ${DEFAULT_MODEL_ID}.`);
   if (saved.warning)
     notice("Saved credentials permissions allow access by other users; expected 0600.");
-  if (saved.error) notice(saved.error);
+  if (saved.error) errorNotice(saved.error);
 
   function updateStatus(): void {
     status.update({
@@ -252,13 +262,11 @@ export function createApp(options: AppOptions = {}) {
   }
   updateStatus();
 
-  function addMessage(role: "user" | "character", text: string): Markdown {
-    const label = role === "user" ? "You:" : `${display(chat?.character.name ?? "Assistant")}:`;
-    transcript.addChild(
-      new Text(role === "user" ? messageStyles.user(label) : messageStyles.character(label)),
-    );
-    const message = new Markdown(text, 1, 0, markdownTheme);
+  function addMessage(role: "user" | "character", text: string): MessageView {
+    const label = role === "user" ? "You" : display(chat?.character.name ?? "Assistant");
+    const message = new MessageView(role, label, text);
     transcript.addChild(message);
+    transcript.addChild(new Spacer(1));
     return message;
   }
   function renderHistory(items: ChatHistoryItem[]): void {
@@ -285,7 +293,7 @@ export function createApp(options: AppOptions = {}) {
       setCharacterChat(CharacterChat.start({ paths, session, item }));
     } catch (error) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat start failed");
-      notice("Could not start the chat. See the diagnostic log.");
+      errorNotice("Could not start the chat. See the diagnostic log.");
     }
   }
   function openCharacterPicker(): void {
@@ -322,7 +330,7 @@ export function createApp(options: AppOptions = {}) {
       try {
         const result = openInEditor(draft, env.VISUAL || env.EDITOR);
         if (!result.ok) {
-          notice(`${result.reason} Draft kept at ${draft}`);
+          errorNotice(`${result.reason} Draft kept at ${draft}`);
           return;
         }
       } finally {
@@ -330,7 +338,7 @@ export function createApp(options: AppOptions = {}) {
         tui.requestRender(true);
       }
       const result = createCharacterFromDraft(paths, draft, VERSION);
-      if ("error" in result) notice(`${result.error} Draft kept at ${result.draftPath}`);
+      if ("error" in result) errorNotice(`${result.error} Draft kept at ${result.draftPath}`);
       else if ("cancelled" in result) notice("Cancelled — the template was not changed.");
       else {
         notice(formatImportReport(result).join("\n"));
@@ -339,7 +347,7 @@ export function createApp(options: AppOptions = {}) {
         notice(`Start chatting with /chat ${result.item.id}`);
       }
     } catch (error) {
-      notice(
+      errorNotice(
         `${error instanceof Error ? error.message : String(error)} Draft path: ${draft ?? join(paths.importRoot, "drafts")}`,
       );
     }
@@ -375,7 +383,9 @@ export function createApp(options: AppOptions = {}) {
       tui.showOverlay(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
-      notice(`${error instanceof Error ? error.message : String(error)} Draft folder: ${folder}`);
+      errorNotice(
+        `${error instanceof Error ? error.message : String(error)} Draft folder: ${folder}`,
+      );
     }
   }
   function editPersona(existingFile?: string): void {
@@ -394,7 +404,7 @@ export function createApp(options: AppOptions = {}) {
       try {
         const result = openInEditor(editorPath, env.VISUAL || env.EDITOR);
         if (!result.ok) {
-          notice(`${result.reason} File kept at ${editorPath}`);
+          errorNotice(`${result.reason} File kept at ${editorPath}`);
           return;
         }
       } finally {
@@ -404,7 +414,7 @@ export function createApp(options: AppOptions = {}) {
       if (draft) {
         const result = createPersonaFromDraft(paths, draft);
         if ("error" in result) {
-          notice(`${result.error} Draft kept at ${result.draftPath}`);
+          errorNotice(`${result.error} Draft kept at ${result.draftPath}`);
           return;
         }
         if ("cancelled" in result) {
@@ -416,13 +426,13 @@ export function createApp(options: AppOptions = {}) {
       if (!file) return;
       const persona = parsePersona(readFileSync(join(paths.importPersonasDir, file), "utf8"));
       if ("error" in persona) {
-        notice(`${persona.error} File kept at ${join(paths.importPersonasDir, file)}`);
+        errorNotice(`${persona.error} File kept at ${join(paths.importPersonasDir, file)}`);
         return;
       }
       writeSettings(paths, { persona: file });
       notice(`You are now ${persona.name}`);
     } catch (error) {
-      notice(
+      errorNotice(
         `${error instanceof Error ? error.message : String(error)} File path: ${draft ?? file}`,
       );
     }
@@ -465,7 +475,7 @@ export function createApp(options: AppOptions = {}) {
       tui.showOverlay(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
-      notice(error instanceof Error ? error.message : String(error));
+      errorNotice(error instanceof Error ? error.message : String(error));
     }
   }
   async function openSessionPicker(): Promise<void> {
@@ -486,7 +496,7 @@ export function createApp(options: AppOptions = {}) {
       try {
         setCharacterChat(CharacterChat.resume({ paths, session, sessionPath: path }));
       } catch (error) {
-        notice(error instanceof Error ? error.message : "Could not resume the chat.");
+        errorNotice(error instanceof Error ? error.message : "Could not resume the chat.");
       }
     };
     tui.showOverlay(picker, { width: "90%" });
@@ -494,13 +504,13 @@ export function createApp(options: AppOptions = {}) {
   async function regenerate(value = editor.getText()): Promise<void> {
     if (interceptMissingKey(value)) return;
     if (!chat) {
-      notice("Start a character chat first (/characters).");
+      errorNotice("Start a character chat first (/characters).");
       return;
     }
     if (closing || chat.isStreaming) return;
     const target = chat.regenerateTarget();
     if (!target) {
-      notice("Nothing to regenerate yet: send a message first.");
+      errorNotice("Nothing to regenerate yet: send a message first.");
       return;
     }
     const history = chat.history();
@@ -516,7 +526,7 @@ export function createApp(options: AppOptions = {}) {
       await running;
     } catch (error) {
       logger.error(error instanceof Error ? error : { error: String(error) }, "Chat failed");
-      notice("Chat request failed. See the diagnostic log.");
+      errorNotice("Chat request failed. See the diagnostic log.");
     } finally {
       editor.disableSubmit = false;
       tui.requestRender();
@@ -542,7 +552,9 @@ export function createApp(options: AppOptions = {}) {
         error instanceof Error ? error : { error: String(error) },
         "Could not append usage",
       );
-      notice("Could not write usage to the ledger. Session totals include only saved records.");
+      errorNotice(
+        "Could not write usage to the ledger. Session totals include only saved records.",
+      );
     }
     response = turn.text;
     reply?.setText(display(response) + (turn.outcome === "interrupted" ? " [interrupted]" : ""));
@@ -553,8 +565,8 @@ export function createApp(options: AppOptions = {}) {
       if (error.kind === "key-rejected") {
         activeKey = null;
         updateStatus();
-        notice("OpenRouter rejected the key. Type /apikey to replace it.");
-      } else notice(error.text);
+        errorNotice("OpenRouter rejected the key. Type /apikey to replace it.");
+      } else errorNotice(error.text);
       logger.error({ error: turn.errorMessage }, "Provider request failed");
     }
     tui.requestRender();
@@ -598,7 +610,7 @@ export function createApp(options: AppOptions = {}) {
     }
     const changeLorebooks = () => {
       if (!chat) {
-        notice("Start a character chat first (/characters).");
+        errorNotice("Start a character chat first (/characters).");
         return;
       }
       if (text === "/lorebooks") {
@@ -617,14 +629,14 @@ export function createApp(options: AppOptions = {}) {
       }
       const id = text.replace(/^\/(attach|detach)/, "").trim();
       if (!id) {
-        notice(`Usage: ${text.startsWith("/attach") ? "/attach" : "/detach"} <id>`);
+        errorNotice(`Usage: ${text.startsWith("/attach") ? "/attach" : "/detach"} <id>`);
         return;
       }
       try {
         if (text.startsWith("/attach")) notice(`Attached ${chat.attachLorebook(id).name}.`);
         else notice(chat.detachLorebook(id) ? "Detached." : `Not attached: ${id}`);
       } catch (error) {
-        notice(error instanceof Error ? error.message : "Could not change lorebooks.");
+        errorNotice(error instanceof Error ? error.message : "Could not change lorebooks.");
       }
       return;
     };
@@ -635,13 +647,13 @@ export function createApp(options: AppOptions = {}) {
       },
       import: async () => {
         const file = text.slice("/import".length).trim();
-        if (file) notice(formatImportReport(importFile(paths, file)).join("\n"));
+        if (file) showImportReport(file);
         else {
           const browser = new FileBrowser(paths.importRoot);
           browser.onCancel = closeOverlay;
           browser.onSelect = (selected) => {
             closeOverlay();
-            notice(formatImportReport(importFile(paths, selected)).join("\n"));
+            showImportReport(selected);
           };
           tui.showOverlay(browser, { width: "90%" });
         }
@@ -655,7 +667,7 @@ export function createApp(options: AppOptions = {}) {
       show: async () => {
         const id = text.slice("/show".length).trim();
         if (!id) {
-          notice("Usage: /show <id>");
+          errorNotice("Usage: /show <id>");
           return;
         }
         const item = getItem(paths, id);
@@ -665,6 +677,7 @@ export function createApp(options: AppOptions = {}) {
             : item
               ? formatItemDetails(item).join("\n")
               : `Item not found: ${id}`,
+          { kind: item && item !== "ambiguous" ? "notice" : "error" },
         );
         return;
       },
@@ -675,9 +688,9 @@ export function createApp(options: AppOptions = {}) {
       chat: async () => {
         const id = text.slice("/chat".length).trim();
         const item = id ? getItem(paths, id) : null;
-        if (!id) notice("Usage: /chat <id>");
-        else if (item === "ambiguous") notice(`Ambiguous item prefix: ${id}`);
-        else if (item?.kind !== "character") notice(`Character not found: ${id}`);
+        if (!id) errorNotice("Usage: /chat <id>");
+        else if (item === "ambiguous") errorNotice(`Ambiguous item prefix: ${id}`);
+        else if (item?.kind !== "character") errorNotice(`Character not found: ${id}`);
         else startChat(item);
         return;
       },
@@ -732,13 +745,13 @@ export function createApp(options: AppOptions = {}) {
             session.setModel(model.id);
             modelId = model.id;
           } catch {
-            notice("Could not select that model.");
+            errorNotice("Could not select that model.");
             return;
           }
           try {
             writeSettings(paths, { model: model.id });
           } catch {
-            notice("Could not save the selected model; using it for this session only.");
+            errorNotice("Could not save the selected model; using it for this session only.");
           }
           tui.hideOverlay();
           updateStatus();
@@ -762,7 +775,7 @@ export function createApp(options: AppOptions = {}) {
       const name = text.slice(1).split(" ", 1)[0];
       const command = commands.find((entry) => entry.name === name);
       if (!command || (!command.argumentHint && text !== `/${name}`)) {
-        notice("Unknown command. Use /help.");
+        errorNotice("Unknown command. Use /help.");
         return;
       }
       await handlers[command.name]?.();

@@ -30,3 +30,18 @@ it("shows the key source and omits drop folders when the library has items", () 
   expect(home.render(100).join("\n")).toContain("API key: environment");
   expect(home.render(100).join("\n")).not.toContain("/tmp/import");
 });
+
+it("centres original ASCII artwork when it fits and uses the plain title below the boundary", () => {
+  const home = new HomeScreen({
+    version: "0.1.0",
+    keyStatus: "none",
+    libraryEmpty: false,
+    importDirs: [],
+  });
+  const wide = home.render(80);
+  expect(wide.join("\n")).toContain(".------------------------------------------------------.");
+  expect(home.render(59).join("\n")).not.toContain(
+    ".------------------------------------------------------.",
+  );
+  expect(home.render(59).join("\n")).toContain("LittleTavern 0.1.0");
+});

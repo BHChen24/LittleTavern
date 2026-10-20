@@ -55,3 +55,21 @@ Subsequent commits and verification invocations are recorded in the next phase's
 26. `write_stdin`: collect gate result. Outcome: build/lint passed; 52 files, 291 tests passed.
 27. `exec_command`: inspect diff and remaining app test patterns. Outcome: changes scoped to T004.
 28. `exec_command`: mark T004 and record notes/usage. Outcome: phase ready for commit.
+
+## Phase 3
+
+29. `exec_command` (escalated): commit validated Phase 2. Outcome: commit `f34cbd7`.
+30. `exec_command`: locate all notice/error sites and inspect import formatting. Outcome: failure paths identified.
+31. `exec_command`: add logo, message-view and error-style tests; run targeted tests.
+    Outcome: expected failures before implementation.
+32. `exec_command`: implement logo, MessageView and app error notices; format and run gate.
+    Outcome: implementation completed; gate started.
+33. `write_stdin`: collect targeted red-test result. Outcome: missing components/styles reproduced.
+34. `write_stdin`: collect full gate. Outcome: build/lint passed; 53 files, 295 tests passed.
+35. `exec_command`: inspect generated artwork, provider error mapping and remaining notices.
+    Outcome: a few remaining failed-command notices identified.
+36. `exec_command`: style remaining failed-command notices and rerun gate. Outcome: gate started.
+37. `exec_command`: inspect Editor rendering, persona lookup, simulated replies and search keys.
+    Outcome: pinned APIs checked for the next phase.
+38. `write_stdin`: collect gate. Outcome: build/lint passed; 53 files, 295 tests passed.
+39. `exec_command`: mark T005-T007 and record this usage. Outcome: phase ready for commit.
