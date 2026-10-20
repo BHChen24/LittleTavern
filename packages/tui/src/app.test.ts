@@ -47,14 +47,26 @@ it("renders the title, accepts editor input and renders a simulated reply", asyn
     }),
   });
   try {
-    expect(app.tui.render(80).join("\n")).toContain("LittleTavern 0.1.0");
+    expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
+      "LittleTavern 0.1.0",
+    );
     app.enterChat();
     app.editor.handleInput("hi");
     app.editor.handleInput("\r");
-    await vi.waitFor(() => expect(app.tui.render(80).join("\n")).toContain("Hello there."));
-    expect(app.tui.render(80).join("\n")).toContain("You:");
-    expect(app.tui.render(80).join("\n")).toContain("Assistant:");
-    expect(app.tui.render(80).at(-1)).toContain("Key: environment");
+    await vi.waitFor(() =>
+      expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
+        "Hello there.",
+      ),
+    );
+    expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
+      "You:",
+    );
+    expect(app.tui.children.flatMap((component) => component.render(80)).join("\n")).toContain(
+      "Assistant:",
+    );
+    expect(app.tui.children.flatMap((component) => component.render(80)).at(-1)).toContain(
+      "Key: environment",
+    );
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });
@@ -69,10 +81,14 @@ it("starts on the home screen and Enter opens the chat with the editor focused",
   });
   try {
     expect(app.tui.children).toHaveLength(1);
-    expect(app.tui.render(100).join("\n")).toContain("Press Enter to start");
+    expect(app.tui.children.flatMap((component) => component.render(100)).join("\n")).toContain(
+      "Press Enter to start",
+    );
     app.tui.getFocusedComponent()?.handleInput?.("\r");
     expect(app.tui.getFocusedComponent()).toBe(app.editor);
-    expect(app.tui.render(100).join("\n")).not.toContain("Press Enter to start");
+    expect(app.tui.children.flatMap((component) => component.render(100)).join("\n")).not.toContain(
+      "Press Enter to start",
+    );
     app.enterChat();
     expect(app.tui.children).toHaveLength(4);
   } finally {
@@ -114,7 +130,9 @@ it("preserves input and sends nothing when Ctrl+R is pressed without a key", asy
     app.editor.setText("keep this draft");
     input?.("\x12");
     expect(app.editor.getText()).toBe("keep this draft");
-    expect(app.tui.render(100).join("\n")).toContain("No API key yet. Type /apikey");
+    expect(app.tui.children.flatMap((component) => component.render(100)).join("\n")).toContain(
+      "No API key yet. Type /apikey",
+    );
     expect(existsSync(paths.usageLedgerFile)).toBe(false);
   } finally {
     await app.quit();
@@ -131,7 +149,9 @@ it("survives an import root that is a file and still imports an explicit path", 
   const app = createApp({ terminal: stubTerminal(), paths, env: { LITTLETAVERN_HOME: home } });
   app.enterChat();
   try {
-    expect(app.tui.render(120).join("\n")).toContain("Could not create import folders");
+    expect(app.tui.children.flatMap((component) => component.render(120)).join("\n")).toContain(
+      "Could not create import folders",
+    );
     await app.submit("/import");
     const browser = app.tui.getFocusedComponent();
     expect(browser?.render(120).join("\n")).toContain("Could not read");
@@ -139,7 +159,9 @@ it("survives an import root that is a file and still imports an explicit path", 
     expect(app.tui.hasOverlay()).toBe(false);
     await app.submit(`/import ${card}`);
     expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
-    expect(app.tui.render(120).join("\n")).toContain("Imported");
+    expect(app.tui.children.flatMap((component) => component.render(120)).join("\n")).toContain(
+      "Imported",
+    );
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

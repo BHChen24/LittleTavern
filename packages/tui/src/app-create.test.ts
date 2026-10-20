@@ -45,7 +45,7 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
     paths,
     env: { VISUAL: `${process.execPath} ${script}` },
   });
-  const screen = () => app.tui.render(100).join("\n");
+  const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
   try {
     app.start();
     expect(existsSync(paths.credentialsFile)).toBe(false);

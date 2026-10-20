@@ -37,7 +37,7 @@ function fixture(envKey?: string, savedKey?: string) {
   });
   const input = (data: string) => app.tui.getFocusedComponent()?.handleInput?.(data);
   const overlay = () => app.tui.getFocusedComponent()?.render(200).join("\n") ?? "";
-  const screen = () => app.tui.render(200).join("\n");
+  const screen = () => app.tui.children.flatMap((component) => component.render(200)).join("\n");
   return { app, paths, home, input, overlay, screen };
 }
 it("has no startup prompt and restores messages and regenerate commands without sending", async () => {

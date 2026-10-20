@@ -101,7 +101,7 @@ it("never renders escape sequences from a card or a reply in the app", async () 
     }),
   });
   app.enterChat();
-  const screen = () => app.tui.render(100).join("\n");
+  const screen = () => app.tui.children.flatMap((component) => component.render(100)).join("\n");
   try {
     await app.submit("/characters");
     expectSafe(app.tui.getFocusedComponent()?.render(100).join("\n") ?? "");

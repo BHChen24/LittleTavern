@@ -59,7 +59,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 2: User Story 1 - Full-screen app (P1)
 
-- [ ] T004 [US1] In `app.ts`, replace `TuiMainScreen` with `TuiAltScreen` per R1:
+- [X] T004 [US1] In `app.ts`, replace `TuiMainScreen` with `TuiAltScreen` per R1:
   - pass `mouse: settings.mouse !== false`, `copyOnSelect: true`, and `copySelection: copyText`, a new engine adapter `packages/engine/src/clipboard.ts` over pi coding-agent's exported `copyToClipboard` (R1; **not** `getNativeClipboard()`). Export it through the engine barrel, with one unit test of the success and error results using an injected copy function;
   - put the transcript inside the primary scroll view and keep the input and status outside it, following pi coding-agent's `tui-renderer.ts`;
   - keep `tui.stop()` on every exit path;

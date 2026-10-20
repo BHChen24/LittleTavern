@@ -62,7 +62,7 @@ afterEach(async () => {
 });
 const input = (value: string) => app.tui.getFocusedComponent()?.handleInput?.(value);
 const overlay = () => app.tui.getFocusedComponent()?.render(180).join("\n") ?? "";
-const screen = () => app.tui.render(180).join("\n");
+const screen = () => app.tui.children.flatMap((component) => component.render(180)).join("\n");
 function choose(label: string) {
   input(label);
   input("\r");

@@ -40,3 +40,18 @@ full arguments and output are in the session transcript. No secrets are recorded
    Outcome: phase documentation prepared; command outcome in transcript.
 
 Subsequent commits and verification invocations are recorded in the next phase's entries.
+
+## Phase 2
+
+20. `exec_command` (escalated): commit validated Phase 1. Outcome: commit `5c7b4c7`.
+21. `exec_command`: write clipboard adapter test and run it. Outcome: expected missing-module failure.
+22. `exec_command`: implement clipboard adapter, full-screen layout and help keys; run gate.
+    Outcome: build/lint passed; raw document assertions needed the full-screen harness update.
+23. `write_stdin`: collect gate result. Outcome: 15 app tests exposed the raw-render mismatch.
+24. `exec_command`: inspect pi stack/text rendering and existing app test harnesses.
+    Outcome: zero-basis layout behavior verified against pinned source.
+25. `exec_command`: update document inspection in app tests, format and rerun gate.
+    Outcome: harness updated without changing app assertions.
+26. `write_stdin`: collect gate result. Outcome: build/lint passed; 52 files, 291 tests passed.
+27. `exec_command`: inspect diff and remaining app test patterns. Outcome: changes scoped to T004.
+28. `exec_command`: mark T004 and record notes/usage. Outcome: phase ready for commit.

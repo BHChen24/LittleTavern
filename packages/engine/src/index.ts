@@ -39,6 +39,7 @@ export { estimateTokens } from "./assembly/tokens.ts";
 export * from "./assembly/types.ts";
 export * from "./character-chat.ts";
 export * from "./chat-session.ts";
+export { copyText } from "./clipboard.ts";
 export * from "./dry-run.ts";
 export * from "./models.ts";
 export * from "./provider-errors.ts";

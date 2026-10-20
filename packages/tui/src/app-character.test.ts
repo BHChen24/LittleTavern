@@ -57,7 +57,7 @@ it("starts a character chat, regenerates the reply and records usage under the c
     }),
   });
   app.enterChat();
-  const screen = () => app.tui.render(80).join("\n");
+  const screen = () => app.tui.children.flatMap((component) => component.render(80)).join("\n");
   try {
     await app.submit(`/chat ${report.item.id.slice(0, 6)}`);
     expect(screen()).toContain("Welcome to the lighthouse.");
@@ -71,7 +71,7 @@ it("starts a character chat, regenerates the reply and records usage under the c
     expect(screen()).toContain("You:");
     await app.submit("/lorebooks");
     expect(screen()).toContain("· No lorebooks.");
-    const lines = app.tui.render(80);
+    const lines = app.tui.children.flatMap((component) => component.render(80));
     expect(lines.at(-1)).toContain("Mira |");
     expect(lines.filter((line) => /^─{4}/.test(line))).toHaveLength(2);
     const records = readUsageRecords(paths.usageLedgerFile);

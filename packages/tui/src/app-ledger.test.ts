@@ -48,7 +48,7 @@ it("records a rejected key, preserves the transcript, and points to /apikey with
   app.enterChat();
   try {
     await app.submit("hello");
-    const rendered = app.tui.render(80).join("\n");
+    const rendered = app.tui.children.flatMap((component) => component.render(80)).join("\n");
     expect(rendered).toContain("hello");
     expect(rendered).toContain("OpenRouter rejected the key");
     expect(rendered).toContain("Type /apikey to replace it.");
@@ -95,7 +95,7 @@ it("waits for the interrupted ledger record before quitting and shows ledger tot
     expect(records).toHaveLength(1);
     expect(records[0]?.outcome).toBe("interrupted");
     const totals = sumUsage(records);
-    const rendered = app.tui.render(80).join("\n");
+    const rendered = app.tui.children.flatMap((component) => component.render(80)).join("\n");
     expect(rendered).toContain(`${totals.inputTokens}/${totals.outputTokens}`);
     expect(rendered).toContain(`$${totals.cost.toFixed(4)}`);
     expect(rendered).toContain("[interrupted]");

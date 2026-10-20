@@ -8,9 +8,11 @@ import {
   Markdown,
   matchesKey,
   ProcessTerminal,
+  ScrollView,
   type Terminal,
   Text,
-  TuiMainScreen,
+  TuiAltScreen,
+  VStack,
 } from "@earendil-works/pi-tui";
 import {
   type AppPaths,
@@ -20,6 +22,7 @@ import {
   type CharacterItem,
   type ChatHistoryItem,
   ChatSession,
+  copyText,
   createCharacterFromDraft,
   createLogger,
   createPersonaFromDraft,
@@ -92,7 +95,11 @@ export function createApp(options: AppOptions = {}) {
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
       getApiKey: () => activeKey?.value,
     });
-  const tui = new TuiMainScreen(options.terminal ?? new ProcessTerminal());
+  const tui = new TuiAltScreen(options.terminal ?? new ProcessTerminal(), undefined, undefined, {
+    mouse: settings.mouse !== false,
+    copyOnSelect: true,
+    copySelection: copyText,
+  });
   const transcript = new Container();
   const editor = new Editor(tui, editorTheme);
   const status = new StatusBar({ model: modelId, keySource: activeKey?.source ?? "none" });
@@ -110,10 +117,24 @@ export function createApp(options: AppOptions = {}) {
     if (inChat) return;
     inChat = true;
     tui.clear();
-    tui.addChild(new Text(`LittleTavern ${VERSION}`));
+    const header = new Text(`LittleTavern ${VERSION}`);
+    tui.addChild(header);
     tui.addChild(transcript);
     tui.addChild(editor);
     tui.addChild(status);
+    tui.setLayoutRoot(
+      new VStack([
+        { component: header, shrink: 1, minSize: 0 },
+        {
+          component: new ScrollView(transcript, { primary: true, follow: "end" }),
+          basis: 0,
+          grow: 1,
+          minSize: 1,
+        },
+        { component: editor, shrink: 1, minSize: 3 },
+        { component: status, shrink: 1, minSize: 0 },
+      ]),
+    );
     tui.setFocus(editor);
     tui.requestRender();
   }
