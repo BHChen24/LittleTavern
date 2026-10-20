@@ -4,7 +4,7 @@
 
 ```bash
 pnpm build && pnpm lint && pnpm test
-bash ../acceptance/run-v1-acceptance.sh --auto-only
+bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"
 ```
 
 ## Manual (owner)
@@ -17,3 +17,5 @@ bash ../acceptance/run-v1-acceptance.sh --auto-only
 6. Without a key, the status shows no model. Add a key with /apikey and check that the model picker opens.
 7. Press Ctrl+O, write a long message in your editor, then save and close: the text is back in the input.
 8. Set `"mouse": false` in settings.json and relaunch: the terminal's own selection works.
+9. Shrink the window below 40 columns and 10 rows, on the home screen and in a chat: no crash, the plain title replaces the logo, and the input is still usable. Enlarge it again: the layout recovers.
+10. Run `NO_COLOR=1 littletavern`: no colours, but names are still bold, `*actions*` italic, bars and `Error:` visible.

@@ -73,7 +73,8 @@ Checked against constitution 3.1.0.
 
 ```text
 packages/data/src/settings.ts                  # + mouse?: boolean
-packages/tui/src/theme.ts                       # named styles: user, character, notice, error, dialogue, accent, muted; NO_COLOR
+packages/engine/src/clipboard.ts                # copyText: adapter over pi coding-agent's copyToClipboard (R1)
+packages/tui/src/theme.ts                       # named styles and palette (R3); NO_COLOR removes colours only
 packages/tui/src/dialogue.ts                    # colourDialogue (R3)
 packages/tui/src/components/message-view.ts     # label + bar + body, max width (R3, R7b)
 packages/tui/src/components/input-box.ts        # placeholder wrapper around Editor (R5)
@@ -94,8 +95,10 @@ packages/tui/src/app.ts                         # TuiAltScreen, MessageView, Loa
 | T-f | Error notices carry `Error:` | low | **write** |
 | T-g | Waiting indicator with a delayed simulated reply: shown before the first delta, removed after; removed on Esc and on error | medium | **write** (the simulated reply factory can await) |
 | T-h | `/apikey` → model picker opens after a key is saved or set for the session | low–medium | **write** through the app harness |
-| T-i | `NO_COLOR` set: labels, bars and `Error:` still present, with no colour escape codes | low | **write** |
-| T-j | Full-screen mode, wheel, selection and copy | high (terminal emulation) | **manual** by the owner. pi-tui's own tests cover these mechanisms |
+| T-i1 | Theme under `NO_COLOR`: no colour codes; `bold`, `italic` and `dim` kept | low | **write** (with T001) |
+| T-i2 | Rendered under `NO_COLOR`: labels, bars, `Error:` and the status still present, with no colour codes | low | **write** (after messages and status exist, with T010) |
+| T-k | Tiny terminal: home screen, a message and the status render at 30 columns with no line wider than the width, and no throw at 8 rows | low | **write** (with T010); the full check is manual (T-j) |
+| T-j | Full-screen mode, wheel, selection and copy, and a terminal smaller than 40×10 | high (terminal emulation) | **manual** by the owner. pi-tui's own tests cover these mechanisms |
 
 ## Complexity Tracking
 

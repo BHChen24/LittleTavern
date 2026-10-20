@@ -8,7 +8,7 @@ description: "Task list for 009-ui-polish"
 
 **Prerequisites**: plan.md, spec.md, research.md
 
-**Tests**: from spec "Acceptance Testing" and plan.md's Test Plan (T-a to T-j).
+**Tests**: from spec "Acceptance Testing" and plan.md's Test Plan (T-a to T-k, with T-i split into T-i1 and T-i2).
 
 **Read before starting**:
 
@@ -49,7 +49,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 1: Foundational
 
-- [ ] T001 [P] Rework `packages/tui/src/theme.ts` into named styles: `user`, `character`, `notice`, `error`, `dialogue`, `accent`, `muted` (R3). Check whether `node:util` `styleText` already honours `NO_COLOR`. If it does not, make every style return its input unchanged when `NO_COLOR` is set. Write tests T-i for the styles
+- [ ] T001 [P] Rework `packages/tui/src/theme.ts` into named styles with the palette in research R3: `user`, `character`, `notice`, `error`, `dialogue`, `accent`, `muted`. Under a non-empty `NO_COLOR`, remove colours only and keep `bold`, `italic` and `dim` (R3 explains why plain `styleText` is not enough). Write tests T-i1
 - [ ] T002 [P] Add `colourDialogue(text)` in `packages/tui/src/dialogue.ts` (R3). Write tests T-a
 - [ ] T003 [P] Add `mouse?: boolean` to `Settings` in `packages/data/src/settings.ts`. It is validated as a boolean, and absent means `true`. Extend `settings.test.ts`
 
@@ -60,7 +60,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 ## Phase 2: User Story 1 - Full-screen app (P1)
 
 - [ ] T004 [US1] In `app.ts`, replace `TuiMainScreen` with `TuiAltScreen` per R1:
-  - pass `mouse: settings.mouse !== false`, `copyOnSelect: true`, and a `copySelection` built on `getNativeClipboard()`;
+  - pass `mouse: settings.mouse !== false`, `copyOnSelect: true`, and `copySelection: copyText`, a new engine adapter `packages/engine/src/clipboard.ts` over pi coding-agent's exported `copyToClipboard` (R1; **not** `getNativeClipboard()`). Export it through the engine barrel, with one unit test of the success and error results using an injected copy function;
   - put the transcript inside the primary scroll view and keep the input and status outside it, following pi coding-agent's `tui-renderer.ts`;
   - keep `tui.stop()` on every exit path;
   - add the search key (`ctrl+shift+f`) and the scroll keys to `helpText()`.
@@ -96,7 +96,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
   - the persona field is `Persona: <name>` from 008's `readActivePersona`, added to `StatusInfo` as `persona?: string`; with no persona, or when the active one falls back, the field is omitted, the same way `character` is omitted outside a chat. It updates after `/persona` changes the selection;
   - after a successful `/apikey`, open the `ModelPicker` with the current model preselected.
 
-  Write tests T-e and T-h.
+  Write tests T-e and T-h, and then, now that messages and the status exist, T-i2 (rendered `NO_COLOR`) and T-k (tiny terminal).
 
 **Checkpoint**: checks pass. Commit.
 
@@ -115,7 +115,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 - [ ] T013 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
 - [ ] T014 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
+- [ ] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, a terminal smaller than 40 columns and 10 rows, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
 
 ## Dependencies & Execution Order
 
