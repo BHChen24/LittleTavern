@@ -59,15 +59,15 @@ invariants).
 **Goal**: Card fields, history and post-history instructions are assembled in FR-004 order, with
 the macros replaced.
 
-- [ ] T006 [US1] Implement `fitHistory(history, availableTokens)` in `packages/engine/src/assembly/history.ts` per R7. It walks newest-first and stops at the first message that does not fit, always keeps the newest message, and returns `{ kept, leftOut, overflow: boolean }`. Write tests T-f in `history.test.ts`
-- [ ] T007 [US1] Implement `assemblePrompt(input)` in `packages/engine/src/assembly/assemble.ts`, initially without lore:
+- [X] T006 [US1] Implement `fitHistory(history, availableTokens)` in `packages/engine/src/assembly/history.ts` per R7. It walks newest-first and stops at the first message that does not fit, always keeps the newest message, and returns `{ kept, leftOut, overflow: boolean }`. Write tests T-f in `history.test.ts`
+- [X] T007 [US1] Implement `assemblePrompt(input)` in `packages/engine/src/assembly/assemble.ts`, initially without lore:
   - Fill in the defaults: settings, `userName` and `contextWindow`.
   - Build the system parts in FR-004 order. Replace macros in each part and omit parts that are empty after trimming. The main instruction is `character.systemPrompt` if it is non-blank, otherwise `DEFAULT_MAIN_INSTRUCTION`. Join the parts with `\n\n`.
   - Set `afterHistory` to `postHistoryInstructions` after macro replacement, or `null`.
   - Fit the history into `contextWindow − replyReserve − tokens(system) − tokens(afterHistory)`.
   - Build `trace.parts`, with one `TracePart` per included part and its `estimateTokens`, and `trace.history`. Add the note `"request exceeds the context window"` when the history overflows. Compute `totalTokens`.
-- [ ] T008 [US1] Write the User Story 1 tests in `packages/engine/src/assembly/assemble.test.ts`: the order, empty parts omitted, the default main instruction versus the card's system prompt, macros replaced everywhere, `afterHistory`, history roles and order, and determinism (deep-equal across two runs)
-- [ ] T009 [US1] Export the assembly API from `packages/engine/src/index.ts` as listed in `contracts/assembly-api.md`
+- [X] T008 [US1] Write the User Story 1 tests in `packages/engine/src/assembly/assemble.test.ts`: the order, empty parts omitted, the default main instruction versus the card's system prompt, macros replaced everywhere, `afterHistory`, history roles and order, and determinism (deep-equal across two runs)
+- [X] T009 [US1] Export the assembly API from `packages/engine/src/index.ts` as listed in `contracts/assembly-api.md`
 
 **Checkpoint**: checks pass. Commit.
 

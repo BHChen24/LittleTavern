@@ -22,3 +22,10 @@ targeted test run failed for the expected missing modules and field. It then imp
 CJK-aware code-point counting, literal macro replacement and the pi contextWindow mapping.
 Build/lint (69 files) and all 123 tests in 23 files passed. exec_command marked T003–T005
 complete and git committed the phase. No dependency, UI or chat behavior changed.
+
+Phase 3: apply_patch added history/assembly tests before implementation; the first run
+confirmed the two missing modules. It implemented newest-first history fitting, card-order
+assembly, macro substitution, post-history instructions and structured trace totals, and
+exported the contract API. Biome formatted the tests. Build/lint (73 files) and all 133 tests
+in 25 files passed. exec_command marked T006–T009 complete and git committed the phase.
+questions.md records the contract output shape and separator/rounding treatment.
