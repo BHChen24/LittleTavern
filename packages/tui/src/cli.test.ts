@@ -1,7 +1,7 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { importFile, listLibrary, resolveAppPaths } from "@littletavern/engine";
+import { importFile, listLibrary, resolveAppPaths, writeSettings } from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
 import { runCli } from "./cli.ts";
 import { formatItemDetails, formatLibraryList } from "./library-format.ts";
@@ -103,6 +103,55 @@ it("dry-runs a character request as text or JSON without a key, and rejects unkn
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it.each(["missing", "invalid"])(
+  "reports a %s active persona once on stderr while keeping dry-run stdout as JSON",
+  async (state) => {
+    const home = mkdtempSync(join(tmpdir(), "lt-cli-persona-"));
+    vi.stubEnv("LITTLETAVERN_HOME", home);
+    vi.stubEnv("OPENROUTER_API_KEY", "");
+    const paths = resolveAppPaths();
+    const card = join(home, "mira.json");
+    const stdout: string[] = [];
+    const stderr = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      writeFileSync(
+        card,
+        JSON.stringify({
+          spec: "chara_card_v3",
+          data: {
+            name: "Mira",
+            description: "Talking to {{user}}.",
+            first_mes: "Welcome, {{user}}.",
+          },
+        }),
+      );
+      const imported = importFile(paths, card);
+      if (!imported.ok) throw new Error(imported.reason);
+      writeSettings(paths, { persona: "active.md", userName: "Parker" });
+      if (state === "invalid") {
+        mkdirSync(paths.importPersonasDir, { recursive: true });
+        writeFileSync(join(paths.importPersonasDir, "active.md"), "## Description\nNo name.\n");
+      }
+      expect(
+        await runCli(["dry-run", imported.item.id, "--json"], (text) => stdout.push(text)),
+      ).toBe(0);
+      expect(stdout).toHaveLength(1);
+      const result = JSON.parse(stdout[0] ?? "");
+      expect(Object.keys(result)).toEqual(["prompt", "trace"]);
+      expect(result.prompt.system).toContain("Talking to Parker.");
+      expect(result.prompt.history[0].text).toBe("Welcome, Parker.");
+      expect(result.trace.parts.map((part: { source: string }) => part.source)).not.toContain(
+        "persona",
+      );
+      expect(stderr).toHaveBeenCalledTimes(1);
+      expect(stderr).toHaveBeenCalledWith(expect.stringContaining("active.md"));
+    } finally {
+      stderr.mockRestore();
+      rmSync(home, { recursive: true, force: true });
+    }
+  },
+);
 
 it("creates from Markdown, prints warnings and preserves the owner's source, including failures", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-cli-create-"));

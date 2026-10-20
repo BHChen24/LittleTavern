@@ -76,3 +76,24 @@ Each entry identifies the invoked tool, purpose and observed outcome. `functions
 57. `functions.exec / exec_command` — Check post-convergence/implementation hooks, finalize report and task markers, verify diff and checklist. Outcome: No hooks; report complete; all 11 tasks checked; checklist 16/16; see diff output.
 58. `functions.exec / exec_command` — Persist complete implementation usage log. Outcome: Log prepared; total development tokens unknown.
 59. `exec_command` — Verify unchanged design/checklists, commit Phase 5 report and confirm clean worktree. Outcome: Issued after this log is serialized; final outcome appears in the session tool result and Git history.
+
+
+## T012 implementation follow-up
+
+Platform-reported total development tokens for this follow-up: **unknown**. No run total is exposed.
+
+The two missing/invalid persona CLI regressions failed before the fix and passed afterward. `pnpm build`, `pnpm lint` and all 286 tests in 49 files passed. JSON stdout retains exactly `prompt` and `trace`; sanitized fallback notices go once to stderr. No dependencies, real keys, `.env`, live provider, real editor, local model or GPU were used.
+
+Tool invocation record (functions.exec batches wrap the listed nested tools):
+
+1. `functions.exec (exec_command ×3)` — Check hooks, prerequisites, branch/checklists; read current artifacts, CLI/tests, contracts and project setup. Outcome: See corresponding command outputs; no mutations.
+2. `functions.exec / apply_patch` — Add lightweight missing/invalid persona CLI regressions before implementation. Outcome: Success.
+3. `exec_command` — Run CLI regressions before implementation. Outcome: Two new regressions failed as expected; existing 5 CLI tests passed.
+4. `functions.exec / write_stdin` — Collect red-test results. Outcome: Both new regressions failed because stderr was not called; existing 5 CLI tests passed.
+5. `apply_patch` — Emit sanitized JSON dry-run notices to stderr and record implementation detail. Outcome: Success.
+6. `exec_command` — Format changed CLI files and run full build/lint/test gate. Outcome: Build and lint passed; 49 test files and 286 tests passed.
+7. `functions.exec / write_stdin` — Collect full validation results. Outcome: See build/lint/test output.
+8. `exec_command` — Review T012 diff, locate report updates and check post-implementation hooks. Outcome: See output; no extension hooks file.
+9. `functions.exec / apply_patch` — Update implementation report and mark T012 complete. Outcome: Success; all 12 tasks complete.
+10. `functions.exec / exec_command` — Persist usage record, verify all tasks complete and check implementation hooks. Outcome: Prepared; see validation output.
+11. `exec_command` — Commit validated T012 fix, tests and feature records on 008-persona; verify clean worktree. Outcome: Final result recorded by the session tool output; unavailable when this log is serialized.

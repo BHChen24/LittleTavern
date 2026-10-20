@@ -113,3 +113,8 @@ description: "Task list for 008-persona"
 ## Dependencies & Execution Order
 
 Phase 1 → 2 → 3 → 4 → 5. **Parallel**: T002 and T003.
+
+
+## Phase 6: Convergence
+
+- [X] T012 Surface the notice naming a missing or invalid active persona when `littletavern dry-run --json` falls back, per FR-008 and US2/AC5 (partial). In `packages/tui/src/cli.ts`, preserve the existing single-document `{ prompt, trace }` JSON stdout contract while making the fallback notice observable; the current JSON branch returns before notices are printed. Add temporary-home CLI regressions in `packages/tui/src/cli.test.ts` for both missing and invalid persona files, asserting the correct fallback name, a notice naming the file emitted once, and parseable JSON stdout. Run the full build/lint/test gate and update the feature report with the result.

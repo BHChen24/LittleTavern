@@ -6,6 +6,7 @@
 - Persona parsing uses the shared ordered sections, rejects duplicate known headings and ignores unknown headings as the character parser does.
 - Active settings identify a Markdown basename within the persona folder; other path shapes produce the documented fallback notice.
 - `readActivePersona` returns `{ persona, notice? }`; no active persona is represented by `null`.
+- T012 emits JSON dry-run fallback notices on stderr, using the existing control-character sanitizer. Stdout retains the contracted single `{ prompt, trace }` JSON document.
 
 ## Unanswered behavior questions
 

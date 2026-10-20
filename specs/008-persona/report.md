@@ -19,8 +19,8 @@ description part.
 
 ## Tasks completed and not completed
 
-T001–T011 are complete. Convergence found no remaining work and appended no tasks. No planned
-tests have been deferred.
+T001–T012 are complete. Convergence appended T012 for JSON dry-run fallback notices; the fix
+and its CLI regressions are complete. No planned tests have been deferred.
 
 ## Test results
 
@@ -31,7 +31,7 @@ The final automated gate passed:
 pnpm build && pnpm lint && pnpm test
 Checked 111 files. No fixes applied.
 Test Files  49 passed (49)
-     Tests  284 passed (284)
+     Tests  286 passed (286)
 ```
 
 | Area | Coverage |
@@ -44,6 +44,7 @@ Test Files  49 passed (49)
 | T-f / T-h | Active-persona greetings, hand-edited names, faux-provider chat request, equal chat/dry-run traces, fallback names and one-time notices for missing and invalid files |
 | T-g | Fake VISUAL creation, terminal stop/restart, activation, relaunch persistence, direct file editing, greeting, clearing, duplicate-name filenames, invalid activation rejection and fresh hand edits |
 | T-i | Failed persona drafts stay under `drafts/personas/` and are absent from the character continuation picker |
+| T012 | Missing and invalid active personas fall back to the settings name; JSON dry-run stdout remains one `{ prompt, trace }` document, and stderr receives one notice naming the file |
 | Paths / settings / creation | Explicit-home persona paths, startup folders, settings validation and merging null clears; original-byte preservation, unique filenames, unchanged and invalid drafts, missing drafts and write failures |
 
 The external offline acceptance run passed **19 checks, 0 failures** using:
@@ -90,15 +91,18 @@ See [development-usage.md](./development-usage.md). Platform-reported total deve
 
 ## Convergence
 
-Converged with no findings: missing 0, partial 0, contradicts 0, unrequested 0. The assessment
-covered 8 functional requirements, 2 buildable success criteria,
+The assessment covered 8 functional requirements, 2 buildable success criteria,
 13 user-story acceptance scenarios, 6 edge cases, research decisions R1–R4, all tasks, the 7
 constitution principles and the applicable technology and testing constraints. SC-001's timed
 owner workflow remains a manual usability check.
 
-The convergence assessment made no writes to tasks.md. The implementation workflow then marked
-T010 and T011 complete. No `.specify/extensions.yml` exists; implementation and convergence
-hooks were skipped.
+The follow-up convergence review identified one partial, medium-severity gap: JSON dry runs
+returned before emitting the missing/invalid persona notice required by FR-008. T012 now sends
+the sanitized notice to stderr while preserving the contracted JSON stdout shape. Both CLI
+regressions first reproduced the missing notice and then passed with the fix; the full gate
+passes with 286 tests. No known implementation finding remains.
+
+No `.specify/extensions.yml` exists; implementation and convergence hooks were skipped.
 
 ## What the owner should check manually
 

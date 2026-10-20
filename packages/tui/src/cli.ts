@@ -130,6 +130,7 @@ async function runDryRun(args: string[], out: (text: string) => void): Promise<n
     return 1;
   }
   if (args.includes("--json")) {
+    for (const notice of result.notices) console.error(stripControls(notice));
     out(JSON.stringify({ prompt: result.prompt, trace: result.trace }, null, 2));
     return 0;
   }
