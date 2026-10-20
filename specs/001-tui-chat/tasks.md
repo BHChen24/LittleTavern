@@ -138,13 +138,13 @@ saved key can be forgotten.
 
 **Independent Test**: T-d, T-e and the ledger parts of T-f and T-h pass.
 
-- [ ] T026 [P] [US3] Implement `packages/data/src/usage-ledger.ts`.
+- [X] T026 [P] [US3] Implement `packages/data/src/usage-ledger.ts`.
   - **Type**: `UsageRecord` exactly as in data-model.md: `v: 1`, `timestamp` (ISO-8601, request start), `sessionId`, `provider: "openrouter"`, `model`, `outcome`, `inputTokens`, `outputTokens`, `cacheReadTokens`, `cacheWriteTokens`, `reasoningTokens` (each "number | null"), `cost` ("{ total, input, output, cacheRead, cacheWrite } | null"), `durationMs` ("number | null"), and an optional `error` that is already scrubbed.
   - **`appendUsageRecord(file, record)`**: creates the directory if missing and appends one `JSON.stringify` line plus `\n`.
   - **`readUsageRecords(file)`**: skips blank lines and ignores unknown fields.
 
   Tests in `packages/data/src/usage-ledger.test.ts`.
-- [ ] T027 [P] [US3] Implement `toUsageRecord(turn, { sessionId, modelPrice, secrets })` and `sumUsage(records)` in `packages/engine/src/usage.ts` with research R6's rules, verbatim.
+- [X] T027 [P] [US3] Implement `toUsageRecord(turn, { sessionId, modelPrice, secrets })` and `sumUsage(records)` in `packages/engine/src/usage.ts` with research R6's rules, verbatim.
   - **Tokens**: `null` when the outcome is interrupted or error **and** `totalTokens === 0`.
   - **Reasoning**: `reasoningTokens` is `null` when pi left it undefined.
   - **Cost**: `null` when the model price is null or both input and output prices are 0.
@@ -152,12 +152,12 @@ saved key can be forgotten.
   - **Totals**: `sumUsage` returns `{ requests, inputTokens, outputTokens, cost, incomplete }`, where `incomplete` is true when any record has a `null` cost or `null` tokens.
 
   Tests T-d and T-e in `packages/engine/src/usage.test.ts`.
-- [ ] T028 [US3] Wire the ledger into `packages/tui/src/app.ts`.
+- [X] T028 [US3] Wire the ledger into `packages/tui/src/app.ts`.
   - **Session**: generate `sessionId = randomUUID()` once per run.
   - **Every request**: on every `onFinish` (completed, interrupted or error) build the record with `toUsageRecord`, call `appendUsageRecord`, and update the status bar with `sumUsage` over this session's records. Show tokens as `in/out` and cost as `$0.0123`, with a trailing `~` when incomplete.
   - **Quitting mid-stream**: `abort()`, wait for the finish, record it, then exit.
   - **Local blocks** (no key, blank input) write no record.
-- [ ] T029 [US3] Extend `packages/engine/src/chat-session.test.ts`: with the simulated provider and a price, three sends produce three records (one per request), `sumUsage` equals their sum, and an error turn whose message contains the key produces a record without the key (T-f, ledger part)
+- [X] T029 [US3] Extend `packages/engine/src/chat-session.test.ts`: with the simulated provider and a price, three sends produce three records (one per request), `sumUsage` equals their sum, and an error turn whose message contains the key produces a record without the key (T-f, ledger part)
 
 **Checkpoint**: checks pass. Commit.
 

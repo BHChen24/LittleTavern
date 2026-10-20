@@ -27,3 +27,10 @@ replacing the active key after rejection. An explicitly entered replacement beco
 for the current run even when the original key came from the environment. Launch precedence
 is unchanged. A save failure leaves the entered key active for this session and displays a
 notice. Wider permissions warn without discarding an otherwise valid saved key.
+
+## Usage totals with missing reasoning
+
+T027 says any null token field makes totals incomplete. This includes reasoningTokens,
+which may be absent even for completed requests. The status therefore adds `~` in that
+case too, following tasks.md/data-model.md; it still sums input/output and cost normally.
+Ledger write failures display a notice and leave totals equal to successfully saved records.

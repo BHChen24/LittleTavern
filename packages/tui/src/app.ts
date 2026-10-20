@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   Container,
   Editor,
@@ -10,17 +11,22 @@ import {
 } from "@earendil-works/pi-tui";
 import {
   type AppPaths,
+  appendUsageRecord,
   ChatSession,
   createLogger,
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
+  findAllowedModel,
   forgetKey,
   readSavedKey,
   resolveApiKey,
   resolveAppPaths,
   saveKey,
   scrubSecrets,
+  sumUsage,
+  toUsageRecord,
+  type UsageRecord,
 } from "@littletavern/engine";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { StatusBar } from "./components/status-bar.ts";
@@ -51,6 +57,8 @@ export function createApp(options: AppOptions = {}) {
   const secrets = [env.OPENROUTER_API_KEY, saved.key].filter((value): value is string =>
     Boolean(value?.trim()),
   );
+  const sessionId = randomUUID();
+  const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
   const session =
     options.session ??
@@ -106,7 +114,7 @@ export function createApp(options: AppOptions = {}) {
       tui.hideOverlay();
       tui.setFocus(editor);
       editor.disableSubmit = false;
-      status.update(DEFAULT_MODEL_ID, activeKey.source);
+      updateStatus();
       tui.requestRender();
     };
     tui.showOverlay(keyPrompt, { width: "90%" });
@@ -117,12 +125,37 @@ export function createApp(options: AppOptions = {}) {
   if (saved.error) notice(saved.error);
   if (needsKey) promptForKey();
 
+  function updateStatus(): void {
+    const totals = sumUsage(records);
+    status.update(
+      DEFAULT_MODEL_ID,
+      activeKey?.source ?? "none",
+      `${totals.inputTokens}/${totals.outputTokens} | $${totals.cost.toFixed(4)}${totals.incomplete ? "~" : ""}`,
+    );
+  }
+  updateStatus();
   const onDelta = session.onDelta((delta) => {
     response += delta;
     reply?.setText(scrubSecrets(response, secrets));
     tui.requestRender();
   });
   const onFinish = session.onFinish((turn) => {
+    const record = toUsageRecord(turn, {
+      sessionId,
+      modelPrice: findAllowedModel(turn.model)?.price ?? null,
+      secrets,
+    });
+    try {
+      appendUsageRecord(paths.usageLedgerFile, record);
+      records.push(record);
+      updateStatus();
+    } catch (error) {
+      logger.error(
+        error instanceof Error ? error : { error: String(error) },
+        "Could not append usage",
+      );
+      notice("Could not write usage to the ledger. Session totals include only saved records.");
+    }
     response = turn.text;
     reply?.setText(
       scrubSecrets(response, secrets) + (turn.outcome === "interrupted" ? " [interrupted]" : ""),
@@ -186,6 +219,7 @@ export function createApp(options: AppOptions = {}) {
       }
       if (activeKey?.source !== "environment") {
         activeKey = null;
+        updateStatus();
         promptForKey();
       } else notice("Saved key forgotten; the environment key remains active.");
       return;

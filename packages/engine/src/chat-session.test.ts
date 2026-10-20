@@ -1,7 +1,12 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { appendUsageRecord, readUsageRecords } from "@littletavern/data";
 import { expect, it } from "vitest";
 import { ChatSession, type TurnResult } from "./chat-session.ts";
 import { DEFAULT_MODEL_ID } from "./models.ts";
 import { DEFAULT_SYSTEM_PROMPT } from "./system-prompt.ts";
+import { sumUsage, toUsageRecord } from "./usage.ts";
 
 it("streams text and supplies the earlier conversation on a second turn", async () => {
   const session = new ChatSession({
@@ -66,4 +71,42 @@ it("does not send blank input or requests without a key", async () => {
   });
   expect(await session.send(" ")).toBeNull();
   expect(await session.send("hello")).toBeNull();
+});
+
+it("writes exactly three scrubbed ledger records for three simulated requests", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-chat-ledger-"));
+  const file = join(home, "usage.jsonl");
+  const price = { inputPerMTok: 1, outputPerMTok: 2 };
+  const key = "synthetic-secret";
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => key,
+    simulated: { price, replies: ["one", "two", { text: "", errorMessage: `401 ${key}` }] },
+  });
+  session.onFinish((turn) => {
+    appendUsageRecord(
+      file,
+      toUsageRecord(turn, { sessionId: "test", modelPrice: price, secrets: [key] }),
+    );
+  });
+  try {
+    await session.send("first");
+    await session.send("second");
+    await session.send("third");
+    const records = readUsageRecords(file);
+    expect(records).toHaveLength(3);
+    expect(records.map((record) => record.outcome)).toEqual(["completed", "completed", "error"]);
+    expect(JSON.stringify(records)).not.toContain(key);
+    const totals = sumUsage(records);
+    expect(totals.inputTokens).toBe(
+      records.reduce((sum, record) => sum + (record.inputTokens ?? 0), 0),
+    );
+    expect(totals.outputTokens).toBe(
+      records.reduce((sum, record) => sum + (record.outputTokens ?? 0), 0),
+    );
+    expect(totals.cost).toBe(records.reduce((sum, record) => sum + (record.cost?.total ?? 0), 0));
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });

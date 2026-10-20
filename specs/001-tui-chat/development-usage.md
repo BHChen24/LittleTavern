@@ -39,3 +39,8 @@ Correction: the final T-i key-entry extension initially failed because it used g
 instead of pi 1.3.0's getFocusedComponent(). Phase 4 was prematurely committed before
 that result was inspected. The method is corrected and the commit is amended only after
 all three checks pass.
+
+Phase 5: `exec_command` implemented the append-only ledger, usage mapping, totals and UI
+wiring, then wrote UI-level rejected-key and quit-during-stream tests. Build/lint and all
+46 tests in 13 files passed. Quitting waits for the interrupted record; local key blocks
+produce no extra record; the status matches ledger sums and errors are scrubbed.
