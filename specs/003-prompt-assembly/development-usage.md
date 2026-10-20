@@ -44,3 +44,10 @@ constant/keyword entries, stop-at-first-overflow behavior and tokens for rejecte
 Assembly applies the budget before placement. Tests also cover CJK costs, macro expansion
 before budgeting, literal macro-looking names, a 4000 default, overrides and zero budget.
 Build/lint (75 files) and all 154 tests in 26 files passed. T012 was marked complete for commit.
+
+Phase 6: apply_patch extended assembly tests for all-entry accounting, budget/history
+invariants, frozen inputs, deterministic results, structured trace fields, ignored secondary
+keys/probability, CJK and macro keyword integration. A new explicit-undefined settings test
+exposed spread-based defaults being overwritten; the implementation now defaults each value
+with nullish coalescing. The test failed before the fix and passed afterwards. Build/lint
+(75 files) and all 164 tests in 26 files passed. T013 was marked complete for commit.

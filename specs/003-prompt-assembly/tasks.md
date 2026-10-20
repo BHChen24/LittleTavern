@@ -101,7 +101,7 @@ the macros replaced.
 
 Most of the trace was built in Phases 3 to 5. This phase checks that it is complete.
 
-- [ ] T013 [US4] Extend `assemble.test.ts`:
+- [X] T013 [US4] Extend `assemble.test.ts`:
   - **Invariants** from data-model.md: every entry exactly once; included plus left-out equals the history length; the included lore sum is at most the budget.
   - **Ignored features**: an entry with secondary keys and `probability: 50` lists both features in `ignoredFeatures`.
   - **Tokens**: `trace.tokensAreEstimates === true`.

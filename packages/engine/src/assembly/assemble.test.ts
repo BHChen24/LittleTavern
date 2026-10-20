@@ -210,3 +210,139 @@ it("budgets expanded lore text and does not replace macro-looking names twice", 
   ]);
   expect(prompt.system.split("\n\n").at(-1)).toBe("{{user}}");
 });
+
+it("keeps trace invariants under different budgets and scan depths without mutating input", () => {
+  const embedded = makeLorebook("embedded", [
+    makeEntry({ name: "constant", constant: true, content: "世界", insertionOrder: 3 }),
+    makeEntry({
+      name: "keyword",
+      keys: ["lighthouse", "light"],
+      content: "灯塔",
+      insertionOrder: 2,
+    }),
+    makeEntry({ name: "disabled", enabled: false, constant: true, content: "Disabled" }),
+    makeEntry({ name: "no keys", keys: [""], content: "Empty key" }),
+    makeEntry({ name: "no match", keys: ["harbor"], content: "Harbor" }),
+  ]);
+  const standalone = makeLorebook("standalone", [
+    makeEntry({ name: "standalone", keys: ["lighthouse"], content: "Standalone" }),
+  ]);
+  for (const loreBudget of [0, 1, 3, 20]) {
+    for (const scanDepth of [0, 1, 2]) {
+      const input: AssemblyInput = {
+        character: makeCharacter({ systemPrompt: "main", lorebook: embedded }),
+        lorebooks: [standalone],
+        history: chat("old", "older", "the lighthouse", "recent"),
+        settings: { loreBudget, scanDepth, replyReserve: 0 },
+        contextWindow: 10,
+      };
+      function freeze(value: unknown): void {
+        if (value && typeof value === "object") {
+          for (const child of Object.values(value)) freeze(child);
+          Object.freeze(value);
+        }
+      }
+      freeze(input);
+      const result = assemblePrompt(input);
+      expect(assemblePrompt(input)).toEqual(result);
+      expect(result.trace.lore.map((item) => [item.lorebook, item.index])).toEqual([
+        ["embedded", 0],
+        ["embedded", 1],
+        ["embedded", 2],
+        ["embedded", 3],
+        ["embedded", 4],
+        ["standalone", 0],
+      ]);
+      expect(result.trace.history.included + result.trace.history.leftOut).toBe(
+        input.history.length,
+      );
+      expect(result.trace.history.included).toBe(result.prompt.history.length);
+      expect(
+        result.trace.lore
+          .filter((item) => item.included)
+          .reduce((sum, item) => sum + (item.tokens ?? 0), 0),
+      ).toBeLessThanOrEqual(loreBudget);
+      expect(
+        result.trace.lore.every(
+          (item) => item.included === ["keyword", "constant"].includes(item.reason.kind),
+        ),
+      ).toBe(true);
+      expect(result.trace.tokensAreEstimates).toBe(true);
+    }
+  }
+});
+it("returns only structured trace fields and notes ignored features without applying them", () => {
+  const result = assemblePrompt({
+    character: makeCharacter({
+      lorebook: makeLorebook("book", [
+        makeEntry({
+          name: "entry",
+          keys: ["key"],
+          secondaryKeys: ["unmatched"],
+          content: "Content",
+          source: { secondary_keys: ["unmatched"], probability: 50 },
+        }),
+      ]),
+    }),
+    history: chat("key"),
+  });
+  expect(result.trace.lore[0]).toEqual({
+    lorebook: "book",
+    index: 0,
+    entry: "entry",
+    included: true,
+    reason: { kind: "keyword", key: "key", message: 1 },
+    placement: "after",
+    tokens: 2,
+    ignoredFeatures: ["secondary keys", "probability"],
+  });
+  expect(result.prompt.system).toContain("Content");
+  expect(JSON.parse(JSON.stringify(result.trace))).toEqual(result.trace);
+  expect(Object.keys(result.trace).sort()).toEqual([
+    "history",
+    "lore",
+    "notes",
+    "parts",
+    "tokensAreEstimates",
+    "totalTokens",
+  ]);
+  expect(
+    result.trace.parts.every((part) => Number.isInteger(part.tokens) && part.tokens >= 0),
+  ).toBe(true);
+});
+it.each([
+  { keys: ["LIGHT"], history: ["lighthouse"], included: true, kind: "keyword" },
+  { keys: ["灯塔"], history: ["到了灯塔"], included: true, kind: "keyword" },
+  { keys: ["こんにちは"], history: ["こんにちは！"], included: true, kind: "keyword" },
+  { keys: ["{{char}}"], history: ["{{char}}"], included: true, kind: "keyword" },
+  { keys: ["key"], history: ["key", "old", "recent"], included: false, kind: "no-match" },
+  { keys: [""], history: ["anything"], included: false, kind: "no-keywords" },
+  { keys: ["key"], history: [], included: false, kind: "no-match" },
+])(
+  "keeps assembled lore and trace aligned for $kind: $keys",
+  ({ keys, history, included, kind }) => {
+    const result = assemblePrompt({
+      character: makeCharacter({
+        name: "Luna",
+        lorebook: makeLorebook("book", [makeEntry({ keys, content: "Lore content" })]),
+      }),
+      history: chat(...history),
+    });
+    expect(result.prompt.system.includes("Lore content")).toBe(included);
+    expect(result.trace.lore[0]).toMatchObject({ included, reason: { kind } });
+  },
+);
+it("uses defaults for explicitly undefined optional settings", () => {
+  const input: AssemblyInput = {
+    character: makeCharacter({
+      lorebook: makeLorebook("book", [makeEntry({ constant: true, content: "汉".repeat(4001) })]),
+    }),
+    history: chat("recent"),
+  };
+  expect(
+    assemblePrompt({
+      ...input,
+      settings: { scanDepth: undefined, loreBudget: undefined, replyReserve: undefined },
+    }),
+  ).toEqual(assemblePrompt(input));
+});

@@ -17,7 +17,11 @@ export function assemblePrompt(input: AssemblyInput): {
   prompt: AssembledPrompt;
   trace: AssemblyTrace;
 } {
-  const settings = { ...DEFAULT_ASSEMBLY_SETTINGS, ...input.settings };
+  const settings = {
+    scanDepth: input.settings?.scanDepth ?? DEFAULT_ASSEMBLY_SETTINGS.scanDepth,
+    loreBudget: input.settings?.loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
+    replyReserve: input.settings?.replyReserve ?? DEFAULT_ASSEMBLY_SETTINGS.replyReserve,
+  };
   const contextWindow = input.contextWindow || DEFAULT_CONTEXT_WINDOW;
   const character = input.character;
   const names = { char: character.name, user: input.userName ?? DEFAULT_USER_NAME };
