@@ -19,6 +19,7 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/import [path]` | file paths | Import a card or lorebook; without a path, browse the import folders |
 | `/library` | — | List the library |
 | `/show <id>` | library items | Inspect an item |
+| `/new-character` | — | Write a new character in your editor (added by 007) |
 | `/model` | — | Choose a model |
 | `/apikey` | — | Add, replace or forget your OpenRouter API key |
 | `/help` | — | Show commands and key bindings |

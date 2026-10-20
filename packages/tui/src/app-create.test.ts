@@ -49,10 +49,9 @@ it("creates from the focused no-key prompt through a fake VISUAL and continues a
   try {
     app.start();
     expect(existsSync(paths.credentialsFile)).toBe(false);
-    const prompt = app.tui.getFocusedComponent();
-    expect(prompt).not.toBe(app.editor);
-    prompt?.handleInput?.("/new-character");
-    prompt?.handleInput?.("\r");
+    // 006 removed the startup key prompt: go from the home screen to chat, then create.
+    app.enterChat();
+    await app.submit("/new-character");
     expect(terminal.stop).toHaveBeenCalled();
     expect(terminal.start).toHaveBeenCalledTimes(2);
     expect(app.tui.getFocusedComponent()).toBe(app.editor);

@@ -4,8 +4,6 @@ import { join, resolve } from "node:path";
 import envPaths from "env-paths";
 
 export interface AppPaths {
-  importRoot: string;
-  importCharactersDir: string;
   configDir: string;
   dataDir: string;
   logDir: string;

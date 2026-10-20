@@ -89,3 +89,32 @@ Follow [quickstart.md](./quickstart.md) using the existing chat entry screen in 
 4. Save without a name and reopen the retained draft through the picker.
 5. Check the generated V3 JSON card in the characters import folder.
 6. If running on Windows, verify the chosen editor receives console input correctly.
+
+## Integration with 006
+
+007 was implemented on top of 006's design commit (`e1aa576`) rather than 006's finished code. It
+therefore carried stand-ins for parts that 006 owns. On 2026-10-20 the owner asked for the two
+branches to be integrated:
+
+- 007's commits were cherry-picked onto `006-usability` as the new branch `007-integrated`.
+  Conflicts were resolved in favour of 006.
+- The original branch is preserved as `backup/007-before-integration`.
+
+Conflicts and resolutions:
+
+| File | 007 stand-in | Resolution |
+|---|---|---|
+| `data/src/paths.ts` | `importRoot` and `importCharactersDir` only | 006's full version (adds `importLorebooksDir`, `ensureImportFolders`). The duplicated interface fields were removed |
+| `tui/src/commands.ts` | a one-entry `COMMANDS` array | 006's command table, plus the `new-character` entry |
+| `tui/src/app.ts` | the help string prefixed with `COMMANDS`, and an `if` branch for `/new-character` | 006's table-driven dispatch, plus a `"new-character"` handler. `newCharacter` and `editCharacter` are kept as written |
+| `tui/src/components/key-prompt.ts` and its test | `/new-character` allowed from the startup key prompt | 006's version. 006 removed the startup key prompt, so creating a character no longer needs a passthrough |
+| `tui/src/language.test.ts` | a separate language test | 006's version (R6 of the 006 research) |
+
+Test updates:
+
+- `commands.test.ts` now expects `new-character` in the contracted command list. 006's
+  `contracts/commands.md` gained the matching row.
+- `app-create.test.ts` now reaches chat through `enterChat()` from the home screen, instead of
+  the removed key prompt.
+
+Result: build and lint pass, and the suite has 45 test files and 261 tests, all passing.

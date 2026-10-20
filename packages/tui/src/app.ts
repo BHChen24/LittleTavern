@@ -535,6 +535,7 @@ export function createApp(options: AppOptions = {}) {
         notice(formatLibraryList(listLibrary(paths)).join("\n"));
         return;
       },
+      "new-character": () => newCharacter(),
       show: async () => {
         const id = text.slice("/show".length).trim();
         if (!id) {
