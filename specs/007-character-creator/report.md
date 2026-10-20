@@ -10,7 +10,7 @@ The parser keeps field text and macros, removes explanatory comments, and builds
 
 ## Tasks completed and not completed
 
-T001–T013 are complete. T012–T013 were appended by convergence. No tasks or planned tests were deferred.
+T001–T015 are complete. T012–T015 were appended by convergence. No tasks or planned tests were deferred.
 
 ## Test results
 
@@ -20,7 +20,7 @@ Every phase checkpoint passed `pnpm build && pnpm lint && pnpm test` before its 
 pnpm build && pnpm lint && pnpm test
 Checked 99 files. No fixes applied.
 Test Files  40 passed (40)
-     Tests  234 passed (234)
+     Tests  237 passed (237)
 ```
 
 | Area | Coverage |
@@ -30,9 +30,9 @@ Test Files  40 passed (40)
 | T-d | Normal import and original-byte preservation; identical file re-import; unique output names; keep-source option; unchanged, invalid and unreadable drafts; card-write and import failures |
 | T-e | Fake VISUAL with arguments and a spaced draft path; EDITOR fallback; missing program; nonzero exit |
 | T-f | CLI creation, report and warnings; source retention; missing name and invalid argument count |
-| T-g | Fake VISUAL app creation; terminal stop/restart; library listing; continuation picker; retained draft; successful continuation; greeting in chat |
+| T-g / T014 | Fake VISUAL app creation through the focused no-key prompt; no accepted API key or saved credentials; terminal stop/restart; library listing; continuation picker; retained draft; successful continuation; greeting in chat |
 | T-h | Created embedded lore with always-on and keyword entries; dry-run trace equals a faux-provider chat trace; greeting macro expansion and simulated reply |
-| Convergence | Whitespace-only fields and lore content, including CRLF and end-of-file; source-language enforcement excluding tests and synthetic fixtures |
+| Convergence | Whitespace-only fields and lore content, including CRLF and end-of-file; source-language enforcement excluding tests and synthetic fixtures; repeated unknown sections with identical or mixed-case headings; duplicate known sections still rejected |
 
 A separate smoke check called the compiled CLI handler in a temporary `LITTLETAVERN_HOME`: create, source retention, library listing, JSON lore dry-run, identical re-import, and exit code 1 for a missing name all passed. The temporary home was removed. Spawning a nested CLI process was blocked by sandbox EPERM, so this check called the compiled handler directly and asserted its return codes.
 
@@ -45,10 +45,12 @@ None. T-g reused the existing terminal and overlay test pattern with a small har
 ## Deviations from spec or plan
 
 - This checkout contains 006's design artifacts but lacks its implementation. Added only the two import path fields needed by 007, using 006 research R2: default `~/.littletavern`, or `<LITTLETAVERN_HOME>/import` with an override. Added a minimal `COMMANDS` table for the creator and consumed it in existing app help. The rest of 006, including the home screen and autocomplete, remains outside this run.
-- Duplicate section headings produce an error and preserve the draft, avoiding silent replacement of field content.
+- Duplicate known section headings produce an error and preserve the draft, avoiding silent replacement of field content. Unknown sections are ignored with a warning for each occurrence, including repeated or mixed-case headings.
 - Safe filenames trim boundary hyphens before applying the empty-name fallback. The helper accepts and returns filenames with `.json`.
 - The pinned pi 1.3.0 source uses asynchronous `spawn`, whereas research R1 explicitly calls for `spawnSync`. This implementation follows R1. Windows real-editor behavior remains for manual verification because pi documents a Windows console-input concern with synchronous spawning.
 - The language guard allows Latin script, common punctuation/symbols and combining marks; it rejects other scripts in application source while allowing non-Latin test data. It checks scripts rather than attempting natural-language identification.
+
+The no-key prompt forwards `/new-character` through the existing `app.ts` command handoff, which already runs local creation before the API-key guard. No application handler change was needed. The regression uses the focused prompt instead of calling `submit()` directly.
 
 ## Open questions
 
@@ -72,6 +74,8 @@ Checked 8 functional requirements, 3 buildable success criteria, 15 acceptance s
 |---|---|---|
 | T012 | Partial, medium: a final whitespace-only field was not emptied as R2 requires | Added blank-only handling and regressions for fields, lore and CRLF |
 | T013 | Missing, medium: constitution's automated source-language check was absent | Added the guard without a dependency |
+| T014 | Partial, high: the no-key prompt treated `/new-character` as a key | Forwarded the command through the existing app handoff; tested creation via the focused prompt with a fake editor, no key and no credentials file |
+| T015 | Contradicts, medium: repeated unknown sections caused a duplicate error | Ignored unknown sections before checking duplicates; tested identical and mixed-case headings while preserving known-section rejection |
 
 Re-check after implementation and the full gate: converged, with no remaining implementation findings. No `.specify/extensions.yml` exists, so implement and converge extension hooks are skipped.
 
@@ -79,7 +83,7 @@ Re-check after implementation and the full gate: converged, with no remaining im
 
 Follow [quickstart.md](./quickstart.md) using the existing chat entry screen in this checkout:
 
-1. Create with a real editor and check terminal restoration, the report and greeting.
+1. Start without a key, run `/new-character` from the key prompt, and create with a real editor. Check terminal restoration, the report and greeting. Chat generation still requires a key.
 2. Trigger a lore keyword and inspect `/trace`.
 3. Close an unchanged template and confirm cancellation.
 4. Save without a name and reopen the retained draft through the picker.

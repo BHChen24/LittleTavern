@@ -1,4 +1,12 @@
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
@@ -6,7 +14,7 @@ import { listLibrary, resolveAppPaths } from "@littletavern/engine";
 import { expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
-it("creates through a fake VISUAL, lists the character, continues a failed draft and restores the terminal", async () => {
+it("creates from the focused no-key prompt through a fake VISUAL and continues a retained draft", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-app-create-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
   const script = join(home, "editor.cjs");
@@ -35,14 +43,22 @@ it("creates through a fake VISUAL, lists the character, continues a failed draft
   const app = createApp({
     terminal,
     paths,
-    env: { VISUAL: `${process.execPath} ${script}`, OPENROUTER_API_KEY: "synthetic-key" },
+    env: { VISUAL: `${process.execPath} ${script}` },
   });
   const screen = () => app.tui.render(100).join("\n");
   try {
     app.start();
-    await app.submit("/new-character");
+    expect(existsSync(paths.credentialsFile)).toBe(false);
+    const prompt = app.tui.getFocusedComponent();
+    expect(prompt).not.toBe(app.editor);
+    prompt?.handleInput?.("/new-character");
+    prompt?.handleInput?.("\r");
     expect(terminal.stop).toHaveBeenCalled();
     expect(terminal.start).toHaveBeenCalledTimes(2);
+    expect(app.tui.getFocusedComponent()).toBe(app.editor);
+    expect(existsSync(paths.credentialsFile)).toBe(false);
+    expect(screen()).toContain("key: none");
+    expect(listLibrary(paths).map((item) => item.name)).toEqual(["Mira"]);
     expect(screen()).toContain("Start chatting with /chat");
     await app.submit("/library");
     expect(screen()).toContain("Mira");
@@ -64,6 +80,8 @@ it("creates through a fake VISUAL, lists the character, continues a failed draft
     const item = listLibrary(paths).find((entry) => entry.name === "Mira");
     await app.submit(`/chat ${item?.id}`);
     expect(screen()).toContain("Welcome!");
+    expect(screen()).toContain("key: none");
+    expect(existsSync(paths.credentialsFile)).toBe(false);
   } finally {
     await app.quit();
     rmSync(home, { recursive: true, force: true });

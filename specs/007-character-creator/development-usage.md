@@ -39,3 +39,35 @@ Each numbered row records one `functions.exec` invocation and all nested tool in
 | 31 | functions.exec; exec_command | Replaced sandbox-blocked subprocess smoke with direct calls to the compiled CLI handler, asserting return codes and output in a temporary home. Corrected the report/ledger distinction; all built-handler smoke assertions passed. |
 | 32 | functions.exec; exec_command | Verified branch 007-character-creator, clean diff formatting and all T001–T013 markers; reviewed final change scope and usage ledger. |
 | 33 | functions.exec; exec_command ×2 (second escalated) | Recorded this final checkpoint; committed validated convergence fixes, completed task markers and report; checked final status and branch. |
+
+
+## Separate convergence review
+
+Platform-reported total development tokens for this review: **unknown**. No run total or per-invocation token usage is exposed. Constitution V requires this accounting entry in addition to the skill's append-only task output. No application code, spec, plan, report or existing task markers were changed. No Git command or history comparison was used.
+
+| Call | Tools | Purpose and outcome |
+|---|---|---|
+| C1 | functions.exec; exec_command | Checked pre-convergence hooks (no extensions file); ran required prerequisites once and resolved the absolute 007 feature directory; reread constitution, spec, plan and all 13 tasks. |
+| C2 | functions.exec; exec_command ×3 | Read creator source/tests, paths, CLI, key input, artifacts, report and exports; bounded the implementation scope. Output truncation was recovered in C3. |
+| C3 | functions.exec; exec_command ×2 | Read focused key-prompt/app/picker code and tests, import detection, test settings and pinned pi editor reference. The unexported-helper search had no match, as expected. |
+| C4 | functions.exec; exec_command ×3 | Read line-numbered evidence and existing usage ledger; started eight relevant test files. Source-only probes reproduced no-key command misclassification and repeated-unknown-section rejection, and confirmed CRLF lore preservation. No real editor or key was used by probes. |
+| C5 | functions.exec; write_stdin; exec_command | All 30 tests in eight files passed; checked the normal import/failure path, dependency boundaries, task inventory, editor helper and quickstart. |
+| C6 | functions.exec; exec_command | After presenting findings, appended only Phase 6 / T014–T015 to tasks.md; verified existing task bytes were unchanged. Recorded this review under Constitution V and checked post-convergence hooks; no extensions file exists. |
+
+Outcome: **tasks_appended**. Findings: missing 0, partial 1 (HIGH), contradicts 1 (MEDIUM), unrequested 0; no CRITICAL findings. Checked 8 FRs, 3 buildable SCs, 15 acceptance scenarios, 6 edge cases, R1–R3, 13 tasks and seven constitution principles plus Language/testing constraints. T014–T015 are deliberately unchecked for a later implementation pass. No new convergence report or application code was written.
+
+## Phase 6 implementation follow-up
+
+Platform-reported total development tokens for this implementation follow-up: **unknown**. Neither a run total nor per-invocation token usage is exposed. Existing convergence task and usage changes were preserved at the start of this run.
+
+| Call | Tools | Purpose and outcome |
+|---|---|---|
+| I1 | functions.exec; exec_command ×2 | Checked extension hooks (absent), prerequisites, branch, existing changes and repository metadata. Requirements checklist passed 16/16. Read governance, complete tasks, plan, research, contract, quickstart and ignores; tool-specific setup search had no matches. |
+| I2 | functions.exec; exec_command | Read key-prompt/app/parser implementation and regression harnesses, credentials/status behavior, existing report and pi focused-component API; output was partly truncated, with relevant sections already present in session context. |
+| I3 | functions.exec; apply_patch; exec_command | Added focused no-key creator and repeated-unknown-section regressions before implementation; started targeted Vitest run. |
+| I4 | functions.exec; write_stdin; exec_command | Collected the expected failing regressions and initialized this follow-up usage ledger. |
+| I5 | functions.exec; apply_patch; exec_command | Forwarded the creator command in the no-key prompt and updated its hint; ignored unknown sections before known-section duplicate checks, added mixed-case known-section assertions, formatted five files and ran focused regressions. |
+| I6 | functions.exec; write_stdin; exec_command | All 15 focused tests in three files passed, including both reproduced gaps; reviewed the exact five-file implementation/test diff. |
+| I7 | functions.exec; exec_command | Marked T014–T015 complete, updated the report and known-section note, and started the required Phase 6 build/lint/full-test gate. |
+| I8 | functions.exec; write_stdin; exec_command | Phase 6 gate passed: build, lint (99 files) and all 237 tests in 40 files. Diff whitespace checks passed; zero unchecked tasks remain. Post-implement hooks skipped because extensions.yml is absent. |
+| I9 | functions.exec; exec_command ×2 (second escalated) | Recorded this checkpoint and committed the validated Phase 6 fixes, regression tests, completed tasks and updated report/accounting; checked final branch and clean status. |

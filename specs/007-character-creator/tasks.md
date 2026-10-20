@@ -103,3 +103,9 @@ Phase 1 → 2 → 3 → 4. **Parallel**: T001, T002 and T003.
 
 - [X] T012 Return an empty field for sections or lore content consisting only of blank lines, including spaces at end-of-file, and add regression tests per FR-003 / research R2 (partial).
 - [X] T013 Add the automated English-language source check described by Constitution Language, excluding test files and synthetic fixtures, without a new dependency (missing).
+
+
+## Phase 6: Convergence
+
+- [X] T014 Make `/new-character` accessible from the active no-key prompt in `packages/tui/src/components/key-prompt.ts` and `packages/tui/src/app.ts`: forward it to the existing command handler instead of treating it as an API key, without changing the rest of the key setup flow. Add a lightweight regression using the focused input and a fake `VISUAL`, with no saved or environment API key; verify creation reaches the library and the command is never accepted or saved as a key. This closes FR-001 / US1/AC1 / T006 (partial, HIGH).
+- [X] T015 In `packages/data/src/cards/template.ts`, ignore unknown sections with warnings even when their headings repeat, including case variants; do not let the duplicate-section guard turn an otherwise valid draft into an error for unknown content. Preserve the documented duplicate handling for known sections and add parser regressions in `template.test.ts` per spec Edge Cases: unknown sections / FR-003 / T001 (contradicts, MEDIUM).

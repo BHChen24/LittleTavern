@@ -49,6 +49,12 @@ it("requires a nonblank name and rejects duplicate sections", () => {
   expect(parseCharacterTemplate("## Name\nOne\n## Name\nTwo")).toEqual({
     error: "Duplicate section: Name.",
   });
+  expect(parseCharacterTemplate("## Name\nOne\n## nAmE\nTwo")).toEqual({
+    error: "Duplicate section: nAmE.",
+  });
+  expect(parseCharacterTemplate("## Name\nOne\n## Lorebook\n## LOREBOOK\n")).toEqual({
+    error: "Duplicate section: LOREBOOK.",
+  });
 });
 it("warns about missing and unknown sections without consuming unknown content", () => {
   const result = parsed("## Name\nMira\n## Mystery\nIgnored\n");
@@ -57,6 +63,24 @@ it("warns about missing and unknown sections without consuming unknown content",
   expect(result.warnings).toContain("Missing section: Description; left empty.");
   expect(Object.values(result.fields)).not.toContain("Ignored");
 });
+it.each(["Notes", "nOtEs"])(
+  "ignores repeated unknown sections named %s with warnings",
+  (heading) => {
+    const result = parsed(
+      `## Name\nMira\n## Notes\nIgnore one.\n## Description\nKeep this.\n## ${heading}\nIgnore two.\n## First message\nHello {{user}}.\n`,
+    );
+    expect(result.fields).toMatchObject({
+      name: "Mira",
+      description: "Keep this.",
+      first_mes: "Hello {{user}}.",
+    });
+    expect(result.warnings.filter((warning) => warning.startsWith("Unknown section:"))).toEqual([
+      "Unknown section: Notes; ignored.",
+      `Unknown section: ${heading}; ignored.`,
+    ]);
+    expect(Object.values(result.fields).join("\n")).not.toContain("Ignore");
+  },
+);
 it("parses titled lore entries with case-insensitive metadata and warns about inert entries", () => {
   const result = parsed(
     "## Name\nMira\n## Lorebook\n### Harbor\nkEyS: tea, harbor, \nAlways ON: no\n  {{user}} visits.  \n\nSecond line.\n### World\nAlways on: YES\nThe sea is blue.\n### Unused\nNever fires.",

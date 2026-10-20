@@ -78,6 +78,10 @@ export function parseCharacterTemplate(text: string): ParsedTemplate {
     const title = sections[i]?.trim() ?? "";
     const heading = title.toLowerCase();
     const content = trimBlankLines(sections[i + 1] ?? "");
+    if (heading !== "lorebook" && !Object.hasOwn(SECTIONS, heading)) {
+      warnings.push(`Unknown section: ${title}; ignored.`);
+      continue;
+    }
     if (seen.has(heading)) return { error: `Duplicate section: ${title}.` };
     seen.add(heading);
     if (heading === "lorebook") {
@@ -116,9 +120,9 @@ export function parseCharacterTemplate(text: string): ParsedTemplate {
           );
         entries.push(entry);
       }
-    } else if (Object.hasOwn(SECTIONS, heading)) {
+    } else {
       fields[SECTIONS[heading as keyof typeof SECTIONS]] = content;
-    } else warnings.push(`Unknown section: ${title}; ignored.`);
+    }
   }
   if (!fields.name.trim()) return { error: "A character needs a name." };
   for (const heading of [...Object.keys(SECTIONS), "lorebook"]) {
