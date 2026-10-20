@@ -110,3 +110,61 @@ it("writes exactly three scrubbed ledger records for three simulated requests", 
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("generate() sends exactly the assembled context and leaves plain chat untouched", async () => {
+  const seen: { role: string; text: string }[][] = [];
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => "synthetic-key",
+    simulated: {
+      replies: [
+        (history) => {
+          seen.push(history);
+          return "In character.";
+        },
+        (history) => {
+          seen.push(history);
+          return "Plain again.";
+        },
+      ],
+    },
+  });
+  const deltas: string[] = [];
+  session.onDelta((delta) => {
+    deltas.push(delta);
+  });
+  const turn = await session.generate({
+    system: "You are Mira.",
+    messages: [
+      { role: "character", text: "Welcome to the lighthouse." },
+      { role: "user", text: "Hello Mira." },
+    ],
+    afterHistory: "Stay brief.",
+  });
+  expect(turn).toMatchObject({ outcome: "completed", text: "In character." });
+  expect(deltas.join("")).toBe("In character.");
+  expect(seen[0]).toEqual([
+    { role: "system", text: "You are Mira." },
+    { role: "assistant", text: "Welcome to the lighthouse." },
+    { role: "user", text: "Hello Mira." },
+    { role: "system", text: "Stay brief." },
+  ]);
+  await session.send("plain hello");
+  expect(seen[1]?.map((message) => message.text)).toEqual([DEFAULT_SYSTEM_PROMPT, "plain hello"]);
+});
+
+it("generate() refuses a context that does not end with a user message", async () => {
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => "synthetic-key",
+    simulated: { replies: ["unused"] },
+  });
+  const result = await session.generate({
+    system: "s",
+    messages: [{ role: "character", text: "greeting" }],
+    afterHistory: null,
+  });
+  expect(result).toBeNull();
+});

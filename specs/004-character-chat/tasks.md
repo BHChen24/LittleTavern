@@ -48,14 +48,14 @@ quickstart.md
 
 ## Phase 2: Foundational
 
-- [ ] T002 Add `ChatContext` (data-model.md) and `generate(context): Promise<TurnResult | null>` to `ChatSession` in `packages/engine/src/chat-session.ts`, following research R1:
+- [X] T002 Add `ChatContext` (data-model.md) and `generate(context): Promise<TurnResult | null>` to `ChatSession` in `packages/engine/src/chat-session.ts`, following research R1:
   - map `system` to a `SystemMessage`, user messages to `UserMessage`s, and character messages to minimal `AssistantMessage`s (text content, the current model's api, provider and model, zero usage, `stopReason: "stop"`);
   - map `afterHistory` to a trailing `SystemMessage`;
   - clear `agent.state.messages` before the run, and have `transformContext` return the mapped list;
   - reuse the streaming, abort and `TurnResult` code from `send`.
 
   `send(text)` must keep working unchanged. Write tests T-b in `chat-session.test.ts`, using the simulated history callback to assert what the model received.
-- [ ] T003 Export `ChatContext` and the new method from `packages/engine/src/index.ts`
+- [X] T003 Export `ChatContext` and the new method from `packages/engine/src/index.ts`
 
 **Checkpoint**: checks pass. Commit.
 

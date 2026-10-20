@@ -1,5 +1,5 @@
 import { Agent } from "@earendil-works/pi-agent-core";
-import { type AssistantMessage, createModels } from "@earendil-works/pi-ai";
+import { type AssistantMessage, createModels, type Message } from "@earendil-works/pi-ai";
 import { fauxAssistantMessage, fauxProvider } from "@earendil-works/pi-ai/providers/faux";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import { isBlank } from "./api-key.ts";
@@ -31,6 +31,12 @@ export type SimulatedReply =
   | string
   | { text: string; errorMessage: string }
   | ((history: SimulatedMessage[]) => string);
+/** A fully assembled request (see 003's AssembledPrompt); used by character chats. */
+export interface ChatContext {
+  system: string;
+  messages: { role: "user" | "character"; text: string }[];
+  afterHistory: string | null;
+}
 export interface ChatSessionOptions {
   modelId: string;
   systemPrompt: string;
@@ -46,6 +52,8 @@ export class ChatSession {
   private finishes = new Set<(turn: TurnResult) => void | Promise<void>>();
   private finalMessage?: AssistantMessage;
   private sending = false;
+  /** Set only while generate() runs: the exact messages the model should see. */
+  private pendingContext?: Message[];
 
   constructor(options: ChatSessionOptions) {
     this.options = options;
@@ -96,6 +104,8 @@ export class ChatSession {
       initialState: { systemPrompt: options.systemPrompt, model, tools: [] },
       streamFn: this.models.streamSimple.bind(this.models),
       getApiKey: () => this.options.getApiKey(),
+      // generate() replaces the whole transcript with an assembled context; send() leaves it alone.
+      transformContext: async (messages) => this.pendingContext ?? messages,
     });
     this.agent.subscribe((event) => {
       if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
@@ -108,6 +118,9 @@ export class ChatSession {
 
   get isStreaming(): boolean {
     return this.sending;
+  }
+  get modelId(): string {
+    return this.agent.state.model.id;
   }
   onDelta(listener: (delta: string) => void): () => void {
     this.deltas.add(listener);
@@ -137,11 +150,64 @@ export class ChatSession {
 
   async send(text: string): Promise<TurnResult | null> {
     if (this.sending || isBlank(text) || isBlank(this.options.getApiKey())) return null;
+    return this.run(() => this.agent.prompt(text));
+  }
+
+  /**
+   * Runs one turn against a fully assembled context. The plain-chat transcript is restored
+   * afterwards, so switching back to plain chat is unaffected.
+   */
+  async generate(context: ChatContext): Promise<TurnResult | null> {
+    const last = context.messages.at(-1);
+    if (this.sending || last?.role !== "user" || isBlank(this.options.getApiKey())) return null;
+    const saved = [...this.agent.state.messages];
+    this.pendingContext = this.toMessages(context);
+    try {
+      return await this.run(() => this.agent.prompt(last.text));
+    } finally {
+      this.pendingContext = undefined;
+      this.agent.state.messages = saved;
+    }
+  }
+
+  private toMessages(context: ChatContext): Message[] {
+    const model = this.agent.state.model;
+    const now = Date.now();
+    const messages: Message[] = [{ role: "system", content: context.system, timestamp: now }];
+    for (const message of context.messages) {
+      if (message.role === "user") {
+        messages.push({ role: "user", content: message.text, timestamp: now });
+        continue;
+      }
+      messages.push({
+        role: "assistant",
+        content: [{ type: "text", text: message.text }],
+        api: model.api,
+        provider: model.provider,
+        model: model.id,
+        usage: {
+          input: 0,
+          output: 0,
+          cacheRead: 0,
+          cacheWrite: 0,
+          totalTokens: 0,
+          cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+        },
+        stopReason: "stop",
+        timestamp: now,
+      });
+    }
+    if (context.afterHistory)
+      messages.push({ role: "system", content: context.afterHistory, timestamp: now });
+    return messages;
+  }
+
+  private async run(prompt: () => Promise<void>): Promise<TurnResult> {
     this.sending = true;
     this.finalMessage = undefined;
     const started = Date.now();
     try {
-      await this.agent.prompt(text);
+      await prompt();
       const message = this.getFinalMessage();
       if (!message) throw new Error("Request ended without an assistant message");
       const turn: TurnResult = {
