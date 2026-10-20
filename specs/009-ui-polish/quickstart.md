@@ -19,4 +19,4 @@ bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"
 8. Set `"mouse": false` in settings.json and relaunch: the terminal's own selection works.
 9. Shrink the window below 40 columns and 10 rows, on the home screen and in a chat: no crash, the plain title replaces the logo, and the input is still usable. Enlarge it again: the layout recovers.
 10. Run `NO_COLOR=1 littletavern`: no colours, but names are still bold, `*actions*` italic, bars and `Error:` visible.
-11. The home screen shows the block-letter logo on the left and the name only once. Press Enter: the character picker opens. Choose "New character" and create one; `/new-character` no longer exists.
+11. The home screen shows the block-letter logo on the left and the name only once. Press Enter: the character picker opens. Choose "New character" and create one; `/new-character` no longer exists. Press Esc on the picker, then `/innkeeper`: the placeholder and replies are labelled Innkeeper, and `/plain` no longer exists.

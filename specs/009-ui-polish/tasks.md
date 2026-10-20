@@ -143,8 +143,16 @@ apply. Work in the checkout you were started in, on branch `009-ui-polish`.
   - remove `new-character` from `COMMANDS` in `commands.ts`, from the handlers in `app.ts` and from `helpText()`;
   - update `commands.test.ts`, `app-create.test.ts` and `app-persona.test.ts` to start creation from `/characters` → "New character";
   - in `specs/006-usability/contracts/commands.md`, remove the `/new-character` row and note "moved into `/characters` by 009" under the table.
-- [ ] T019 Run the full gate and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, then add a "Phase 7" section to `report.md` (what changed, test results) and the manual checks: the logo at full and narrow width, Enter opening the picker, and creating a character from it. Commit
+- [ ] T020 [US3] Rename plain chat to the innkeeper (FR-014), **user-facing text only** in `packages/tui`:
+  - the command `plain` becomes `innkeeper` in `COMMANDS` (description "Talk to the innkeeper"), the handlers and `helpText()`;
+  - the no-character speaker label and waiting text use `Innkeeper` instead of `Assistant` (`app.ts`, the `chat?.character.name ?? "Assistant"` fallbacks);
+  - the placeholder `Talk… (/ for commands)` becomes `Talk to the innkeeper… (/ for commands)`;
+  - the notice becomes `You are talking to the innkeeper. Use /characters to start a character chat.`;
+  - in `specs/006-usability/contracts/commands.md`, rename the `/plain` row and note "renamed by 009".
+
+  Do not change the plain-chat system prompt or engine internals (`ChatSession` keeps its names). Update the affected tests.
+- [ ] T019 Run the full gate and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, then add a "Phase 7" section to `report.md` (what changed, test results) and the manual checks: the logo at full and narrow width, Enter opening the picker, creating a character from it, and Esc then `/innkeeper` showing the Innkeeper. Commit. (T020 is listed before T019 because it was added later; do T019 last)
 
 ## Dependencies & Execution Order
 
-Phase 1 → 2 → 3 → 4 → 5 → 6 → 7. **Parallel**: T001, T002, T003; T005 and T006; T009 alongside T008; T016 alongside T017–T018 (T017 and T018 both edit `openCharacterPicker` and `app.ts`, so do them in order).
+Phase 1 → 2 → 3 → 4 → 5 → 6 → 7. **Parallel**: T001, T002, T003; T005 and T006; T009 alongside T008; T016 alongside T017–T018 (T017, T018 and T020 all edit `app.ts`, so do them in order). T019 is last.

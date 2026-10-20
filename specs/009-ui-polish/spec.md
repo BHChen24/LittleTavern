@@ -54,6 +54,10 @@ a finished product.
   picker opens on top of it, so a first-time user lands in roleplay, not in plain chat. Plain chat
   and `/plain` stay as they are; their future role (an in-app assistant) is a separate, undecided
   feature.
+- Q: What is plain chat called? → A: The **innkeeper** (owner, 2026-10-20). `/plain` becomes
+  `/innkeeper`, and the no-character speaker is "Innkeeper" instead of "Assistant". Only the
+  names change; the innkeeper's behaviour and prompt wait for the separate in-app assistant
+  feature.
 - Q: Where does creating a character live? → A: Inside `/characters`, as a "New character" entry,
   like "New persona" in `/persona`. The separate `/new-character` command is removed.
 
@@ -262,6 +266,9 @@ capability. Otherwise it is listed as deferred in the plan:
   Cancelling the picker leaves the user in plain chat, as before.
 - **FR-013**: The character picker MUST offer "New character", which starts 007's creation flow
   (including continuing a draft). The `/new-character` command MUST be removed.
+- **FR-014**: The no-character chat MUST be presented as the innkeeper: the `/innkeeper` command
+  replaces `/plain`, and its label, waiting text, placeholder and notice say "Innkeeper". Its
+  system prompt is unchanged.
 
 ### Key Entities
 
