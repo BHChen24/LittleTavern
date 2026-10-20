@@ -117,6 +117,34 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 - [X] T014 Run `speckit-converge` on this feature and complete any appended tasks
 - [X] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, a terminal smaller than 40 columns and 10 rows, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
 
+## Phase 7: Owner acceptance feedback (FR-011 to FR-013)
+
+Added by the design side after the owner's first look on 2026-10-20. The rules for this run still
+apply. Work in the checkout you were started in, on branch `009-ui-polish`.
+
+- [ ] T016 [P] Home screen (FR-011), in `components/home-screen.ts`:
+  - replace `LOGO` with exactly these four lines (original artwork):
+
+    ```text
+      l i t t l e
+    ▀▀█▀▀ ▄▀▀▀▄ █   █ █▀▀▀▀ █▀▀▀▄ █▄  █
+      █   █▀▀▀█ ▀▄ ▄▀ █▀▀▀  █▀▀▀▄ █ ▀▄█
+      ▀   ▀   ▀   ▀   ▀▀▀▀▀ ▀   ▀ ▀   ▀
+    ```
+
+  - render it **left-aligned** (no centring padding), in the accent style, when `width >= LOGO_WIDTH`;
+  - replace the `LittleTavern <version>` line with `v<version> · Terminal roleplay with character cards and lorebooks`;
+  - the narrow fallback (no logo) shows `LittleTavern` in the accent style, then that same line, so the name still appears once.
+
+  Update `home-screen.test.ts`: the logo is left-aligned, its three letter rows have equal width, the name is not repeated, and the narrow fallback shows it once.
+- [ ] T017 [US1] Enter on the home screen (FR-012): `enterChat` opens the chat layout and then `openCharacterPicker()`. Esc closes the picker and leaves plain chat as today. Do not change plain chat or `/plain`. Update the app tests that press Enter and expect plain chat to close the picker first.
+- [ ] T018 [US1] "New character" in the character picker (FR-013):
+  - in `openCharacterPicker`, add a first entry `New character` (searchable as "New character") that closes the picker and calls the existing `newCharacter()`, which already offers draft continuation; with an empty library it is the only entry;
+  - remove `new-character` from `COMMANDS` in `commands.ts`, from the handlers in `app.ts` and from `helpText()`;
+  - update `commands.test.ts`, `app-create.test.ts` and `app-persona.test.ts` to start creation from `/characters` → "New character";
+  - in `specs/006-usability/contracts/commands.md`, remove the `/new-character` row and note "moved into `/characters` by 009" under the table.
+- [ ] T019 Run the full gate and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, then add a "Phase 7" section to `report.md` (what changed, test results) and the manual checks: the logo at full and narrow width, Enter opening the picker, and creating a character from it. Commit
+
 ## Dependencies & Execution Order
 
-Phase 1 → 2 → 3 → 4 → 5 → 6. **Parallel**: T001, T002, T003; T005 and T006; T009 alongside T008.
+Phase 1 → 2 → 3 → 4 → 5 → 6 → 7. **Parallel**: T001, T002, T003; T005 and T006; T009 alongside T008; T016 alongside T017–T018 (T017 and T018 both edit `openCharacterPicker` and `app.ts`, so do them in order).

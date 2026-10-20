@@ -46,6 +46,17 @@ a finished product.
   `NO_COLOR` with light/dark support, and `$EDITOR` for long messages depend on effort, and pi's
   own features are preferred.
 
+### Session 2026-10-20 (owner acceptance feedback)
+
+- Q: How should the logo sit on the home screen? → A: The block-letter "little TAVERN" logo,
+  left-aligned, with no repeated name below it: the next line is the version and the tagline.
+- Q: What happens when Enter is pressed on the home screen? → A: The chat opens and the character
+  picker opens on top of it, so a first-time user lands in roleplay, not in plain chat. Plain chat
+  and `/plain` stay as they are; their future role (an in-app assistant) is a separate, undecided
+  feature.
+- Q: Where does creating a character live? → A: Inside `/characters`, as a "New character" entry,
+  like "New persona" in `/persona`. The separate `/new-character` command is removed.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A full-screen app (Priority: P1)
@@ -245,6 +256,12 @@ capability. Otherwise it is listed as deferred in the plan:
   MUST open the model picker.
 - **FR-010**: Every distinction MUST remain visible when colour is unavailable (labels, bars and
   prefixes carry the meaning).
+- **FR-011**: The home screen MUST show the logo left-aligned and MUST NOT repeat the product name
+  below it; the version appears once, with the tagline.
+- **FR-012**: Pressing Enter on the home screen MUST open the chat with the character picker shown.
+  Cancelling the picker leaves the user in plain chat, as before.
+- **FR-013**: The character picker MUST offer "New character", which starts 007's creation flow
+  (including continuing a draft). The `/new-character` command MUST be removed.
 
 ### Key Entities
 
