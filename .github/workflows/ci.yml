@@ -36,9 +36,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 26
       - name: Install checksum-verified gitleaks
         shell: bash
         run: |
