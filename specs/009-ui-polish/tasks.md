@@ -159,7 +159,7 @@ Phase 1 → 2 → 3 → 4 → 5 → 6 → 7. **Parallel**: T001, T002, T003; T00
 
 ## Phase 8: Explicit chat setup (owner follow-up)
 
-Requested directly by the owner after Phase 7. These instructions supersede T017 and the
+Requested directly by the owner after Phase 7 (spec FR-012 and FR-015). These instructions supersede T017 and the
 old automatic-picker/default-innkeeper startup behavior. Keep existing creation and key flows.
 
 - [X] T021 Open only the chat layout on home Enter, keeping the editor focused and no picker open.

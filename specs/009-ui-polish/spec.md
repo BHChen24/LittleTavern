@@ -50,10 +50,13 @@ a finished product.
 
 - Q: How should the logo sit on the home screen? → A: The block-letter "little TAVERN" logo,
   left-aligned, with no repeated name below it: the next line is the version and the tagline.
-- Q: What happens when Enter is pressed on the home screen? → A: The chat opens and the character
-  picker opens on top of it, so a first-time user lands in roleplay, not in plain chat. Plain chat
-  and `/plain` stay as they are; their future role (an in-app assistant) is a separate, undecided
-  feature.
+- Q: What happens when Enter is pressed on the home screen? → A: Only the chat layout opens, with
+  the input focused and no picker (owner follow-up, replacing an earlier "open the character
+  picker" answer). The app lists the setup steps that are still missing.
+- Q: When may the app send a request? → A: Only when a model, a key and a chat mode are all set.
+  A valid saved model and an environment or saved key count as set. A character (selected or
+  resumed) or `/innkeeper` must be chosen explicitly in each run; cancelling a picker chooses
+  nothing. The engine's internal default model does not count as a choice.
 - Q: What is plain chat called? → A: The **innkeeper** (owner, 2026-10-20). `/plain` becomes
   `/innkeeper`, and the no-character speaker is "Innkeeper" instead of "Assistant". Only the
   names change; the innkeeper's behaviour and prompt wait for the separate in-app assistant
@@ -163,7 +166,7 @@ indicator shows during the delay and disappears when text arrives. Esc still int
 **Acceptance Scenarios**:
 
 1. **Given** a message is sent, **When** no text has arrived yet, **Then** a waiting indicator
-   naming the character (or "Assistant" in plain chat) is shown.
+   naming the character (or "Innkeeper") is shown.
 2. **Given** the first text arrives, **When** it renders, **Then** the indicator disappears.
 3. **Given** the indicator is shown, **When** the owner presses Esc or an error occurs, **Then** it
    disappears, and the usual interruption or error handling applies.
@@ -173,12 +176,13 @@ indicator shows during the delay and disappears when text arrives. Esc still int
 ### User Story 5 - An input that invites the story (Priority: P1)
 
 The empty input shows an immersive placeholder: "Talk to Seraphina… (/ for commands)" in a
-character chat, and "Talk… (/ for commands)" in plain chat. Without a key it reads "Add your key
-with /apikey to start talking".
+character chat, and "Talk to the innkeeper… (/ for commands)" with the innkeeper. While setup is
+incomplete it names the next step: "Add your key with /apikey to start talking", "Select a model
+with /model to start talking", or "Choose /characters or /innkeeper to start talking".
 
 **Why this priority**: Agreed on 2026-10-20. Cheap, and it doubles as guidance.
 
-**Independent Test**: Check the placeholder in plain chat, in a character chat and without a key.
+**Independent Test**: Check the placeholder with the innkeeper, in a character chat, and at each missing setup step.
 
 **Acceptance Scenarios**:
 
@@ -262,13 +266,17 @@ capability. Otherwise it is listed as deferred in the plan:
   prefixes carry the meaning).
 - **FR-011**: The home screen MUST show the logo left-aligned and MUST NOT repeat the product name
   below it; the version appears once, with the tagline.
-- **FR-012**: Pressing Enter on the home screen MUST open the chat with the character picker shown.
-  Cancelling the picker leaves the user with the innkeeper (the former plain chat).
+- **FR-012**: Pressing Enter on the home screen MUST open only the chat layout, with the input
+  focused and the missing setup steps listed.
 - **FR-013**: The character picker MUST offer "New character", which starts 007's creation flow
   (including continuing a draft). The `/new-character` command MUST be removed.
 - **FR-014**: The no-character chat MUST be presented as the innkeeper: the `/innkeeper` command
   replaces `/plain`, and its label, waiting text, placeholder and notice say "Innkeeper". Its
   system prompt is unchanged.
+- **FR-015**: Every request, including regenerate and Ctrl+R, MUST be blocked until a model, a key
+  and an explicitly chosen chat mode (a character or `/innkeeper`) are set, as clarified above. A
+  blocked attempt MUST keep the typed text, list the missing steps, and send and record nothing.
+  Setup and offline commands stay available.
 
 ### Key Entities
 

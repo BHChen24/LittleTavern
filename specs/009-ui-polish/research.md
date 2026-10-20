@@ -91,8 +91,8 @@ in mind.
 - **Decision**: `InputBox` in `components/input-box.ts` wraps the editor. When the text is empty,
   it renders the placeholder line (muted) in place of the empty editor content, keeping the
   editor's border and cursor. Everything else is delegated to the editor.
-- **Placeholder by state**: `Talk to <name>… (/ for commands)`, `Talk… (/ for commands)`, or
-  `Add your key with /apikey to start talking`.
+- **Placeholder by state**: `Talk to <name>… (/ for commands)`, `Talk to the innkeeper… (/ for
+  commands)`, or the next missing setup step (key, model, chat mode; spec User Story 5).
 
 ## R6. Key first, then model
 
