@@ -20,6 +20,7 @@ import {
   findAllowedModel,
   forgetKey,
   readSavedKey,
+  readSettings,
   resolveApiKey,
   resolveAppPaths,
   saveKey,
@@ -27,8 +28,10 @@ import {
   sumUsage,
   toUsageRecord,
   type UsageRecord,
+  writeSettings,
 } from "@littletavern/engine";
 import { KeyPrompt } from "./components/key-prompt.ts";
+import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { VERSION } from "./version.ts";
@@ -52,6 +55,9 @@ export interface AppOptions {
 export function createApp(options: AppOptions = {}) {
   const env = options.env ?? process.env;
   const paths = options.paths ?? resolveAppPaths(env);
+  const settings = readSettings(paths);
+  const storedModel = findAllowedModel(settings.model);
+  let modelId = storedModel?.id ?? DEFAULT_MODEL_ID;
   const saved = readSavedKey(paths);
   let activeKey = resolveApiKey({ envValue: env.OPENROUTER_API_KEY, savedValue: saved.key });
   const secrets = [env.OPENROUTER_API_KEY, saved.key].filter((value): value is string =>
@@ -63,14 +69,14 @@ export function createApp(options: AppOptions = {}) {
   const session =
     options.session ??
     new ChatSession({
-      modelId: DEFAULT_MODEL_ID,
+      modelId,
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
       getApiKey: () => activeKey?.value,
     });
   const tui = new TuiMainScreen(options.terminal ?? new ProcessTerminal());
   const transcript = new Container();
   const editor = new Editor(tui, editorTheme);
-  const status = new StatusBar(DEFAULT_MODEL_ID, activeKey?.source ?? "none");
+  const status = new StatusBar(modelId, activeKey?.source ?? "none");
   tui.addChild(new Text(`LittleTavern ${VERSION}`));
   tui.addChild(transcript);
   tui.addChild(editor);
@@ -120,6 +126,8 @@ export function createApp(options: AppOptions = {}) {
     tui.showOverlay(keyPrompt, { width: "90%" });
     tui.requestRender();
   }
+  if (settings.model && !storedModel)
+    notice(`Saved model ${settings.model} is unavailable; using ${DEFAULT_MODEL_ID}.`);
   if (saved.warning)
     notice("Saved credentials permissions allow access by other users; expected 0600.");
   if (saved.error) notice(saved.error);
@@ -128,7 +136,7 @@ export function createApp(options: AppOptions = {}) {
   function updateStatus(): void {
     const totals = sumUsage(records);
     status.update(
-      DEFAULT_MODEL_ID,
+      modelId,
       activeKey?.source ?? "none",
       `${totals.inputTokens}/${totals.outputTokens} | $${totals.cost.toFixed(4)}${totals.incomplete ? "~" : ""}`,
     );
@@ -225,6 +233,32 @@ export function createApp(options: AppOptions = {}) {
       return;
     }
     if (needsKey) return;
+    if (text === "/model") {
+      const picker = new ModelPicker();
+      picker.onCancel = () => {
+        tui.hideOverlay();
+        tui.requestRender();
+      };
+      picker.onSelect = (model) => {
+        try {
+          session.setModel(model.id);
+          modelId = model.id;
+        } catch {
+          notice("Could not select that model.");
+          return;
+        }
+        try {
+          writeSettings(paths, { model: model.id });
+        } catch {
+          notice("Could not save the selected model; using it for this session only.");
+        }
+        tui.hideOverlay();
+        updateStatus();
+        tui.requestRender();
+      };
+      tui.showOverlay(picker, { width: "90%" });
+      return;
+    }
     if (text === "/help") {
       const help = new Text(APP_HELP);
       tui.showOverlay(help);

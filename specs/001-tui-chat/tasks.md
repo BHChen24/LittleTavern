@@ -170,9 +170,9 @@ saved key can be forgotten.
 **Independent Test**: The settings test passes. The owner then checks quickstart step 6 and the
 relaunch in step 9.
 
-- [ ] T030 [P] [US4] Implement `readSettings(paths)` and `writeSettings(paths, { model })` in `packages/data/src/settings.ts`. A missing or malformed file returns `{}`. Tests in `packages/data/src/settings.test.ts`
-- [ ] T031 [US4] Implement `packages/tui/src/components/model-picker.ts`: an overlay with an `Input` filter on top of a `SelectList`. Filter with pi-tui `fuzzyFilter` (prefix-only `setFilter` is not enough, research R5) and rebuild the list. Each item shows `id` and `$in/$out per M` (or `price unknown`). Enter selects, Esc cancels
-- [ ] T032 [US4] In `packages/tui/src/app.ts`:
+- [X] T030 [P] [US4] Implement `readSettings(paths)` and `writeSettings(paths, { model })` in `packages/data/src/settings.ts`. A missing or malformed file returns `{}`. Tests in `packages/data/src/settings.test.ts`
+- [X] T031 [US4] Implement `packages/tui/src/components/model-picker.ts`: an overlay with an `Input` filter on top of a `SelectList`. Filter with pi-tui `fuzzyFilter` (prefix-only `setFilter` is not enough, research R5) and rebuild the list. Each item shows `id` and `$in/$out per M` (or `price unknown`). Enter selects, Esc cancels
+- [X] T032 [US4] In `packages/tui/src/app.ts`:
   - **`/model`** (in `ready` only) opens the picker. On select, call `session.setModel(id)`, `writeSettings`, and update the status bar.
   - **At launch**: use `findAllowedModel(settings.model)`. If the stored id is no longer allowed, use `DEFAULT_MODEL_ID` and show a notice naming both.
 

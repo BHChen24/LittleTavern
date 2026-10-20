@@ -44,3 +44,7 @@ Phase 5: `exec_command` implemented the append-only ledger, usage mapping, total
 wiring, then wrote UI-level rejected-key and quit-during-stream tests. Build/lint and all
 46 tests in 13 files passed. Quitting waits for the interrupted record; local key blocks
 produce no extra record; the status matches ledger sums and errors are scrubbed.
+
+Phase 6: `exec_command` implemented settings persistence, the fuzzy-filtered model picker
+and app integration. Build/lint and all 48 tests in 15 files passed, including settings
+round trips and a non-prefix model filter followed by selection/cancellation.

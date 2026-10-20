@@ -4,11 +4,13 @@ export {
   createLogger,
   forgetKey,
   readSavedKey,
+  readSettings,
   readUsageRecords,
   resolveAppPaths,
   saveKey,
   scrubSecrets,
   type UsageRecord,
+  writeSettings,
 } from "@littletavern/data";
 export * from "./api-key.ts";
 export * from "./chat-session.ts";
