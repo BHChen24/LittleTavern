@@ -190,9 +190,9 @@ earlier history, and `/sessions` lists both chats.
 
 ## Phase 8: Polish
 
-- [ ] T015 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures. (The script's guided step 12 still mentions `/chat` and `/attach`; it is outside the repository and is updated by the owner's side, not here)
+- [X] T015 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures. (The script's guided step 12 still mentions `/chat` and `/attach`; it is outside the repository and is updated by the owner's side, not here)
 - [ ] T016 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T017 Write `specs/011-tui-pickers/report.md` with the same sections as `specs/010-release/report.md`. Include the test results, the T-j output, deferred tests, the owner's manual checks from `quickstart.md`, and the note that 0.1.1 is released by the owner after merge. Commit
+- [X] T017 Write `specs/011-tui-pickers/report.md` with the same sections as `specs/010-release/report.md`. Include the test results, the T-j output, deferred tests, the owner's manual checks from `quickstart.md`, and the note that 0.1.1 is released by the owner after merge. Commit
 
 ## Dependencies & Execution Order
 
@@ -211,3 +211,8 @@ Phase 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8.
 US1–US3 remove the ids; US4 changes only the look; US5 brings the docs in line. The feature is
 complete only when all phases are done. If a run is interrupted, leave the remaining tasks
 unchecked and say so in the report; do not present a partial run as delivered.
+
+## Phase 9: Convergence
+
+- [ ] T018 Resolve owner design question Q1 in `specs/011-tui-pickers/questions.md` before completing T009: reconcile FR-007, SC-003 and US3/AC1 with pi's deferred persistence of greeting-only chats (`partial`, HIGH). Once the owner specifies whether these chats must be saved and updates the affected design, implement that decision in `packages/engine/src/character-chat.ts` and add a synthetic regression test in `packages/tui/src/app-pickers.test.ts`. Do not invent a session-storage policy or rewrite the spec during implementation
+- [ ] T019 Resolve owner design question Q2 in `specs/011-tui-pickers/questions.md`: specify how a panel taller than the terminal keeps all borders visible per FR-008 and US4/AC1 (`partial`, MEDIUM). A real renderer check at 60 columns and 24 rows renders help at 32 rows and omits the bottom border. Once the owner specifies clipping, scrolling or another overflow policy, implement it in the planned overlay/frame touchpoints and add a terminal-harness regression check; do not silently choose new overflow behavior

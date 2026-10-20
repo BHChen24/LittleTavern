@@ -33,3 +33,19 @@ The owner must decide whether greeting-only chats should be persisted (and speci
 storage change), or whether the requirement applies only after a user message. No storage-policy
 change is invented here. Independent work continues under the unattended-run rules.
 
+
+### Q2. Panels taller than the terminal lose a border
+
+**Affected work**: FR-008 / US4/AC1; convergence T019.
+
+The planned Frame wraps the child's rendered lines and has no viewport-height contract. At
+60 columns and 24 terminal rows, `/help` renders 32 rows. An offline check against the built app
+and a stub terminal captured a top border but no bottom border in actual terminal writes.
+pi's overlay compositor crops oversized overlays; a border around all child lines is therefore
+not sufficient to keep all four sides visible.
+
+The owner must specify whether tall panels should scroll, clip content while retaining the
+border, or use another overflow policy. Each option affects what the user can read or navigate.
+The plan only specifies a height adjustment for the trace, which has been implemented. No new
+height or scrolling policy is chosen here. The reproduced check used a temporary home, no key
+and no network.

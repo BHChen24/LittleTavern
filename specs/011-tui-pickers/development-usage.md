@@ -103,3 +103,30 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
 - `exec_command` / `write_stdin`: build, lint and all 63 test files / 381 tests passed.
   Marked T014 complete and committed with normal hooks. The current feature spec, plan,
   research, data model, contract and quality checklist remain unchanged.
+
+## Phase 8: Validation, Convergence and Reporting
+
+- `exec_command` / `write_stdin`: ran the external acceptance script with `--auto-only`, the
+  current checkout and a temporary app home. The required escalation allows its result file
+  under `../acceptance/results`; the script never enters its guided/provider sections. Passed
+  19 checks with zero failures. Record: `../acceptance/results/v1-acceptance-20261020-155506.md`.
+- `exec_command`: ran convergence prerequisites and inspected the current requirement, command,
+  picker, frame and session code against all feature artifacts and constitution constraints.
+- `exec_command`: reproduced the help overflow with a generated temporary home, stub terminal,
+  built app and actual renderer writes. At 60x24, help renders 32 rows; the top border is drawn
+  and the bottom border is absent. Recorded Q2 without inventing an overflow policy.
+- `exec_command`: convergence appended only Phase 9 with T018–T019. Outcome `tasks_appended`: one
+  HIGH partial gap (greeting-only persistence) and one MEDIUM partial gap (help overflow); no
+  missing, contradicting, unrequested or constitution-violation findings. Original tasks and
+  design artifacts were not rewritten by convergence. No pre/post convergence hooks exist.
+- `exec_command`: recorded the open questions, completed T015 and wrote the implementation
+  report. T009, T016, T018 and T019 remain incomplete pending the owner's design decisions.
+- Final `exec_command` / `write_stdin` calls validate build/lint/tests, command suggestions and
+  whitespace, inspect branch/worktree status, check implementation post-hooks, and commit the
+  report, task markers and usage record through normal hooks. Results are in the report and
+  conversation transcript. Total platform-reported development tokens remain **unknown**.
+
+Final checkpoint: build and lint passed (137 files); all 63 test files and 381 tests passed.
+The exact quickstart grep printed nothing (expected grep exit 1 for no matches). Whitespace
+checks passed. No implementation post-hooks are registered. Only reporting/task files remained
+to commit; the four design-dependent task markers stay unchecked.
