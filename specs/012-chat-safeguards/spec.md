@@ -77,6 +77,19 @@ The name used for the player defaults to "User" unless a persona is active.
   chat, next to the API-key hint. Once a chat (character or innkeeper) has started in this run,
   it is no longer shown.
 
+### Plan-time corrections (2026-10-20)
+
+Recorded while planning; they follow from facts in `research.md`.
+
+- The innkeeper has no `/regenerate` or Ctrl+R, so its failure notice says to send the message
+  again and has no retry count (research R5). It is redesigned in 013.
+- "Prices unknown" (FR-008) means the current model has no known price. The status bar's
+  "incomplete" mark is not used for this, because errors also set it (research R3).
+- The fallback name for `{{user}}` becomes "Traveler" everywhere, so Esc on the name prompt
+  needs no extra state (research R8).
+- `/prev` appends a copy of the restored reply to the session file, because pi only moves its
+  branch pointer in memory and a reload takes the last entry (research R6).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - A failed reply explains what to do (Priority: P1)
@@ -110,7 +123,9 @@ and the log path, and the log has the provider's message. A retry that fails aga
    OpenRouter, `/model`) instead of suggesting a retry, and still names the log file.
 6. **Given** any failure, **When** the user opens the log file, **Then** it contains the
    provider's error message, the model and the time; no API key appears in it.
-7. **Given** the innkeeper, **When** a reply fails, **Then** the same notice rules apply.
+7. **Given** the innkeeper, **When** a reply fails, **Then** the notice follows the same rules,
+   except that it says to send the message again and shows no retry count (plan-time
+   correction).
 
 ---
 
@@ -346,12 +361,13 @@ provider receives exactly those values and no others, and `/trace` lists them.
 
 ## Assumptions
 
-- The run's spend is the cost the status bar already totals for this run. When some prices are
-  unknown, that total is incomplete, and FR-008 applies.
+- The run's spend is the cost the status bar already totals for this run. FR-008 applies when the
+  current model's price is unknown (plan-time correction).
 - The output cap is passed to the provider as the request's maximum output tokens. Providers
   that ignore it are outside the app's control.
-- `/prev` reuses what regenerate already keeps in the session file. Its in-memory limit (this run
-  only) is the owner's decision, not a storage limit.
+- `/prev` builds on what regenerate keeps in the session file, and appends the restored reply so
+  it persists (plan-time correction). Its in-memory limit (this run only) is the owner's
+  decision, not a storage limit.
 - The name prompt fits into the existing setup flow before the first chat. Exactly where is a
   plan detail.
 - Sampling parameters are passed through pi's request options. pi-ai 1.3.0 has `temperature` and
