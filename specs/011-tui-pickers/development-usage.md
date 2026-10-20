@@ -40,3 +40,13 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
   sandbox. The authorized escalated retry succeeded as `06b966d`, with gitleaks and lint hooks.
 - `exec_command`: marked T002–T004 complete and committed this phase with normal hooks after
   the successful build, lint and test checkpoint.
+
+## Phase 3: Show Picker
+
+- `exec_command`: created synthetic app-harness tests for both item kinds, name filtering,
+  selection/details, Esc cancellation, argument rejection and the empty-library hint. Updated
+  command-completion expectations. The initial focused run failed as expected before implementation.
+- `exec_command`: implemented T005 and formatted the edited files. Build and lint passed;
+  all 62 test files and 352 tests passed. Inspected remaining command references and session APIs
+  for the next phases.
+- `exec_command`: marked T005 complete and committed the phase with normal hooks.

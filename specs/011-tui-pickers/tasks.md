@@ -88,7 +88,7 @@ quickstart.md
 
 **Independent test**: `/show`, type part of a name, Enter: the item's details are shown.
 
-- [ ] T005 [US1] In `packages/tui/src/commands.ts`, give `show` no `argumentHint` and no `getArgumentCompletions`, with the description `Inspect a library item` (contract). In `packages/tui/src/app.ts`:
+- [X] T005 [US1] In `packages/tui/src/commands.ts`, give `show` no `argumentHint` and no `getArgumentCompletions`, with the description `Inspect a library item` (contract). In `packages/tui/src/app.ts`:
   - `/show` with no text opens a `ListPicker` (through `showPanel`) of every `listLibrary(paths)` item, using the contract's title and placeholder. Each entry has the label `stripControls(name)`, the description `<kind> · <id>` and the search text `<name> <id>` (data-model.md). Choosing an item closes the picker and shows `formatItemDetails(item)`;
   - an empty library shows `EMPTY_LIBRARY_HINT` and opens no picker;
   - `/show <anything>` shows `/show opens a picker. In a shell, run: littletavern show <id>` and looks nothing up. In the dispatch check, `show` joins `import` as a command that accepts trailing text (research R3).

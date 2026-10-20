@@ -66,7 +66,7 @@ it("reads fresh library items, filters by name or id and offers only attached bo
   ]);
   expect(await complete("chat", character.item.id.slice(0, 6))).toHaveLength(1);
   expect(await complete("attach")).toEqual([expect.objectContaining({ value: lorebook.item.id })]);
-  expect(await complete("show")).toHaveLength(2);
+  expect(await complete("show")).toBeUndefined();
   expect(await complete("detach")).toEqual([expect.objectContaining({ value: "attached-id" })]);
   expect(
     await COMMANDS({ paths, getChat: () => null })
@@ -79,4 +79,11 @@ it("offers import without a path hint or file completion", () => {
   expect(command?.argumentHint).toBeUndefined();
   expect(command?.getArgumentCompletions).toBeUndefined();
   expect(command?.description).toBe("Import a card or lorebook from the import folders");
+});
+
+it("offers show without an id hint or completion", () => {
+  const command = COMMANDS().find((item) => item.name === "show");
+  expect(command?.argumentHint).toBeUndefined();
+  expect(command?.getArgumentCompletions).toBeUndefined();
+  expect(command?.description).toBe("Inspect a library item");
 });

@@ -77,7 +77,12 @@ import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
 import { openInEditor } from "./editor-launch.ts";
-import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
+import {
+  EMPTY_LIBRARY_HINT,
+  formatImportReport,
+  formatItemDetails,
+  formatLibraryList,
+} from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
@@ -818,21 +823,31 @@ export function createApp(options: AppOptions = {}) {
       },
       persona: openPersonaPicker,
       show: async () => {
-        const id = text.slice("/show".length).trim();
-        if (!id) {
-          errorNotice("Usage: /show <id>");
+        if (text !== "/show") {
+          notice("/show opens a picker. In a shell, run: littletavern show <id>");
           return;
         }
-        const item = getItem(paths, id);
-        notice(
-          item === "ambiguous"
-            ? `Ambiguous item prefix: ${id}`
-            : item
-              ? formatItemDetails(item).join("\n")
-              : `Item not found: ${id}`,
-          { kind: item && item !== "ambiguous" ? "notice" : "error" },
+        const items = listLibrary(paths);
+        if (!items.length) {
+          notice(EMPTY_LIBRARY_HINT);
+          return;
+        }
+        const picker = new ListPicker(
+          "Inspect an item (Enter shows details, Esc cancels)",
+          items.map((item) => ({
+            value: item,
+            label: stripControls(item.name),
+            description: `${item.kind} · ${item.id}`,
+            search: `${item.name} ${item.id}`,
+          })),
+          "Filter items",
         );
-        return;
+        picker.onCancel = closeOverlay;
+        picker.onSelect = (item) => {
+          closeOverlay();
+          notice(formatItemDetails(item).join("\n"));
+        };
+        showPanel(picker, { width: "90%" });
       },
       characters: async () => {
         openCharacterPicker();
@@ -903,7 +918,13 @@ export function createApp(options: AppOptions = {}) {
     if (text.startsWith("/")) {
       const name = text.slice(1).split(/\s+/, 1)[0];
       const command = commands.find((entry) => entry.name === name);
-      if (!command || (!command.argumentHint && command.name !== "import" && text !== `/${name}`)) {
+      if (
+        !command ||
+        (!command.argumentHint &&
+          command.name !== "import" &&
+          command.name !== "show" &&
+          text !== `/${name}`)
+      ) {
         errorNotice("Unknown command. Use /help.");
         return;
       }

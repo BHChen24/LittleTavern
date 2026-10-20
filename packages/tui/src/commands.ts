@@ -71,9 +71,7 @@ export function COMMANDS(context?: CommandContext): SlashCommand[] {
     { name: "library", description: "List the library" },
     {
       name: "show",
-      argumentHint: "<id>",
-      description: "Inspect an item",
-      getArgumentCompletions: library(),
+      description: "Inspect a library item",
     },
     { name: "persona", description: "Choose who you are in the story" },
     { name: "model", description: "Choose a model" },
