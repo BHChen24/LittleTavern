@@ -79,7 +79,8 @@ it("starts a character chat, regenerates the reply and records usage under the c
     expect(screen()).not.toContain("First reply.");
     expect(screen()).toContain("You:");
     await app.submit("/lorebooks");
-    expect(screen()).toContain("· No lorebooks.");
+    expect(app.tui.getFocusedComponent()?.render(100).join("\n")).toContain("Import a lorebook");
+    app.tui.getFocusedComponent()?.handleInput?.("\x1b");
     const lines = app.tui.children.flatMap((component) => component.render(80));
     expect(lines[0]).toContain("Character: Mira |");
     expect(lines.filter((line) => /^─{4}/.test(line))).toHaveLength(2);

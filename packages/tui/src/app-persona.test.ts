@@ -104,7 +104,9 @@ it("creates, persists, reopens and clears a persona through a fake VISUAL withou
   );
   const imported = importFile(paths, card);
   if (!imported.ok) throw new Error(imported.reason);
-  await app.submit(`/chat ${imported.item.id}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${imported.item.id}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   expect(screen()).toContain("Welcome Sailor");
   await app.submit("/persona");
   choose("No persona");

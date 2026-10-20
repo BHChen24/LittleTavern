@@ -117,7 +117,9 @@ it("accepts saved credentials and a chosen character and blocks regenerate after
     model: DEFAULT_MODEL_ID,
     savedKey: true,
   });
-  await app.submit(`/chat ${characterId}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${characterId}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   const generate = vi.spyOn(session, "generate");
   await app.submit("hello");
   expect(generate).toHaveBeenCalledOnce();
@@ -138,7 +140,9 @@ it("accepts saved credentials and a chosen character and blocks regenerate after
 
 it("keeps a selected character blocked without an API key", async () => {
   const { app, session, paths, characterId } = fixture({ key: false, model: DEFAULT_MODEL_ID });
-  await app.submit(`/chat ${characterId}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${characterId}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   const generate = vi.spyOn(session, "generate");
   await app.submit("keep this character draft");
   expect(generate).not.toHaveBeenCalled();
@@ -148,7 +152,9 @@ it("keeps a selected character blocked without an API key", async () => {
 
 it("blocks character regeneration until a model is selected and permits it once all setup is complete", async () => {
   const { app, session, paths, screen, selectModel, characterId } = fixture();
-  await app.submit(`/chat ${characterId}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${characterId}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   const generate = vi.spyOn(session, "generate");
   await app.submit("/regenerate");
   expect(generate).not.toHaveBeenCalled();
@@ -205,7 +211,9 @@ it("removes completed setup steps when the model is selected before the key", as
   expect(screen()).not.toContain("Select a model with /model.");
   expect(screen()).toContain("Choose a character with /characters or enter /innkeeper mode.");
   expect(screen().match(/Chat is disabled/g)).toHaveLength(1);
-  await app.submit(`/chat ${characterId}`);
+  await app.submit("/characters");
+  app.tui.getFocusedComponent()?.handleInput?.(`${characterId}`);
+  app.tui.getFocusedComponent()?.handleInput?.("\r");
   expect(screen()).not.toContain("Chat is disabled");
   await app.submit("hello");
   expect(screen()).toContain("Ready reply.");

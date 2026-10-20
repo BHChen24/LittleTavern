@@ -12,10 +12,12 @@ import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, relative, sep } from "node:path";
 import {
   CombinedAutocompleteProvider,
+  type Component,
   Container,
   Editor,
   Loader,
   matchesKey,
+  type OverlayOptions,
   ProcessTerminal,
   ScrollView,
   Spacer,
@@ -23,6 +25,7 @@ import {
   Text,
   TuiAltScreen,
   VStack,
+  wrapTextWithAnsi,
 } from "@earendil-works/pi-tui";
 import {
   type AppPaths,
@@ -44,7 +47,9 @@ import {
   findAllowedModel,
   forgetKey,
   getItem,
+  type ImportReport,
   importFile,
+  type LorebookItem,
   listChats,
   listLibrary,
   listPersonas,
@@ -65,6 +70,7 @@ import {
 } from "@littletavern/engine";
 import { COMMANDS, helpText } from "./commands.ts";
 import { FileBrowser } from "./components/file-browser.ts";
+import { Frame } from "./components/frame.ts";
 import { HomeScreen } from "./components/home-screen.ts";
 import { InputBox } from "./components/input-box.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
@@ -74,7 +80,12 @@ import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
 import { TraceOverlay } from "./components/trace-overlay.ts";
 import { openInEditor } from "./editor-launch.ts";
-import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
+import {
+  EMPTY_LIBRARY_HINT,
+  formatImportReport,
+  formatItemDetails,
+  formatLibraryList,
+} from "./library-format.ts";
 import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
@@ -176,7 +187,7 @@ export function createApp(options: AppOptions = {}) {
     waiting = undefined;
     tui.requestRender();
   }
-  const commands = COMMANDS({ paths, getChat: () => chat });
+  const commands = COMMANDS();
   editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
   let response = "";
   let running: Promise<unknown> | undefined;
@@ -186,7 +197,6 @@ export function createApp(options: AppOptions = {}) {
     resolveDone = resolve;
   });
   let started = false;
-  let helpOpen = false;
   /** Untrusted text (cards, lore, replies, errors) as it may be shown: no key, no escapes. */
   const display = (text: string) => stripControls(scrubSecrets(text, secrets));
   const notice = (text: string, options: { kind?: "notice" | "error" } = {}) => {
@@ -198,9 +208,25 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
-  function showImportReport(file: string): void {
-    const report = importFile(paths, file);
-    notice(formatImportReport(report).join("\n"), { kind: report.ok ? "notice" : "error" });
+  function showPanel(component: Component, options?: OverlayOptions): void {
+    tui.showOverlay(new Frame(component, () => tui.terminal.rows), options);
+  }
+  function importSelected(selected: string): ImportReport | null {
+    try {
+      const location = relative(realpathSync(paths.importRoot), realpathSync(selected));
+      if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) {
+        errorNotice(`${basename(selected)} is outside the import folders.`);
+        return null;
+      }
+      const report = importFile(paths, selected);
+      notice(formatImportReport(report).join("\n"), { kind: report.ok ? "notice" : "error" });
+      return report;
+    } catch (error) {
+      errorNotice(
+        `Could not import ${basename(selected)}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    }
   }
   function promptForKey(): void {
     const keyPrompt = new KeyPrompt(paths.credentialsFile);
@@ -224,7 +250,7 @@ export function createApp(options: AppOptions = {}) {
         notice("OPENROUTER_API_KEY in the environment will be used again next launch.");
       openModelPicker();
     };
-    tui.showOverlay(keyPrompt, { width: "90%" });
+    showPanel(keyPrompt, { width: "90%" });
     tui.requestRender();
   }
   function openApiKeyPicker(): void {
@@ -270,9 +296,9 @@ export function createApp(options: AppOptions = {}) {
         }
         closeOverlay();
       };
-      tui.showOverlay(actions, { width: "90%" });
+      showPanel(actions, { width: "90%" });
     };
-    tui.showOverlay(provider, { width: "90%" });
+    showPanel(provider, { width: "90%" });
   }
   function setupSteps(): string[] {
     const steps: string[] = [];
@@ -380,7 +406,7 @@ export function createApp(options: AppOptions = {}) {
       if (item === "new") newCharacter();
       else startChat(item);
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
   function editCharacter(draftPath?: string): void {
     let draft = draftPath;
@@ -409,7 +435,7 @@ export function createApp(options: AppOptions = {}) {
         notice(formatImportReport(result).join("\n"));
         notice(`Created with LittleTavern ${VERSION}.`);
         for (const warning of result.warnings) notice(`Warning: ${warning}`);
-        notice(`Start chatting with /chat ${result.item.id}`);
+        notice("Choose the character with /characters to start chatting.");
       }
     } catch (error) {
       errorNotice(
@@ -445,7 +471,7 @@ export function createApp(options: AppOptions = {}) {
         closeOverlay();
         editCharacter(draft);
       };
-      tui.showOverlay(picker, { width: "90%" });
+      showPanel(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
       errorNotice(
@@ -540,7 +566,7 @@ export function createApp(options: AppOptions = {}) {
           updateStatus();
         }
       };
-      tui.showOverlay(picker, { width: "90%" });
+      showPanel(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
       errorNotice(error instanceof Error ? error.message : String(error));
@@ -567,7 +593,7 @@ export function createApp(options: AppOptions = {}) {
         errorNotice(error instanceof Error ? error.message : "Could not resume the chat.");
       }
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
   async function regenerate(value = editor.getText()): Promise<void> {
     if (interceptIncompleteSetup(value)) return;
@@ -729,48 +755,105 @@ export function createApp(options: AppOptions = {}) {
       updateStatus();
       tui.requestRender();
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
 
   async function submit(value: string): Promise<void> {
     const text = value.trim();
-    if (closing || session.isStreaming || !text) return;
+    if (closing || !text) return;
+    if (session.isStreaming) {
+      if (text === "/new") notice("Wait for the reply, or press Esc to stop it.");
+      return;
+    }
     editor.setText("");
     if (text === "/key" || text === "/forget-key") {
       notice(`${text} was replaced by /apikey.`);
       return;
     }
-    const changeLorebooks = () => {
-      if (!chat) {
+    const openLorebookPicker = () => {
+      const current = chat;
+      if (!current) {
         errorNotice("Start a character chat first (/characters).");
         return;
       }
-      if (text === "/lorebooks") {
-        const books = chat.activeLorebooks();
-        notice(
-          books.length === 0
-            ? "No lorebooks. Attach one with /attach <id>."
-            : books
-                .map(
-                  (book) =>
-                    `${book.attached ? `attached ${book.id ?? ""}` : "card"} · ${book.name} · ${book.entries} entries`,
-                )
-                .join("\n"),
-        );
-        return;
+      type Choice =
+        | { kind: "import" }
+        | { kind: "card" }
+        | { kind: "library"; item: LorebookItem }
+        | { kind: "missing"; id: string };
+      const ids = current.attachedLorebookIds();
+      const books = listLibrary(paths).filter(
+        (item): item is LorebookItem => item.kind === "lorebook",
+      );
+      const embedded = current.character.lorebook;
+      const entries: PickerItem<Choice>[] = [
+        { value: { kind: "import" }, label: "Import a lorebook…", search: "Import a lorebook" },
+      ];
+      if (embedded)
+        entries.push({
+          value: { kind: "card" },
+          label: stripControls(embedded.name),
+          description: "part of the card",
+          search: embedded.name,
+        });
+      for (const item of books)
+        entries.push({
+          value: { kind: "library", item },
+          label: stripControls(item.name),
+          description: ids.includes(item.id) ? "attached" : "not attached",
+          search: `${item.name} ${item.id}`,
+        });
+      for (const id of ids) {
+        if (!books.some((item) => item.id === id))
+          entries.push({
+            value: { kind: "missing", id },
+            label: stripControls(id),
+            description: "attached, missing from the library",
+            search: id,
+          });
       }
-      const id = text.replace(/^\/(attach|detach)/, "").trim();
-      if (!id) {
-        errorNotice(`Usage: ${text.startsWith("/attach") ? "/attach" : "/detach"} <id>`);
-        return;
-      }
-      try {
-        if (text.startsWith("/attach")) notice(`Attached ${chat.attachLorebook(id).name}.`);
-        else notice(chat.detachLorebook(id) ? "Detached." : `Not attached: ${id}`);
-      } catch (error) {
-        errorNotice(error instanceof Error ? error.message : "Could not change lorebooks.");
-      }
-      return;
+      const picker = new ListPicker(
+        `Lorebooks for ${stripControls(current.character.name)} (Enter toggles, Esc cancels)`,
+        entries,
+        "Filter lorebooks",
+      );
+      picker.onCancel = closeOverlay;
+      picker.onSelect = (choice) => {
+        closeOverlay();
+        if (choice.kind === "import") {
+          const browser = new FileBrowser(paths.importLorebooksDir, paths.importRoot);
+          browser.onCancel = closeOverlay;
+          browser.onSelect = (selected) => {
+            closeOverlay();
+            const report = importSelected(selected);
+            if (report?.ok && report.item.kind === "lorebook") {
+              current.attachLorebook(report.item.id);
+              notice(`Attached ${stripControls(report.item.name)}.`);
+            }
+          };
+          showPanel(browser, { width: "90%" });
+          return;
+        }
+        try {
+          if (choice.kind === "card") {
+            notice(
+              `${stripControls(embedded?.name ?? "")} is part of the character card and cannot be detached.`,
+            );
+          } else if (choice.kind === "missing") {
+            current.detachLorebook(choice.id);
+            notice("Detached a lorebook that is no longer in the library.");
+          } else if (ids.includes(choice.item.id)) {
+            current.detachLorebook(choice.item.id);
+            notice(`Detached ${stripControls(choice.item.name)}.`);
+          } else {
+            current.attachLorebook(choice.item.id);
+            notice(`Attached ${stripControls(choice.item.name)}.`);
+          }
+        } catch (error) {
+          errorNotice(error instanceof Error ? error.message : "Could not change lorebooks.");
+        }
+      };
+      showPanel(picker, { width: "90%" });
     };
     const handlers: Record<string, () => void | Promise<void>> = {
       quit: async () => {
@@ -788,20 +871,9 @@ export function createApp(options: AppOptions = {}) {
           browser.onCancel = closeOverlay;
           browser.onSelect = (selected) => {
             closeOverlay();
-            try {
-              const location = relative(realpathSync(paths.importRoot), realpathSync(selected));
-              if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) {
-                errorNotice(`${basename(selected)} is outside the import folders.`);
-                return;
-              }
-              showImportReport(selected);
-            } catch (error) {
-              errorNotice(
-                `Could not import ${basename(selected)}: ${error instanceof Error ? error.message : String(error)}`,
-              );
-            }
+            importSelected(selected);
           };
-          tui.showOverlay(browser, { width: "90%" });
+          showPanel(browser, { width: "90%" });
         }
       },
       library: async () => {
@@ -810,34 +882,56 @@ export function createApp(options: AppOptions = {}) {
       },
       persona: openPersonaPicker,
       show: async () => {
-        const id = text.slice("/show".length).trim();
-        if (!id) {
-          errorNotice("Usage: /show <id>");
+        if (text !== "/show") {
+          notice("/show opens a picker. In a shell, run: littletavern show <id>");
           return;
         }
-        const item = getItem(paths, id);
-        notice(
-          item === "ambiguous"
-            ? `Ambiguous item prefix: ${id}`
-            : item
-              ? formatItemDetails(item).join("\n")
-              : `Item not found: ${id}`,
-          { kind: item && item !== "ambiguous" ? "notice" : "error" },
+        const items = listLibrary(paths);
+        if (!items.length) {
+          notice(EMPTY_LIBRARY_HINT);
+          return;
+        }
+        const picker = new ListPicker(
+          "Inspect an item (Enter shows details, Esc cancels)",
+          items.map((item) => ({
+            value: item,
+            label: stripControls(item.name),
+            description: `${item.kind} · ${item.id}`,
+            search: `${item.name} ${item.id}`,
+          })),
+          "Filter items",
         );
-        return;
+        picker.onCancel = closeOverlay;
+        picker.onSelect = (item) => {
+          closeOverlay();
+          notice(formatItemDetails(item).join("\n"));
+        };
+        showPanel(picker, { width: "90%" });
       },
       characters: async () => {
         openCharacterPicker();
         return;
       },
-      chat: async () => {
-        const id = text.slice("/chat".length).trim();
-        const item = id ? getItem(paths, id) : null;
-        if (!id) errorNotice("Usage: /chat <id>");
-        else if (item === "ambiguous") errorNotice(`Ambiguous item prefix: ${id}`);
-        else if (item?.kind !== "character") errorNotice(`Character not found: ${id}`);
-        else startChat(item);
-        return;
+      new: () => {
+        if (chat) {
+          const item = getItem(paths, chat.libraryId);
+          if (!item || item === "ambiguous" || item.kind !== "character") {
+            notice(
+              `${stripControls(chat.character.name)} is no longer in the library. Choose a character with /characters.`,
+            );
+          } else {
+            startChat(item);
+            notice(
+              `Started a new chat with ${stripControls(item.character.name)}. Earlier chats are in /sessions.`,
+            );
+          }
+        } else if (innkeeperSelected) {
+          session.clearConversation();
+          transcript.clear();
+          notice("Started a new conversation with the innkeeper.");
+        } else {
+          notice("Choose a character with /characters, or use /innkeeper.");
+        }
       },
       sessions: async () => {
         await openSessionPicker();
@@ -860,11 +954,12 @@ export function createApp(options: AppOptions = {}) {
             modelId: session.modelId,
             loreBudget: readSettings(paths).loreBudget ?? DEFAULT_ASSEMBLY_SETTINGS.loreBudget,
           },
-          Math.max(40, Math.floor(width * 0.9) - 2),
+          // The panel is 90% wide; its frame takes two columns on each side.
+          Math.max(20, Math.floor(width * 0.9) - 4),
         );
-        const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
+        const overlay = new TraceOverlay(lines, Math.max(3, tui.terminal.rows - 8));
         overlay.onClose = closeOverlay;
-        tui.showOverlay(overlay, { width: "90%" });
+        showPanel(overlay, { width: "90%" });
         tui.requestRender();
         return;
       },
@@ -882,20 +977,28 @@ export function createApp(options: AppOptions = {}) {
       },
       model: openModelPicker,
       help: async () => {
-        const help = new Text(helpText());
-        tui.showOverlay(help);
-        helpOpen = true;
+        const innerWidth = Math.max(1, Math.min(80, tui.terminal.columns) - 4);
+        const help = new TraceOverlay(
+          wrapTextWithAnsi(helpText(), innerWidth),
+          Math.max(3, tui.terminal.rows - 8),
+        );
+        help.onClose = closeOverlay;
+        showPanel(help);
         return;
       },
       apikey: openApiKeyPicker,
-      lorebooks: changeLorebooks,
-      attach: changeLorebooks,
-      detach: changeLorebooks,
+      lorebooks: openLorebookPicker,
     };
     if (text.startsWith("/")) {
       const name = text.slice(1).split(/\s+/, 1)[0];
       const command = commands.find((entry) => entry.name === name);
-      if (!command || (!command.argumentHint && command.name !== "import" && text !== `/${name}`)) {
+      if (
+        !command ||
+        (!command.argumentHint &&
+          command.name !== "import" &&
+          command.name !== "show" &&
+          text !== `/${name}`)
+      ) {
         errorNotice("Unknown command. Use /help.");
         return;
       }
@@ -926,11 +1029,6 @@ export function createApp(options: AppOptions = {}) {
     if (matchesKey(data, "escape") && session.isStreaming) {
       clearWaiting();
       session.abort();
-      return { consume: true };
-    }
-    if (matchesKey(data, "escape") && helpOpen) {
-      tui.hideOverlay();
-      helpOpen = false;
       return { consume: true };
     }
     return undefined;

@@ -151,6 +151,10 @@ export class ChatSession {
     return this.finalMessage;
   }
 
+  clearConversation(): void {
+    this.agent.state.messages = [];
+  }
+
   async send(text: string): Promise<TurnResult | null> {
     if (this.sending || isBlank(text) || isBlank(this.options.getApiKey())) return null;
     return this.run(() => this.agent.prompt(text));

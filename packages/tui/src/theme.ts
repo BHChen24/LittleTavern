@@ -23,6 +23,7 @@ export const messageStyles = {
   muted: (text: string) => style(["dim"], text),
 };
 const dim = messageStyles.muted;
+export const frameBorder = dim;
 const cyan = messageStyles.accent;
 export const selectListTheme: SelectListTheme = {
   selectedPrefix: cyan,

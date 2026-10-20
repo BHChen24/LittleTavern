@@ -266,6 +266,10 @@ export class CharacterChat {
     return null;
   }
 
+  attachedLorebookIds(): string[] {
+    return readSettings(this.paths).lorebookAttachments?.[this.libraryId] ?? [];
+  }
+
   attachLorebook(id: string): LorebookItem {
     const item = getItem(this.paths, id);
     if (!item || item === "ambiguous" || item.kind !== "lorebook")
