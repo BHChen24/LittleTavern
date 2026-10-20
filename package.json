@@ -1,6 +1,6 @@
 {
   "name": "littletavern",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A terminal (TUI) app for character-card roleplay chat.",
   "private": true,
   "type": "module",
@@ -13,7 +13,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "biome check .",
-    "lint:fix": "biome check --write ."
+    "lint:fix": "biome check --write .",
+    "dev": "pnpm build && node --env-file-if-exists=.env packages/tui/dist/cli.js",
+    "test:live": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --config vitest.live.config.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.7",

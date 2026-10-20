@@ -60,18 +60,20 @@ Rationale: this is a deliberate scope limit that keeps the codebase small enough
 Rationale: a source blob not captured at import can never be recovered later. Fidelity to other
 people's data is a feature in itself.
 
-### V. Explainable Context
+### V. SDD Development Usage Accounting
 
-- Every request the engine assembles MUST be accompanied by a machine-readable trace: which
-  sources contributed (card fields, lorebook entries, history, injected state), why each lorebook
-  entry activated or was excluded (matched key, constant, budget cut), and its token cost.
-- The trace MUST be produced by the same code path that builds the request, not reconstructed
-  afterwards. Engine tests assert on the trace as well as on the prompt.
-- Full traces are developer-facing by default; users can enable a debug mode that shows them.
-  This is a visibility default, not a security boundary.
+- SDD development agents MUST keep a record of each tool invocation and the total development
+  token usage reported by the agent platform for the run.
+- Records MUST identify the tool, its purpose and its outcome without including secrets.
+- Token counts MUST come from platform-reported usage. When a count is unavailable, agents MUST
+  mark it as unknown rather than estimate it or report zero. Per-invocation token counts MAY be
+  included when the platform exposes them.
+- This principle governs the SDD development workflow. It imposes no application context trace,
+  prompt-source breakdown, lorebook activation trace or application token-accounting requirement.
+  Application usage accounting is defined by the active feature specification.
 
-Rationale: context engineering cannot be developed, tested or trusted if its decisions are
-invisible. The trace is both the main debugging tool and the clearest demonstration of the engine.
+Rationale: the owner needs to track the tool calls and tokens consumed while developing the
+project. Development reports must distinguish measured usage from unavailable measurements.
 
 ### VI. MVP First, One Decided Piece at a Time
 
@@ -147,4 +149,4 @@ for clarifications. Each amendment updates the Sync Impact Report and the dates 
 and review checks compliance; an exception is allowed only when the plan records why it is needed
 and why the simpler compliant option was rejected.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 2.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19

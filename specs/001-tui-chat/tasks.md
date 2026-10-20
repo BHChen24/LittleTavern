@@ -43,10 +43,10 @@ T-k). Keep them lightweight: our own code only, never pi's behaviour.
 
 **Purpose**: Clean the scaffold and add the scripts every later phase relies on.
 
-- [ ] T001 Set `"version": "0.1.0"` in `package.json`, `packages/data/package.json`, `packages/engine/package.json` and `packages/tui/package.json`
-- [ ] T002 Remove the placeholder `PACKAGE_NAME` constants and the smoke test: `packages/data/src/index.ts`, `packages/data/src/index.test.ts`, `packages/engine/src/index.ts`, `packages/tui/src/index.ts` (leave each `index.ts` as an empty barrel to be filled in later)
-- [ ] T003 Add root `vitest.config.ts` whose default run excludes `**/*.live.test.ts`, `**/dist/**` and `**/node_modules/**`, and `vitest.live.config.ts` that includes only `packages/*/src/**/*.live.test.ts`
-- [ ] T004 Add root scripts in `package.json`: `"dev": "pnpm build && node --env-file-if-exists=.env packages/tui/dist/cli.js"` and `"test:live"`, which runs vitest with `vitest.live.config.ts` under `node --env-file-if-exists=.env`. Add `.env.example` containing only `OPENROUTER_API_KEY=`
+- [X] T001 Set `"version": "0.1.0"` in `package.json`, `packages/data/package.json`, `packages/engine/package.json` and `packages/tui/package.json`
+- [X] T002 Remove the placeholder `PACKAGE_NAME` constants and the smoke test: `packages/data/src/index.ts`, `packages/data/src/index.test.ts`, `packages/engine/src/index.ts`, `packages/tui/src/index.ts` (leave each `index.ts` as an empty barrel to be filled in later)
+- [X] T003 Add root `vitest.config.ts` whose default run excludes `**/*.live.test.ts`, `**/dist/**` and `**/node_modules/**`, and `vitest.live.config.ts` that includes only `packages/*/src/**/*.live.test.ts`
+- [X] T004 Add root scripts in `package.json`: `"dev": "pnpm build && node --env-file-if-exists=.env packages/tui/dist/cli.js"` and `"test:live"`, which runs vitest with `vitest.live.config.ts` under `node --env-file-if-exists=.env`. Add `.env.example` containing only `OPENROUTER_API_KEY=`
 
 **Checkpoint**: `pnpm build && pnpm lint && pnpm test` pass (with zero test files, configure vitest `passWithNoTests` or keep it green some other way). Commit.
 

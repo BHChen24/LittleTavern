@@ -144,3 +144,12 @@ vite.config.ts.timestamp-*
 
 # Agent Products
 .omo
+
+# Build and editor artifacts
+build/
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

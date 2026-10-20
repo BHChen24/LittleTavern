@@ -1,6 +1,6 @@
 {
   "name": "@littletavern/data",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Storage, schema and import/export for LittleTavern.",
   "private": true,
   "type": "module",

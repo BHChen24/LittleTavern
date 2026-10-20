@@ -56,7 +56,7 @@ Nothing else is performance-sensitive.
 | II. Wrap pi behind our types | Pass | Only `engine/src/chat-session.ts` and `engine/src/models.ts` import pi-ai or pi-agent-core. The engine exports `ChatSession`, `ModelInfo`, `UsageRecord` and similar types of its own. `tui` uses pi-tui directly, which the constitution allows |
 | III. Mechanism, not policy | Pass | Provider errors are classified by status code and shown; no retry heuristics are added |
 | IV. Lossless ecosystem data | N/A | No cards in this feature |
-| V. Explainable context | Deferred to 003 | The only context is a fixed system prompt plus the history. The usage ledger is the start of observability |
+| V. SDD development usage accounting | Pass | Development tool invocations and available platform token totals are recorded in development-usage.md. Unavailable token counts are marked unknown. Application usage follows FR-019–FR-023 |
 | VI. MVP first | Pass | No sessions, cards, themes or multiple providers |
 | VII. Understandable over clever | Pass | Small single-purpose modules, no abstractions without two uses, and pi's `chat-simple.ts` example as the structural template |
 | Testing policy | Pass | See the Test Plan below; pi's own behaviour is not re-tested |

@@ -1,6 +1,6 @@
 {
   "name": "@littletavern/tui",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "The LittleTavern terminal application.",
   "private": true,
   "type": "module",
