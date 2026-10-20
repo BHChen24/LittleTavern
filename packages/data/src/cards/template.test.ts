@@ -106,3 +106,11 @@ it("makes safe unique filenames without changing the name in the card", () => {
   expect(safeCardFileName("Mira", ["mira.json", "mira-2.json"])).toBe("mira-3.json");
   expect(safeCardFileName("x".repeat(90), [])).toBe(`${"x".repeat(60)}.json`);
 });
+
+it("trims whitespace-only fields and lore content, including end-of-file blank lines", () => {
+  expect(parsed("## Name\nMira\n## Description\n   ").fields.description).toBe("");
+  expect(
+    parsed("## Name\nMira\n## Lorebook\n### Empty\nAlways on: yes\n \t ").entries[0]?.content,
+  ).toBe("");
+  expect(parsed("## Name\nMira\n## Description\r\n  \r\n\t").fields.description).toBe("");
+});

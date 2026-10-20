@@ -91,10 +91,15 @@ description: "Task list for 007-character-creator"
 
 ## Phase 4: Polish
 
-- [ ] T009 Run `pnpm build && pnpm lint && pnpm test` and fix any failures
-- [ ] T010 Run `speckit-converge` on this feature and complete any tasks it appends
-- [ ] T011 Write `specs/007-character-creator/report.md` with the same sections as the earlier reports. Commit
+- [X] T009 Run `pnpm build && pnpm lint && pnpm test` and fix any failures
+- [X] T010 Run `speckit-converge` on this feature and complete any tasks it appends
+- [X] T011 Write `specs/007-character-creator/report.md` with the same sections as the earlier reports. Commit
 
 ## Dependencies & Execution Order
 
 Phase 1 → 2 → 3 → 4. **Parallel**: T001, T002 and T003.
+
+## Phase 5: Convergence
+
+- [X] T012 Return an empty field for sections or lore content consisting only of blank lines, including spaces at end-of-file, and add regression tests per FR-003 / research R2 (partial).
+- [X] T013 Add the automated English-language source check described by Constitution Language, excluding test files and synthetic fixtures, without a new dependency (missing).

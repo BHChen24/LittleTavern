@@ -56,6 +56,7 @@ export type ParsedTemplate =
 
 /** Remove blank boundary lines without trimming any characters from content lines. */
 function trimBlankLines(text: string): string {
+  if (!text.trim()) return "";
   return text.replace(/^(?:[^\S\n]*\n)+/, "").replace(/(?:\r?\n[^\S\n]*)+$/, "");
 }
 
