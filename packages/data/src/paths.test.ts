@@ -26,9 +26,11 @@ it("puts all application files and import folders under the explicit home", () =
   expect(paths.importRoot).toBe("/tmp/lt-path-test/import");
   expect(paths.importCharactersDir).toBe(join(paths.importRoot, "characters"));
   expect(paths.importLorebooksDir).toBe(join(paths.importRoot, "lorebooks"));
+  expect(paths.importPersonasDir).toBe(join(paths.importRoot, "personas"));
 });
 it("defaults to the home drop folders without creating them", () => {
   expect(resolveAppPaths({}).importRoot).toBe(join(homedir(), ".littletavern"));
+  expect(resolveAppPaths({}).importPersonasDir).toBe(join(homedir(), ".littletavern", "personas"));
 });
 it("creates missing import folders and leaves existing files intact", () => {
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: testHome() });
@@ -38,6 +40,7 @@ it("creates missing import folders and leaves existing files intact", () => {
   expect(ensureImportFolders(paths)).toBeNull();
   expect(readFileSync(file, "utf8")).toBe("original bytes");
   expect(existsSync(paths.importLorebooksDir)).toBe(true);
+  expect(existsSync(paths.importPersonasDir)).toBe(true);
 });
 it("returns a notice instead of throwing when the import root is a file", () => {
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: testHome() });

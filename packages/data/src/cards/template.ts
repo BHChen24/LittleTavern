@@ -60,6 +60,18 @@ function trimBlankLines(text: string): string {
   return text.replace(/^(?:[^\S\n]*\n)+/, "").replace(/(?:\r?\n[^\S\n]*)+$/, "");
 }
 
+export function parseMarkdownSections(
+  text: string,
+): { title: string; key: string; body: string }[] {
+  const sections = text.replace(/<!--[\s\S]*?-->/g, "").split(/^## (.+)\r?$/m);
+  const result: { title: string; key: string; body: string }[] = [];
+  for (let i = 1; i < sections.length; i += 2) {
+    const title = sections[i]?.trim() ?? "";
+    result.push({ title, key: title.toLowerCase(), body: trimBlankLines(sections[i + 1] ?? "") });
+  }
+  return result;
+}
+
 export function parseCharacterTemplate(text: string): ParsedTemplate {
   const fields: CharacterFields = {
     name: "",
@@ -73,11 +85,7 @@ export function parseCharacterTemplate(text: string): ParsedTemplate {
   const entries: TemplateEntry[] = [];
   const warnings: string[] = [];
   const seen = new Set<string>();
-  const sections = text.replace(/<!--[\s\S]*?-->/g, "").split(/^## (.+)\r?$/m);
-  for (let i = 1; i < sections.length; i += 2) {
-    const title = sections[i]?.trim() ?? "";
-    const heading = title.toLowerCase();
-    const content = trimBlankLines(sections[i + 1] ?? "");
+  for (const { title, key: heading, body: content } of parseMarkdownSections(text)) {
     if (heading !== "lorebook" && !Object.hasOwn(SECTIONS, heading)) {
       warnings.push(`Unknown section: ${title}; ignored.`);
       continue;

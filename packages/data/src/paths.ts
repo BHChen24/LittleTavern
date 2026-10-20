@@ -14,6 +14,7 @@ export interface AppPaths {
   importRoot: string;
   importCharactersDir: string;
   importLorebooksDir: string;
+  importPersonasDir: string;
 }
 
 export function resolveAppPaths(
@@ -29,6 +30,7 @@ export function resolveAppPaths(
     importRoot,
     importCharactersDir: join(importRoot, "characters"),
     importLorebooksDir: join(importRoot, "lorebooks"),
+    importPersonasDir: join(importRoot, "personas"),
     configDir,
     dataDir,
     logDir,
@@ -43,6 +45,7 @@ export function ensureImportFolders(paths: AppPaths): string | null {
   try {
     mkdirSync(paths.importCharactersDir, { recursive: true });
     mkdirSync(paths.importLorebooksDir, { recursive: true });
+    mkdirSync(paths.importPersonasDir, { recursive: true });
     return null;
   } catch {
     return `Could not create import folders under ${paths.importRoot}. You can still use /import <path>.`;

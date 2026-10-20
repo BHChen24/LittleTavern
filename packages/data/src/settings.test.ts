@@ -5,6 +5,23 @@ import { expect, it } from "vitest";
 import { resolveAppPaths } from "./paths.ts";
 import { readSettings, writeSettings } from "./settings.ts";
 
+it("persists a persona, clears it with null, and drops invalid values independently", () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-settings-"));
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  try {
+    writeSettings(paths, { userName: "Parker", persona: "traveller.md" });
+    expect(readSettings(paths)).toEqual({ userName: "Parker", persona: "traveller.md" });
+    writeSettings(paths, { persona: null });
+    expect(readSettings(paths)).toEqual({ userName: "Parker", persona: null });
+    for (const persona of ["", "  ", 3, [], {}]) {
+      writeFileSync(paths.settingsFile, JSON.stringify({ persona, userName: "Parker" }));
+      expect(readSettings(paths)).toEqual({ userName: "Parker" });
+    }
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
 it("round-trips the model preference and falls back for missing or malformed settings", () => {
   const home = mkdtempSync(join(tmpdir(), "lt-settings-"));
   const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });

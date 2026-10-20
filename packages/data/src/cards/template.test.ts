@@ -4,8 +4,21 @@ import {
   buildV3Card,
   CHARACTER_TEMPLATE,
   parseCharacterTemplate,
+  parseMarkdownSections,
   safeCardFileName,
 } from "./template.ts";
+
+it("splits Markdown sections in order, preserving duplicate headings and original spelling", () => {
+  expect(
+    parseMarkdownSections(
+      "Intro\n## Name\n\n  Mira  \n<!-- hidden -->\n## nAmE\nTwo\n## Empty\n \n",
+    ),
+  ).toEqual([
+    { title: "Name", key: "name", body: "  Mira  " },
+    { title: "nAmE", key: "name", body: "Two" },
+    { title: "Empty", key: "empty", body: "" },
+  ]);
+});
 
 function parsed(text: string) {
   const result = parseCharacterTemplate(text);

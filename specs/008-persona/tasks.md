@@ -46,9 +46,9 @@ description: "Task list for 008-persona"
 
 ## Phase 1: Foundational
 
-- [ ] T001 Extract `parseMarkdownSections(text)` from `parseCharacterTemplate` in `packages/data/src/cards/template.ts` per research R3. It returns an **ordered list** `{ title, key, body }[]`, where `title` is the original heading text, `key` is lowercased and trimmed, and duplicates are kept, so that 007's duplicate and unknown-section messages keep the original spelling. Export it, make `parseCharacterTemplate` use it, and add one direct test. All 007 tests must stay green, unchanged (T-a)
-- [ ] T002 [P] Add `importPersonasDir` to `AppPaths` in `packages/data/src/paths.ts`, and make `ensureImportFolders` create it. Extend `paths.test.ts`
-- [ ] T003 [P] Add `persona?: string | null` to `Settings` in `packages/data/src/settings.ts`. It is validated as a non-empty string, and a merging write can clear it with `null`. Extend `settings.test.ts`
+- [X] T001 Extract `parseMarkdownSections(text)` from `parseCharacterTemplate` in `packages/data/src/cards/template.ts` per research R3. It returns an **ordered list** `{ title, key, body }[]`, where `title` is the original heading text, `key` is lowercased and trimmed, and duplicates are kept, so that 007's duplicate and unknown-section messages keep the original spelling. Export it, make `parseCharacterTemplate` use it, and add one direct test. All 007 tests must stay green, unchanged (T-a)
+- [X] T002 [P] Add `importPersonasDir` to `AppPaths` in `packages/data/src/paths.ts`, and make `ensureImportFolders` create it. Extend `paths.test.ts`
+- [X] T003 [P] Add `persona?: string | null` to `Settings` in `packages/data/src/settings.ts`. It is validated as a non-empty string, and a merging write can clear it with `null`. Extend `settings.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 
