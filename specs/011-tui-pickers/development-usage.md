@@ -50,3 +50,17 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
   all 62 test files and 352 tests passed. Inspected remaining command references and session APIs
   for the next phases.
 - `exec_command`: marked T005 complete and committed the phase with normal hooks.
+
+## Phase 4: Lorebook Picker
+
+- `write_stdin`: confirmed the Phase 3 commit completed as `5bdec40`.
+- `exec_command`: added T-d/T-e tests and updated existing command and character-app tests before
+  implementation. The initial run failed as expected against the old listing and commands.
+- `exec_command`: implemented import/card/library/missing entries, persistent toggles and the
+  shared import-and-attach flow; removed attach/detach commands and completions.
+- `exec_command`: build and lint passed. The first full suite exposed one test expectation using
+  “too large” rather than the existing “larger than 20 MB” message; corrected the test without
+  changing import behavior. All 62 test files and 362 tests then passed.
+- `exec_command`: inspected remaining id-command tests, report structure and external offline
+  acceptance script. Marked T006–T008 complete, recorded implementation details and committed
+  the phase with normal hooks.

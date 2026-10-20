@@ -106,7 +106,7 @@ quickstart.md
 **Independent test**: in a chat with one attached, one unattached and one embedded lorebook,
 `/lorebooks` lists them with their states; choosing the unattached one attaches it.
 
-- [ ] T006 [US2] In `packages/tui/src/app.ts`, replace `changeLorebooks` and the `/lorebooks` listing with a picker (contract, data-model.md, research R4):
+- [X] T006 [US2] In `packages/tui/src/app.ts`, replace `changeLorebooks` and the `/lorebooks` listing with a picker (contract, data-model.md, research R4):
   - no character chat gives the existing `Start a character chat first (/characters).`;
   - the entries, in this order:
     1. `Import a lorebook…`;
@@ -118,12 +118,12 @@ quickstart.md
   - choosing the card lorebook shows `<name> is part of the character card and cannot be detached.` and changes nothing;
   - choosing a missing entry detaches it with `Detached a lorebook that is no longer in the library.`;
   - names go through `stripControls`.
-- [ ] T007 [US2] In `packages/tui/src/app.ts`, implement the import entry (research R5):
+- [X] T007 [US2] In `packages/tui/src/app.ts`, implement the import entry (research R5):
   - open `new FileBrowser(paths.importLorebooksDir, paths.importRoot)` through `showPanel`;
   - on selection, call `importSelected`;
   - only if the report is ok and its item is a lorebook, call `chat.attachLorebook(report.item.id)` and show `Attached <name>.`;
   - any other result attaches nothing.
-- [ ] T008 [US2] Remove `attach` and `detach` from `COMMANDS()` in `packages/tui/src/commands.ts` and from the handler table. Set the `lorebooks` description to `Choose or import lorebooks for the current character`. Delete the now-unused `/detach` completion code. Write tests T-d and T-e with every case listed for them in plan.md (including the library with no lorebooks, the already-imported lorebook and the damaged file), and update existing tests that used `/attach` or `/detach` to use the `/lorebooks` picker
+- [X] T008 [US2] Remove `attach` and `detach` from `COMMANDS()` in `packages/tui/src/commands.ts` and from the handler table. Set the `lorebooks` description to `Choose or import lorebooks for the current character`. Delete the now-unused `/detach` completion code. Write tests T-d and T-e with every case listed for them in plan.md (including the library with no lorebooks, the already-imported lorebook and the damaged file), and update existing tests that used `/attach` or `/detach` to use the `/lorebooks` picker
 
 **Checkpoint**: checks pass. Commit.
 

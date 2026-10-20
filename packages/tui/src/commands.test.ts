@@ -16,8 +16,6 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     "sessions",
     "regenerate",
     "trace",
-    "attach",
-    "detach",
     "lorebooks",
     "innkeeper",
     "import",
@@ -44,12 +42,7 @@ it("reads fresh library items, filters by name or id and offers only attached bo
   mkdirSync(home, { recursive: true });
   const commands = COMMANDS({
     paths,
-    getChat: () => ({
-      activeLorebooks: () => [
-        { name: "Attached", id: "attached-id", attached: true, entries: 0 },
-        { name: "Embedded", attached: false, entries: 0 },
-      ],
-    }),
+    getChat: () => null,
   });
   const complete = (name: string, prefix = "") =>
     commands.find((c) => c.name === name)?.getArgumentCompletions?.(prefix);
@@ -65,14 +58,14 @@ it("reads fresh library items, filters by name or id and offers only attached bo
     expect.objectContaining({ value: character.item.id, label: "Mira" }),
   ]);
   expect(await complete("chat", character.item.id.slice(0, 6))).toHaveLength(1);
-  expect(await complete("attach")).toEqual([expect.objectContaining({ value: lorebook.item.id })]);
+  expect(await complete("attach")).toBeUndefined();
   expect(await complete("show")).toBeUndefined();
-  expect(await complete("detach")).toEqual([expect.objectContaining({ value: "attached-id" })]);
+  expect(await complete("detach")).toBeUndefined();
   expect(
     await COMMANDS({ paths, getChat: () => null })
       .find((c) => c.name === "detach")
       ?.getArgumentCompletions?.(""),
-  ).toEqual([]);
+  ).toBeUndefined();
 });
 it("offers import without a path hint or file completion", () => {
   const command = COMMANDS({ paths, getChat: () => null }).find((item) => item.name === "import");

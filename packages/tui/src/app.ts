@@ -48,6 +48,7 @@ import {
   getItem,
   type ImportReport,
   importFile,
+  type LorebookItem,
   listChats,
   listLibrary,
   listPersonas,
@@ -764,37 +765,90 @@ export function createApp(options: AppOptions = {}) {
       notice(`${text} was replaced by /apikey.`);
       return;
     }
-    const changeLorebooks = () => {
-      if (!chat) {
+    const openLorebookPicker = () => {
+      const current = chat;
+      if (!current) {
         errorNotice("Start a character chat first (/characters).");
         return;
       }
-      if (text === "/lorebooks") {
-        const books = chat.activeLorebooks();
-        notice(
-          books.length === 0
-            ? "No lorebooks. Attach one with /attach <id>."
-            : books
-                .map(
-                  (book) =>
-                    `${book.attached ? `attached ${book.id ?? ""}` : "card"} · ${book.name} · ${book.entries} entries`,
-                )
-                .join("\n"),
-        );
-        return;
+      type Choice =
+        | { kind: "import" }
+        | { kind: "card" }
+        | { kind: "library"; item: LorebookItem }
+        | { kind: "missing"; id: string };
+      const ids = current.attachedLorebookIds();
+      const books = listLibrary(paths).filter(
+        (item): item is LorebookItem => item.kind === "lorebook",
+      );
+      const embedded = current.character.lorebook;
+      const entries: PickerItem<Choice>[] = [
+        { value: { kind: "import" }, label: "Import a lorebook…", search: "Import a lorebook" },
+      ];
+      if (embedded)
+        entries.push({
+          value: { kind: "card" },
+          label: stripControls(embedded.name),
+          description: "part of the card",
+          search: embedded.name,
+        });
+      for (const item of books)
+        entries.push({
+          value: { kind: "library", item },
+          label: stripControls(item.name),
+          description: ids.includes(item.id) ? "attached" : "not attached",
+          search: `${item.name} ${item.id}`,
+        });
+      for (const id of ids) {
+        if (!books.some((item) => item.id === id))
+          entries.push({
+            value: { kind: "missing", id },
+            label: stripControls(id),
+            description: "attached, missing from the library",
+            search: id,
+          });
       }
-      const id = text.replace(/^\/(attach|detach)/, "").trim();
-      if (!id) {
-        errorNotice(`Usage: ${text.startsWith("/attach") ? "/attach" : "/detach"} <id>`);
-        return;
-      }
-      try {
-        if (text.startsWith("/attach")) notice(`Attached ${chat.attachLorebook(id).name}.`);
-        else notice(chat.detachLorebook(id) ? "Detached." : `Not attached: ${id}`);
-      } catch (error) {
-        errorNotice(error instanceof Error ? error.message : "Could not change lorebooks.");
-      }
-      return;
+      const picker = new ListPicker(
+        `Lorebooks for ${stripControls(current.character.name)} (Enter toggles, Esc cancels)`,
+        entries,
+        "Filter lorebooks",
+      );
+      picker.onCancel = closeOverlay;
+      picker.onSelect = (choice) => {
+        closeOverlay();
+        if (choice.kind === "import") {
+          const browser = new FileBrowser(paths.importLorebooksDir, paths.importRoot);
+          browser.onCancel = closeOverlay;
+          browser.onSelect = (selected) => {
+            closeOverlay();
+            const report = importSelected(selected);
+            if (report?.ok && report.item.kind === "lorebook") {
+              current.attachLorebook(report.item.id);
+              notice(`Attached ${stripControls(report.item.name)}.`);
+            }
+          };
+          showPanel(browser, { width: "90%" });
+          return;
+        }
+        try {
+          if (choice.kind === "card") {
+            notice(
+              `${stripControls(embedded?.name ?? "")} is part of the character card and cannot be detached.`,
+            );
+          } else if (choice.kind === "missing") {
+            current.detachLorebook(choice.id);
+            notice("Detached a lorebook that is no longer in the library.");
+          } else if (ids.includes(choice.item.id)) {
+            current.detachLorebook(choice.item.id);
+            notice(`Detached ${stripControls(choice.item.name)}.`);
+          } else {
+            current.attachLorebook(choice.item.id);
+            notice(`Attached ${stripControls(choice.item.name)}.`);
+          }
+        } catch (error) {
+          errorNotice(error instanceof Error ? error.message : "Could not change lorebooks.");
+        }
+      };
+      showPanel(picker, { width: "90%" });
     };
     const handlers: Record<string, () => void | Promise<void>> = {
       quit: async () => {
@@ -911,9 +965,7 @@ export function createApp(options: AppOptions = {}) {
         return;
       },
       apikey: openApiKeyPicker,
-      lorebooks: changeLorebooks,
-      attach: changeLorebooks,
-      detach: changeLorebooks,
+      lorebooks: openLorebookPicker,
     };
     if (text.startsWith("/")) {
       const name = text.slice(1).split(/\s+/, 1)[0];
