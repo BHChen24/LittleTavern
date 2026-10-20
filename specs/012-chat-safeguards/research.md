@@ -124,6 +124,9 @@ and pi `v1.3.0`. Every fact cites the line it was read from.
     (`session-manager.ts:1104–1112`).
   - `history()` follows the branch from the leaf (`character-chat.ts:234–235`,
     `getBranch()`).
+  - The manager keeps the tree in memory. A file edited while the app runs is not reloaded, so
+    such edits cannot be detected and are unsupported. After a restart nothing is kept (spec edge
+    case).
 - **Consequence**: if `/prev` only moved the leaf to the old sibling, a restart would show the
   newer reply again, which breaks FR-011.
 - **Decision**:
@@ -136,7 +139,9 @@ and pi `v1.3.0`. Every fact cites the line it was read from.
        `replaced` (`appendMessage`). The copy becomes the last entry, so it is still the current
        reply after a restart;
     3. set `replaced` to the reply just swapped out.
-  - `send()` and the start of `regenerate()` clear `replaced`. A new `CharacterChat`, after a
+  - `send()` and the start of `regenerate()` clear `replaced`. Only a regenerate that completes
+    or is interrupted (and so is saved) sets it to the reply it replaced. A failed regenerate
+    leaves it cleared (spec FR-010: A → B → C keeps B). A new `CharacterChat`, after a
     chat switch or a restart, starts with none.
   - Each `/prev` adds one entry to the session file. The file is append-only, so this is the
     only way to make the choice persist.
@@ -168,7 +173,9 @@ and pi `v1.3.0`. Every fact cites the line it was read from.
     default is already "Traveler", and nothing is saved, so the prompt returns next start.
     "User" never appears (SC-004).
   - A `NamePrompt` component, an `Input` prefilled with `Traveler`, opens through `showPanel` in
-    `enterChat()` when `userName` is absent and `settings.persona` is not a string. It opens
+    `enterChat()` when `userName` is absent and `readActivePersona(paths).persona` is null
+    (`packages/data/src/personas.ts:72`; a missing or invalid persona file counts as none, spec
+    FR-012). It opens
     before the setup notice.
     - Enter: `stripControls`, trim; empty gives the contract message and keeps the prompt open;
       otherwise `writeSettings({ userName })`.
@@ -192,6 +199,13 @@ and pi `v1.3.0`. Every fact cites the line it was read from.
   An invalid value is dropped (a limit falls back to its default) and adds a warning such as
   `Ignored generation.temperature in settings.json: must be a number from 0 to 2.` The app shows
   the warnings once at start, like the other startup notices.
+- **What pi does with the options**: `buildBaseOptions` sets
+  `maxTokens: clampMaxTokensToContext(model, context, options?.maxTokens ?? model.maxTokens)`, and
+  merges the model's own `samplingParams` under ours (`../pi/packages/ai/src/api/simple-options.ts:36–46`;
+  called from `openai-completions.ts:738–756`). So without our cap, the model's maximum is
+  requested, and any cap may be lowered to fit the context. The trace therefore reports what
+  LittleTavern **requested** (spec FR-017). `maxTokens` is only passed when `replyTokens > 0`,
+  because the adapter treats 0 as "not set" (`openai-completions.ts:844`).
 - **Trace**:
   - `CharacterChat.generate()` records `session.request` on `lastTrace` as `request`.
   - `formatTraceReport` adds one line after the header: `Request: max <n> output tokens ·

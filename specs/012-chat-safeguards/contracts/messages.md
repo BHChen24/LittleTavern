@@ -11,6 +11,8 @@ through `stripControls`.
 
 ## Failure notices (error style)
 
+Only the retryable kinds show a retry count (spec FR-003).
+
 | Kind (`describeProviderError`) | Text |
 |---|---|
 | `rate-limited` | `The reply failed: rate limit reached. Press Ctrl+R or use /regenerate to retry. Retries so far: <n>. Details: <log>` |
@@ -59,6 +61,8 @@ and pino's `time`, with secrets removed.
 
 ## Trace line
 
-After the header: `Request: max <n> output tokens · temperature <v> · top_p <v> · top_k <v> ·
-min_p <v> · repetition_penalty <v>`, listing only the parameters that were sent. With a cap of
-0, it reads `no output limit`. With nothing sent at all, it reads `Request: model defaults`.
+After the header: `Requested: max <n> output tokens · temperature <v> · top_p <v> · top_k <v> ·
+min_p <v> · repetition_penalty <v>`, listing only the parameters LittleTavern set. With a cap of
+0, the first item reads `model's maximum output`. With no cap and no parameters, the line reads
+`Requested: model defaults`. pi may lower the output cap to fit the remaining context
+(`../pi/packages/ai/src/api/simple-options.ts:45`).

@@ -29,7 +29,7 @@ H=$(mktemp -d); LITTLETAVERN_HOME=$H node packages/tui/dist/cli.js
    and `"generation": { "temperature": 1.5, "topP": 2 }`. Restart:
    - a warning names `generation.topP`;
    - a reply is cut off with the cut-off note;
-   - `/trace` shows `Request: max 30 output tokens · temperature 1.5`;
+   - `/trace` shows `Requested: max 30 output tokens · temperature 1.5`;
    - the next send asks `Continue` or `Stop`; `Stop` keeps your text.
 4. While a reply streams, type `/prev` and press Enter: the wait message appears.
 5. A real failure, if one happens: the notice is short and names the log; the log has the

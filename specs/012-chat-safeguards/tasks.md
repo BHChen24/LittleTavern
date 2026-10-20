@@ -111,10 +111,11 @@ count.
   - replace the current error notice with the contract text for each `describeProviderError` kind, ending with `Details: <paths.logFile>`. Keep the existing key-rejected behaviour of clearing the active key;
   - set the reply text to `<partial> (incomplete, not saved)`;
   - track `retries` as in data-model.md: a regenerate whose target is `"user"` right after a failure counts as a retry;
+  - only the retryable kinds show the count (spec FR-003);
   - the innkeeper variant: `Send your message again to retry.`, with no count;
   - log `logger.error({ error, model, kind }, "Provider request failed")`.
 
-  Write T-e in a new `packages/tui/src/app-safeguards.test.ts`, using the simulated provider's error replies
+  Write T-e in a new `packages/tui/src/app-safeguards.test.ts` with every case in plan.md, including its edge cases, using the simulated provider's error replies
 
 **Checkpoint**: checks pass. Commit.
 
@@ -151,11 +152,11 @@ count.
 again shows B.
 
 - [ ] T009 [US3] In `packages/engine/src/character-chat.ts`, add `replaced` and `prev(): "restored" | "nothing-to-restore"` exactly as research R6 describes:
-  - set `replaced` when a regenerate of a reply completes or is interrupted;
   - clear it in `send()` and at the start of `regenerate()`;
+  - set it to the replaced reply only when that regenerate completes or is interrupted; a failed regenerate leaves it cleared (spec FR-010);
   - `prev()` branches from the leaf's parent and appends a copy of `replaced`, then keeps the swapped-out reply as `replaced`.
 
-  Write T-d in `packages/engine/src/character-chat.test.ts`, including reopening the session file
+  Write T-d in `packages/engine/src/character-chat.test.ts` with every case in plan.md, including the failed regenerate and reopening the session file
 - [ ] T010 [US3] Add `prev` to `COMMANDS()` in `packages/tui/src/commands.ts` with the contract description, and a handler in `packages/tui/src/app.ts`:
   - not in a character chat: the contract message;
   - `"nothing-to-restore"`: the contract message;
@@ -174,7 +175,7 @@ again shows B.
 **Independent test**: a fresh home shows the prompt with `Traveler`; Enter saves it; a restart
 does not ask again.
 
-- [ ] T011 [US4] Create `packages/tui/src/components/name-prompt.ts`, a pi-tui `Input` prefilled with `Traveler` and titled as in the contract, forwarding `focused`. In `enterChat()` (`packages/tui/src/app.ts`), open it through `showPanel` before the setup notice when `readSettings(paths).userName` is absent and `readSettings(paths).persona` is not a string (research R8):
+- [ ] T011 [US4] Create `packages/tui/src/components/name-prompt.ts`, a pi-tui `Input` prefilled with `Traveler` and titled as in the contract, forwarding `focused`. In `enterChat()` (`packages/tui/src/app.ts`), open it through `showPanel` before the setup notice when `readSettings(paths).userName` is absent and `readActivePersona(paths).persona` is null (research R8; a missing or invalid persona file counts as none):
   - Enter: clean the text with `stripControls` and trim it. An empty result shows `Please enter a name.` and keeps the prompt open. Otherwise `writeSettings(paths, { userName })` and show the saved message.
   - Esc: close and save nothing.
 
@@ -191,7 +192,7 @@ Phase 1.
 
 **Independent test**: with `generation.temperature` set, `/trace` shows it on the request line.
 
-- [ ] T012 [US5] Add `request?` to `AssemblyTrace` and set it from `session.request` in `CharacterChat.generate()` (research R9). In `packages/tui/src/trace-format.ts`, add the contract's `Request:` line after the header. Write T-i in the existing trace-format tests
+- [ ] T012 [US5] Add `request?` to `AssemblyTrace` and set it from `session.request` in `CharacterChat.generate()` (research R9). In `packages/tui/src/trace-format.ts`, add the contract's `Requested:` line after the header (it reports what LittleTavern requested; research R9). Write T-i in the existing trace-format tests
 
 **Checkpoint**: checks pass. Commit.
 
@@ -212,7 +213,7 @@ Phase 1.
   - `/prev` in the command table;
   - a short note that failures show the log path.
 
-  Add a `/prev` row "(added by 012)" to `specs/006-usability/contracts/commands.md`
+  Add a `/prev` row "(added by 012)" to `specs/006-usability/contracts/commands.md`. Help lists `/prev` through `COMMANDS()` (spec FR-014)
 
 **Checkpoint**: checks pass. Commit.
 

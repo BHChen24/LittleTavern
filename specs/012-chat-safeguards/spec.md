@@ -58,8 +58,8 @@ The name used for the player defaults to "User" unless a persona is active.
   request.
 - Q: What is the player called without a persona? → A: The app asks for a name once, on the first
   start where none is set, with "Traveler" filled in. Enter accepts it. The name is used whenever
-  no persona is active; a persona's name still takes precedence. "You" or "你" are not used,
-  because cards write `{{user}}` in the third person.
+  no persona is active; a persona's name still takes precedence. A second-person word such as
+  "You" is not used, because cards write `{{user}}` in the third person.
 - Q: What do the spend limits cover? → A: Two limits:
   - a cap on each reply's length: **4096 output tokens** by default, enough for thinking models
     whose reasoning also counts as output;
@@ -178,9 +178,9 @@ contains A; `/prev` again shows B.
    history and in the next request.
 2. **Given** `/prev` was just used, **When** the user enters `/prev` again, **Then** the other
    reply comes back.
-3. **Given** the user sent a new message, regenerated again, switched chats or restarted after a
-   regenerate, **When** they enter `/prev`, **Then** the app says there is no previous reply to
-   bring back, and nothing changes.
+3. **Given** the user sent a new message, switched chats or restarted after a regenerate, or a
+   later regenerate failed, **When** they enter `/prev`, **Then** the app says there is no
+   previous reply to bring back, and nothing changes.
 4. **Given** two regenerates in a row (A → B → C), **When** the user enters `/prev`, **Then** B
    comes back (only the last replaced reply is kept), and `/prev` again shows C.
 5. **Given** a reply is streaming, **When** the user enters `/prev`, **Then** the app says to wait
@@ -240,7 +240,8 @@ provider receives exactly those values and no others, and `/trace` lists them.
    above 0), **When** settings are read, **Then** that parameter is ignored and the app says once
    which one and why; the other parameters still apply.
 4. **Given** a request was sent, **When** the user opens `/trace`, **Then** it lists the reply cap
-   and every sampling parameter that was sent, or says that the model defaults were used.
+   and every sampling parameter that LittleTavern requested, or says that model defaults were
+   requested.
 
 ---
 
@@ -255,10 +256,10 @@ provider receives exactly those values and no others, and `/trace` lists them.
   screen, as today.
 - Settings with an invalid limit (negative, not a number): that limit uses its default, and the
   other settings still apply, as with other invalid settings.
-- A limit set to 0 in settings: that limit is off. The reminder says "off" for it.
+- A limit set to 0 in settings: that limit is off. The reminder says "not capped" for it.
 - The run's cap is reached in the middle of a reply: the reply finishes, and the next send asks.
-- `/prev` after the previous reply's file entry was removed or the session file was edited:
-  "nothing to bring back", with no error.
+- `/prev` after a restart: "nothing to bring back", which also covers a session file edited while
+  the app was closed. Editing a session file while the app is running is not supported.
 - The name prompt and the API-key setup on the same first start: the name prompt comes first,
   then the existing setup steps.
 - A model that ignores some sampling parameter: the request still includes it, and the app cannot
@@ -273,9 +274,10 @@ provider receives exactly those values and no others, and `/trace` lists them.
 - **FR-001**: The app MUST NOT retry failed requests automatically.
 - **FR-002**: A failed reply's partial text MUST stay visible, marked `(incomplete, not saved)`.
   It MUST NOT be saved or sent with later requests.
-- **FR-003**: The failure notice MUST be short, and MUST include the retry hint (or the fix for
-  rejected key, no credit or unavailable model), the manual retry count for that message, and the
-  log file's path.
+- **FR-003**: The failure notice MUST be short and MUST include the log file's path. When a retry
+  can help, it MUST include the retry hint and the manual retry count for that message (character
+  chats; the innkeeper has no count). For a rejected key, missing credit or an unavailable model,
+  it MUST name the fix instead, without a retry count.
 - **FR-004**: Each failure MUST be written to the log with the provider's message, the model and
   the time, with secrets removed.
 - **FR-005**: Every request MUST ask for at most the reply cap in output tokens: 4096 by default,
@@ -288,27 +290,31 @@ provider receives exactly those values and no others, and `/trace` lists them.
 - **FR-008**: When the prices of the current model are unknown, the app MUST say once per run that
   the spend cap cannot be checked, and still apply the reply cap.
 - **FR-009**: The home screen and the pre-chat setup notice MUST show one line naming both limits
-  (or "off") and the settings file, until a chat starts in this run.
-- **FR-010**: `/prev` MUST swap the current last reply with the one that the latest regenerate in
-  this run replaced, and swap back on a second use. It MUST say there is nothing to bring back
-  after a new message, another regenerate, a chat switch or a restart. It works in character
-  chats only.
+  (or "not capped") and the settings file, until a chat starts in this run.
+- **FR-010**: `/prev` MUST swap the current last reply with the one that the latest successful
+  regenerate in this run replaced, and swap back on a second use. A new regenerate discards the
+  kept reply when it starts and keeps the reply it replaces once it succeeds (A → B → C keeps B).
+  `/prev` MUST say there is nothing to bring back after a new message, a failed regenerate, a
+  chat switch or a restart. It works in character chats only.
 - **FR-011**: After `/prev`, the shown reply MUST be the one in the saved chat history and in the
   next request.
-- **FR-012**: On the first chat layout where no name is saved and no persona is active, the app
+- **FR-012**: On the first chat layout where no name is saved and no persona is active (a persona
+  setting whose file is missing or invalid counts as no persona), the app
   MUST ask for the player's name, with "Traveler" filled in. Enter saves it; Esc uses "Traveler"
   for this run only.
 - **FR-013**: The saved name MUST be used for `{{user}}` whenever no persona is active. A persona's
   name still takes precedence.
-- **FR-014**: Help, the README and the command contract MUST describe `/prev`, the limits, the name
-  prompt and the `generation` settings.
+- **FR-014**: Help and the command contract MUST list `/prev`. The README MUST describe `/prev`,
+  the limits, the name prompt and the `generation` settings.
 - **FR-015**: The app MUST send the `generation` parameters set in `settings.json` (`temperature`,
   `topP`, `topK`, `minP`, `repetitionPenalty`) with every request, and MUST NOT send the ones
   that are not set.
 - **FR-016**: An invalid or out-of-range `generation` value MUST be ignored with a one-time notice
   that names it; the valid ones still apply.
-- **FR-017**: `/trace` MUST show the reply cap and the sampling parameters sent with the last
-  request, or that model defaults were used.
+- **FR-017**: `/trace` MUST show the reply cap and the sampling parameters that LittleTavern
+  requested for the last request, or that model defaults were requested. pi may lower the output
+  cap to fit the remaining context, and without a cap it uses the model's maximum; the trace says
+  "requested" to make this clear.
 
 ### Key Entities
 
@@ -330,8 +336,9 @@ provider receives exactly those values and no others, and `/trace` lists them.
 
 - **SC-001**: After any failed reply, a user can tell from the screen alone whether to retry and
   where the details are, without reading provider jargon.
-- **SC-002**: With default settings, no single reply can exceed 4096 output tokens, and the run
-  cannot spend more than 1 USD without the user agreeing.
+- **SC-002**: With default settings, LittleTavern never asks for more than 4096 output tokens per
+  reply, and once the run has spent 1 USD it starts no further request without the user agreeing.
+  The request in progress when the cap is crossed may take the total slightly past it.
 - **SC-003**: A regenerated-away reply can be brought back with one command in 100% of the cases
   covered by FR-010.
 - **SC-004**: In a new installation, no character addresses the player as "User".
