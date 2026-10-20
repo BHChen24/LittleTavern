@@ -1,10 +1,155 @@
 # LittleTavern
 
-A terminal (TUI) app for character-card roleplay chat, in the same family as
-[SillyTavern](https://github.com/SillyTavern/SillyTavern) — but its own application rather than a
-port of one. SillyTavern serves as a design reference; LittleTavern borrows the good ideas and
-implements them its own way.
+A terminal app for character-card roleplay. Import the character cards and lorebooks you already
+have, choose who you are in the story, and chat in a full-screen TUI. When a reply surprises you,
+LittleTavern can show you exactly what was sent to the model and why.
 
-Import your existing character cards and lorebooks (PNG or JSON), and chat from your terminal.
+It is in the same family as [SillyTavern](https://github.com/SillyTavern/SillyTavern), but it is
+its own application, not a port. SillyTavern is a design reference: LittleTavern takes the ideas
+and implements them independently. It is built on the [pi](https://github.com/earendil-works/pi)
+agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
-Early development: there is no source tree yet.
+> **Status:** v0.1, early. Usable for everyday roleplay; expect rough edges.
+
+## Features
+
+- **Bring your cards.** Character Card V2 and V3, as JSON or PNG, plus SillyTavern lorebooks.
+  Unknown fields and extensions are kept as they are, never executed and never lost.
+- **Explainable context.** `/trace` shows every part of the last request (instructions, persona,
+  character, lore, history), with estimated tokens and the reason each lorebook entry was or was
+  not included. `littletavern dry-run` shows the next request without sending anything.
+- **Personas.** Write who you are once, as a Markdown file, and switch between personas at any time.
+- **Write characters in your editor.** Create a character from a Markdown template in `$EDITOR`;
+  it is saved as a standard V3 card.
+- **A comfortable TUI.** Full screen, with mouse scrolling and copy-on-select, coloured dialogue,
+  transcript search, and resumable chats with regenerate.
+- **Cost you can see.** Tokens, cache hits and cost for the session are shown in the status bar.
+
+## Requirements
+
+- Node.js 26 or newer
+- An [OpenRouter](https://openrouter.ai/) API key. Models from the OpenAI and Gemini families are
+  supported.
+
+## Install
+
+Prebuilt releases are not published yet. To install from source (needs [pnpm](https://pnpm.io/)):
+
+```bash
+git clone https://github.com/BHChen24/LittleTavern.git
+cd LittleTavern
+pnpm install
+pnpm build
+cd packages/tui && pnpm link --global
+```
+
+`littletavern` is now available in any directory. Remove it with
+`pnpm remove --global @littletavern/tui`.
+
+## Quick start
+
+1. Put character cards in `~/.littletavern/characters/` and lorebooks in
+   `~/.littletavern/lorebooks/`, or import them later with `/import`.
+2. Run `littletavern` and press Enter. The app lists the setup steps that are still missing.
+3. `/apikey` adds your OpenRouter key. You choose whether it is kept for this session only or
+   saved to a file only you can read.
+4. `/model` chooses a model.
+5. `/characters` starts a chat, or creates a new character. `/persona` sets who you are.
+
+Type `/` at any time to see the commands, with completion.
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `/characters` | Choose a character and start a chat, or create a new one |
+| `/chat <id>` | Start a chat with a character |
+| `/sessions` | Resume a saved chat |
+| `/regenerate` | Regenerate the last reply (also Ctrl+R) |
+| `/trace` | Show why the last request looked the way it did |
+| `/attach <id>`, `/detach <id>` | Attach or detach a lorebook for the current character |
+| `/lorebooks` | List the active lorebooks |
+| `/persona` | Choose, create or edit who you are in the story |
+| `/import [path]` | Import a card or lorebook; without a path, browse the import folders |
+| `/library`, `/show <id>` | List the library, or inspect one item |
+| `/innkeeper` | Talk to the innkeeper (a chat without a character) |
+| `/model` | Choose a model |
+| `/apikey` | Add, replace or forget your OpenRouter key |
+| `/help` | Show commands and key bindings |
+| `/quit` | Quit |
+
+| Key | What it does |
+|---|---|
+| Enter | Send |
+| Esc | Interrupt a reply; close a picker |
+| Ctrl+R | Regenerate the last reply |
+| Ctrl+O | Write the current message in `$EDITOR` |
+| PgUp / PgDn, mouse wheel | Scroll the transcript |
+| Ctrl+Shift+F | Search the transcript |
+| Ctrl+C | Quit |
+
+## Command line
+
+```text
+littletavern                         Start the app
+littletavern import <file…>          Import cards or lorebooks
+littletavern list                    List the library
+littletavern show <id>               Inspect an item (a unique prefix is enough)
+littletavern create <file.md>        Create and import a character from Markdown
+littletavern dry-run <character-id> [--message <text>] [--session <id-or-path>] [--json]
+                                     Show the next request and its lore trace; sends nothing
+```
+
+## Supported formats
+
+| Kind | Accepted |
+|---|---|
+| Character cards | V3 JSON (`chara_card_v3`), V2 JSON (`chara_card_v2`), PNG with a `ccv3` or `chara` text chunk (`ccv3` wins when both exist) |
+| Lorebooks | The lorebook embedded in a card (`data.character_book`), and standalone SillyTavern world-info JSON |
+
+Not supported yet, with a clear error: V1 cards, CharX, BYAF, YAML cards, and PNGs without card
+data.
+
+## Where things are stored
+
+| What | Where (Linux defaults) |
+|---|---|
+| Import folders and personas | `~/.littletavern/{characters,lorebooks,personas}` |
+| Settings and a saved key | `~/.config/littletavern/` (`settings.json`, `credentials.json`) |
+| Library and chat sessions | `~/.local/share/littletavern/` |
+
+macOS and Windows use their platform's usual folders. Set `LITTLETAVERN_HOME` to keep everything
+in one directory instead.
+
+## Your API key
+
+- By default the key is used **for the current session only** and is never written to disk.
+- It is saved only when you choose to, to `credentials.json` with permissions only you can read.
+- `OPENROUTER_API_KEY` in the environment overrides a saved key.
+- The key is removed from anything the app displays or logs.
+
+## Development
+
+```bash
+pnpm install       # also installs the git hooks
+pnpm build         # TypeScript build, which is also the type check
+pnpm lint          # Biome
+pnpm test          # Vitest; uses a simulated model, never a real key
+```
+
+Git hooks (husky) run [gitleaks](https://github.com/gitleaks/gitleaks) and the lint before each
+commit, check that commit messages follow the conventional format in English, and run the build
+and tests before each push. Install gitleaks before committing.
+
+### How this project is built
+
+LittleTavern is developed spec-first with [Spec Kit](https://github.com/github/spec-kit). Each
+feature has a specification, a plan, a task list and an implementation report under
+[`specs/`](specs/), all governed by the project
+[constitution](.specify/memory/constitution.md). Design and specifications are worked out by the
+owner with Claude; implementation is done by Codex following [`AGENTS.md`](AGENTS.md). The
+constitution also requires each feature to record the development tokens it used.
+
+## License
+
+[MIT](LICENSE). Character cards and lorebooks you import keep their own licenses.
