@@ -27,3 +27,9 @@ Sync Impact Report: 2.0.0 -> 3.0.0 (incompatible governance change); modified De
 Workflow; no core principle changed; no added or removed section; no remaining placeholders.
 The review impact is recorded here so no temporary HTML comment is committed to the constitution.
 The earlier pending branch question is resolved. No extension hooks file is present.
+
+Phase 2: `exec_command` wrote PNG/detection/normalization tests first and confirmed the
+expected missing-module failures. It then implemented T003–T005, formatted and checked them.
+One diagnostic test incorrectly assumed every Node JSON.parse error includes line/column;
+the fixture was corrected to a syntax error with location data, preserving the required
+verbatim JSON.parse message. Final build/lint and all 76 tests in 18 files passed.

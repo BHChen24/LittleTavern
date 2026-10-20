@@ -58,15 +58,15 @@ to T-h). Keep them lightweight.
 
 ## Phase 2: Foundational (parsing; blocks all stories)
 
-- [ ] T003 [P] Implement `readPngTextChunks(bytes): Map<string,string>` in `packages/data/src/cards/png.ts` per research R1. Check the signature, walk the chunks, split each `tEXt` at the first `\0` and decode as Latin-1. Do not verify the CRC and do not read `zTXt` or `iTXt`. Throw a typed error when the signature is not PNG. Write tests T-a in `packages/data/src/cards/png.test.ts`
-- [ ] T004 [P] Implement `toCharacter(data)` and `toLorebook(raw, fallbackName)` in `packages/data/src/cards/normalize.ts`, both returning `{ value, warnings }`, using research R4's tables verbatim.
+- [X] T003 [P] Implement `readPngTextChunks(bytes): Map<string,string>` in `packages/data/src/cards/png.ts` per research R1. Check the signature, walk the chunks, split each `tEXt` at the first `\0` and decode as Latin-1. Do not verify the CRC and do not read `zTXt` or `iTXt`. Throw a typed error when the signature is not PNG. Write tests T-a in `packages/data/src/cards/png.test.ts`
+- [X] T004 [P] Implement `toCharacter(data)` and `toLorebook(raw, fallbackName)` in `packages/data/src/cards/normalize.ts`, both returning `{ value, warnings }`, using research R4's tables verbatim.
   - **Defaults for a missing field or a wrong type**: `""`, `[]`, `null`, `true` for `enabled`, `false` for `constant`, `0` for `insertionOrder`. Each wrong type adds a warning in the form `field "<name>" ... ignored`.
   - **Entry order**: world-info entries are sorted by numeric key; card-format entries keep array order.
   - **Lorebook name**: when `name` is missing or blank, use `fallbackName`.
   - **Preserved, not used**: `preservedUnusedFields(raw)` lists the keys under `raw.data` that R4 does not map, plus `extensions.<key>` for each extension key.
 
   Write tests T-c in `packages/data/src/cards/normalize.test.ts`.
-- [ ] T005 Implement `detectFile(bytes, fileName)` in `packages/data/src/cards/detect.ts` per research R2, in that order, using bytes only and never the extension. It returns either `{ kind: "character", format, raw }`, `{ kind: "lorebook", format, raw }`, or `{ rejected: true, detected, reason }`.
+- [X] T005 Implement `detectFile(bytes, fileName)` in `packages/data/src/cards/detect.ts` per research R2, in that order, using bytes only and never the extension. It returns either `{ kind: "character", format, raw }`, `{ kind: "lorebook", format, raw }`, or `{ rejected: true, detected, reason }`.
   - **Rejection messages** use the wording in `contracts/cli-and-library.md`, for example "V1 character cards are not supported in this version" and "PNG image without a character card".
   - **Damaged JSON**: the reason is `damaged JSON: <the JSON.parse message>`.
   - **Missing name**: a card whose name is missing or blank is rejected with "a character must have a name".
