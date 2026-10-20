@@ -94,3 +94,12 @@ Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present
   Marked T012–T013 complete and committed with normal hooks.
 - `exec_command`: read the convergence skill and documentation touchpoints in preparation for
   the remaining task phases. No convergence writes have been made yet.
+
+## Phase 7: Documentation
+
+- `exec_command`: updated the README command table and the explicitly authorized 006 command
+  contract rows and removal note. A search equivalent to the quickstart grep found no obsolete
+  in-app id suggestions in application source, README or the active contract.
+- `exec_command` / `write_stdin`: build, lint and all 63 test files / 381 tests passed.
+  Marked T014 complete and committed with normal hooks. The current feature spec, plan,
+  research, data model, contract and quality checklist remain unchanged.

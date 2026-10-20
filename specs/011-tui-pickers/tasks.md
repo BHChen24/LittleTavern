@@ -176,7 +176,7 @@ earlier history, and `/sessions` lists both chats.
 
 ## Phase 7: User Story 5 - Help and docs match the commands (Priority: P3)
 
-- [ ] T014 [US5] Update `README.md`'s command table (research R8):
+- [X] T014 [US5] Update `README.md`'s command table (research R8):
   - remove `/chat <id>` and `/attach <id>`, `/detach <id>`;
   - add `/new`;
   - `/lorebooks` becomes "Choose, attach or import lorebooks for the current character";

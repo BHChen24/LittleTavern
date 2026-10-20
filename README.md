@@ -65,15 +65,14 @@ Type `/` at any time to see the commands, with completion.
 | Command | What it does |
 |---|---|
 | `/characters` | Choose a character and start a chat, or create a new one |
-| `/chat <id>` | Start a chat with a character |
+| `/new` | Start a new chat with the current character |
 | `/sessions` | Resume a saved chat |
 | `/regenerate` | Regenerate the last reply (also Ctrl+R) |
 | `/trace` | Show why the last request looked the way it did |
-| `/attach <id>`, `/detach <id>` | Attach or detach a lorebook for the current character |
-| `/lorebooks` | List the active lorebooks |
+| `/lorebooks` | Choose, attach or import lorebooks for the current character |
 | `/persona` | Choose, create or edit who you are in the story |
 | `/import` | Import a card or lorebook from the import folders |
-| `/library`, `/show <id>` | List the library, or inspect one item |
+| `/library`, `/show` | List the library, or pick an item to inspect |
 | `/innkeeper` | Talk to the innkeeper (a chat without a character) |
 | `/model` | Choose a model |
 | `/apikey` | Add, replace or forget your OpenRouter key |
