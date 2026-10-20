@@ -55,6 +55,11 @@
   model is valid; `chat` and `innkeeperSelected` track the current run’s explicit mode.
   The guard is shared by sending and regeneration; setup/offline commands stay available.
 
+- Phase 9: setup requirements are current UI state, not historical notices. One reusable
+  pi `Text` component is refreshed from `setupSteps` on entry, blocked attempts and status
+  changes. Removing/reinserting only that component preserves ordinary transcript content
+  and safely handles the existing transcript clear/rebuild paths.
+
 ## Open behaviour questions
 
 None.

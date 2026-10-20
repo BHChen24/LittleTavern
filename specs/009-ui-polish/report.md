@@ -285,3 +285,40 @@ exists; implementation and convergence hooks were skipped.
   saved key and confirm subsequent sends/regeneration preserve input and prompt for `/apikey`.
 
 These visual/terminal checks remain pending owner acceptance.
+
+
+## Phase 9: Stale setup notice fix
+
+The reported warning was a stale snapshot in the transcript: configuring the model or key
+updated the actual readiness state and status bar, but never removed earlier missing-step
+notices. Blocked attempts also appended duplicates. The new implementation keeps one reusable
+pi `Text` component for the current setup requirements, refreshed on entry, blocked attempts
+and every status update. Completed steps disappear immediately; with no missing steps, the
+component is removed. Ordinary notices remain intact. Clearing/rebuilding the transcript and
+forgetting/rejecting a key use the existing status refresh paths to restore the correct notice.
+The request gate and the requirement to explicitly choose a character or Innkeeper are unchanged.
+
+Regression coverage exercises both setup orders, verifies that old model/key warnings disappear
+without another blocked send, preserves unrelated library output, checks the remaining mode
+step, checks full notice removal, prevents duplicate blocked-attempt warnings, and checks the
+warning after forgetting a key. The red run reproduced three failures; all eight focused
+readiness tests passed after the fix. The full gate first caught one extra blank line in the
+new test; formatting was corrected, then all checks passed:
+
+```text
+pnpm build && pnpm lint && pnpm test
+Checked 122 files. No fixes applied.
+Test Files  56 passed (56)
+     Tests  313 passed (313)
+```
+
+No automated tests were deferred. No engine, CLI, dependencies, design/checklist artifacts,
+secrets or real user data changed. This TUI-only correction did not rerun external CLI acceptance.
+Scoped convergence of FR-012/FR-015 and T024–T025 found no remaining gap: every model/key/mode
+state change refreshes the notice, and both request paths retain the same readiness guard.
+No extension configuration exists; hooks were skipped.
+
+Manual owner check: start without configuration and complete `/model` and `/apikey` in either
+order. Each completed requirement must disappear immediately; only the character/Innkeeper
+step remains until chosen. Repeated blocked sends must show one current notice, and forgetting
+a saved key must show the key requirement again. Visual terminal acceptance remains pending.

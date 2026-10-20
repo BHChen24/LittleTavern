@@ -77,6 +77,7 @@ it("starts without an overlay and lists every missing step without sending or lo
   expect(readUsageRecords(paths.usageLedgerFile)).toEqual([]);
   await app.submit("/regenerate");
   expect(app.editor.getText()).toBe("/regenerate");
+  expect(screen().match(/Chat is disabled/g)).toHaveLength(1);
   expect(send).not.toHaveBeenCalled();
   await app.submit("/library");
   expect(screen()).toContain("Mira");
@@ -121,6 +122,7 @@ it("accepts saved credentials and a chosen character and blocks regenerate after
   await app.submit("hello");
   expect(generate).toHaveBeenCalledOnce();
   expect(screen()).toContain("Ready reply.");
+  expect(screen()).not.toContain("Chat is disabled");
   await app.submit("/apikey");
   input("\r");
   input("Forget saved key");
@@ -129,6 +131,9 @@ it("accepts saved credentials and a chosen character and blocks regenerate after
   expect(generate).toHaveBeenCalledOnce();
   expect(readUsageRecords(paths.usageLedgerFile)).toHaveLength(1);
   expect(app.editor.getText()).toBe("/regenerate");
+  expect(screen().match(/Chat is disabled/g)).toHaveLength(1);
+  expect(screen()).toContain("No API key yet. Type /apikey");
+  expect(screen()).not.toContain("Select a model with /model.");
 });
 
 it("keeps a selected character blocked without an API key", async () => {
@@ -168,12 +173,40 @@ it("adding a session key leaves model and mode selection explicit after cancelli
   await app.submit("not ready yet");
   expect(app.editor.getText()).toBe("not ready yet");
   expect(screen()).toContain("No model — /model");
+  expect(screen()).not.toContain("No API key yet. Type /apikey");
+  expect(screen().match(/Chat is disabled/g)).toHaveLength(1);
   expect(readUsageRecords(paths.usageLedgerFile)).toEqual([]);
   await selectModel();
+  expect(screen()).not.toContain("Select a model with /model.");
+  expect(screen()).toContain("Choose a character with /characters or enter /innkeeper mode.");
   await app.submit("still need a mode");
   expect(app.editor.getText()).toBe("still need a mode");
   expect(readUsageRecords(paths.usageLedgerFile)).toEqual([]);
   await app.submit("/innkeeper");
+  await app.submit("hello");
+  expect(screen()).toContain("Ready reply.");
+  expect(readUsageRecords(paths.usageLedgerFile)).toHaveLength(1);
+});
+
+it("removes completed setup steps when the model is selected before the key", async () => {
+  const { app, paths, screen, input, selectModel, characterId } = fixture({ key: false });
+  await app.submit("/library");
+  await selectModel();
+  expect(screen()).not.toContain("Select a model with /model.");
+  expect(screen()).toContain("No API key yet. Type /apikey");
+  expect(screen()).toContain("Characters (1)");
+  await app.submit("/apikey");
+  input("\r");
+  input("synthetic-session-key");
+  input("\r");
+  input("\r");
+  input("\x1b");
+  expect(screen()).not.toContain("No API key yet. Type /apikey");
+  expect(screen()).not.toContain("Select a model with /model.");
+  expect(screen()).toContain("Choose a character with /characters or enter /innkeeper mode.");
+  expect(screen().match(/Chat is disabled/g)).toHaveLength(1);
+  await app.submit(`/chat ${characterId}`);
+  expect(screen()).not.toContain("Chat is disabled");
   await app.submit("hello");
   expect(screen()).toContain("Ready reply.");
   expect(readUsageRecords(paths.usageLedgerFile)).toHaveLength(1);

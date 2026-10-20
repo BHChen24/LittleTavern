@@ -259,3 +259,38 @@ The preceding diagnostic turn was interrupted by the owner before edits:
 33. `exec_command` (escalated): commit validated Phase 8 files and check final worktree status.
     Outcome: commit identifier/status are recorded in the session transcript and final response;
     the identifier is not available inside the document being committed.
+
+
+## Phase 9: Stale setup notice fix
+
+Platform-reported development tokens: **unknown**. The platform exposes no run total; no
+estimate or zero is substituted. No sub-agents were used. Each nested tool invocation is
+listed below; `functions.exec` wrappers and full arguments/results are in the transcript.
+
+1. `exec_command`: inspect branch/status, readiness state, startup notices and model/key handlers.
+   Outcome: clean `009-ui-polish`; setup warnings are appended as historical notices.
+2. `exec_command`: inspect readiness tests, status/input wrappers, tasks and pinned pi container APIs.
+   Outcome: missing stale-text assertions identified; pi supports removing only the warning component.
+3. `exec_command`: read updated FR-012/FR-015, constitution/implement rules, pinned pi Container,
+   explicit 009 prerequisites and hooks. Outcome: valid feature; no extension hooks.
+4. `exec_command`: read plan/notes and count checklist markers. Outcome: 16/16 checks passed.
+5. `exec_command`: append T024–T025, extend readiness regressions and run red suite. Outcome: started.
+6. `write_stdin`: collect red regressions. Outcome: three failures reproduced duplicates and stale model/key warnings.
+7. `apply_patch`: replace historical setup notices with one reusable Text refreshed from current state.
+   Outcome: applied, preserving ordinary transcript entries and the existing request gate.
+8. `exec_command`: run focused readiness tests after the fix. Outcome: started.
+9. `write_stdin`: collect focused result. Outcome: eight tests passed.
+10. `exec_command`: run full build/lint/test gate. Outcome: started.
+11. `write_stdin`: collect full gate. Outcome: build passed; lint caught an extra blank line in the new test.
+12. `exec_command`: review complete scoped diff and post-execution hooks. Outcome: only intended notice/test changes; no hooks.
+13. `exec_command`: format the readiness test and repeat required full gate. Outcome: formatting corrected; gate started.
+14. `write_stdin`: collect corrected full gate. Outcome: build/lint passed; 56 files, 313 tests passed.
+15. `exec_command`: check whitespace, state mutations and notice refresh paths for scoped convergence.
+    Outcome: no remaining gap; all model/key/mode changes use status refresh; no hooks.
+16. `exec_command`: mark tasks and record implementation notes, evidence, manual checks and this usage log.
+    Outcome: documentation prepared for final audit and commit.
+17. `exec_command`: audit branch, 25 completed tasks, unchanged protected artifacts/engine/data/dependencies,
+    whitespace and absent post-execution hooks. Outcome: audit passed; final documentation lint passed.
+18. `exec_command` (escalated): commit the validated fix and inspect final worktree status.
+    Outcome: commit identifier and status are recorded in the session transcript and final response;
+    the identifier is unavailable inside the document being committed.

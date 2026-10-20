@@ -107,6 +107,7 @@ export function createApp(options: AppOptions = {}) {
     copySelection: copyText,
   });
   const transcript = new Container();
+  const setupNotice = new Text("");
   const editor = new Editor(tui, editorTheme);
   const status = new StatusBar({ model: storedModel?.id, keySource: activeKey?.source ?? "none" });
   const homeScreen = new HomeScreen({
@@ -141,8 +142,7 @@ export function createApp(options: AppOptions = {}) {
       ]),
     );
     tui.setFocus(editor);
-    const steps = setupSteps();
-    if (steps.length) notice(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
+    updateSetupNotice();
     tui.requestRender();
   }
   let reply: MessageView | undefined;
@@ -273,11 +273,22 @@ export function createApp(options: AppOptions = {}) {
       steps.push("Choose a character with /characters or enter /innkeeper mode.");
     return steps;
   }
+  function updateSetupNotice(): void {
+    if (!inChat) return;
+    transcript.removeChild(setupNotice);
+    const steps = setupSteps();
+    if (steps.length) {
+      const text = display(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
+      setupNotice.setText(messageStyles.notice(`· ${text}`));
+      transcript.addChild(setupNotice);
+    }
+    tui.requestRender();
+  }
   function interceptIncompleteSetup(value: string): boolean {
     const steps = setupSteps();
     if (!steps.length) return false;
     editor.setText(value);
-    notice(`Chat is disabled. Before chatting:\n${steps.join("\n")}`);
+    updateSetupNotice();
     return true;
   }
   const importNotice = ensureImportFolders(paths);
@@ -296,6 +307,7 @@ export function createApp(options: AppOptions = {}) {
       persona: readActivePersona(paths).persona?.name,
       totals: sumUsage(records),
     });
+    updateSetupNotice();
   }
   updateStatus();
 

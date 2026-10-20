@@ -170,3 +170,13 @@ old automatic-picker/default-innkeeper startup behavior. Keep existing creation 
   a character or Innkeeper must be selected in the current run (owner-confirmed).
 - [X] T023 Update lightweight app regression tests for the setup gate, cancellation and both chat modes.
   Run build/lint/tests and external offline acceptance; record results, manual checks and usage; commit.
+
+
+## Phase 9: Current setup notices (owner bug report)
+
+- [X] T024 Keep the FR-012/FR-015 setup notice synchronized with current key, model and mode
+  state. Replace repeated blocked-attempt notices instead of retaining obsolete snapshots;
+  remove completed steps immediately and remove the notice when ready. Restore the correct
+  notice when keys are forgotten/rejected or the transcript is rebuilt.
+- [X] T025 Add focused regressions for both model/key setup orders, stale-step removal and
+  repeated attempts. Run the full build/lint/test gate, record results and manual checks, and commit.
