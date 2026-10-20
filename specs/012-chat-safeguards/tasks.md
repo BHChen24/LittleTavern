@@ -221,9 +221,9 @@ Phase 1.
 
 ## Phase 8: Polish
 
-- [ ] T015 Run `pnpm build && pnpm lint && pnpm test`, the quickstart grep for `"User"`, and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
-- [ ] T016 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T017 Write `specs/012-chat-safeguards/report.md` with the same sections as `specs/011-tui-pickers/report.md`. Include test results, deferred tests, the owner's manual checks from `quickstart.md`, and the 0.1.1 release steps for the owner. Commit
+- [X] T015 Run `pnpm build && pnpm lint && pnpm test`, the quickstart grep for `"User"`, and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
+- [X] T016 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T017 Write `specs/012-chat-safeguards/report.md` with the same sections as `specs/011-tui-pickers/report.md`. Include test results, deferred tests, the owner's manual checks from `quickstart.md`, and the 0.1.1 release steps for the owner. Commit
 
 ## Dependencies & Execution Order
 

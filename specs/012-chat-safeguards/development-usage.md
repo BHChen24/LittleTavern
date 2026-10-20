@@ -121,4 +121,23 @@ see conversation output for completion of the final refresh.
 | 112 | write_stdin | Collect phase-seven validation | exit 0 |
 | 113 | write_stdin | Collect request-tracing commit result | exit 0 |
 | 114 | exec_command | Inspect phase-seven results and confirm failed-turn transport handling | exit 0 |
+| 115 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 116 | exec_command | Commit validated phase seven | completed; see conversation output |
+| 117 | exec_command | Inspect offline acceptance runner and check for remaining User defaults | exit 0 |
+| 118 | exec_command | Run required offline external acceptance in a temporary home | completed; see conversation output |
+| 119 | exec_command | Run polish checks and verify no User fallback remains | completed; see conversation output |
+| 120 | write_stdin | Collect happy-path and documentation commit result | exit 0 |
+| 121 | write_stdin | Collect external offline acceptance results | exit 0 |
+| 122 | write_stdin | Collect polish validation and default-name scan | exit 1 |
+| 123 | exec_command | Prepare convergence checklist and final report structure | exit 0 |
+| 124 | apply_patch | Write the implementation report and owner handoff before convergence | completed; see conversation output |
+| 125 | exec_command | Mark polish verified and initialize the required convergence review | exit 0 |
+| 126 | exec_command | Convergence: verify settings, pi request adapter, previous reply, and persistence | exit 0 |
+| 127 | exec_command | Convergence: verify app guards, messages, name setup, trace, and streaming input | exit 0 |
+| 128 | exec_command | Convergence: map all requirements, scenarios, plan decisions, tasks, and verification evidence | exit 0 |
+| 129 | exec_command | Finish convergence: verify no task-file mutation and check post-hooks | exit 0 |
+| 130 | exec_command | Complete implementation task markers, finalize report, and check handoff files | exit 0 |
+| 131 | apply_patch | Refresh per-invocation usage journal | completed; see conversation output |
+| 132 | apply_patch | Finalize usage journal including this refresh and final checkpoint | see final checkpoint tool output in conversation |
+| 133 | exec_command | Commit validated phase-eight report and task completion; verify clean branch state and post-hooks | see final checkpoint tool output in conversation |
 
