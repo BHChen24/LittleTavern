@@ -74,3 +74,27 @@ it("recognizes both standalone lorebook shapes", () => {
     "Lorebook (card format)",
   );
 });
+
+it.each([[{}], [[]]])(
+  "recognizes named lorebooks with descriptions before the V1 heuristic: %j",
+  (entries) => {
+    const raw = { name: "Synthetic lorebook", description: "A shared metadata field", entries };
+    expect(detectFile(json(raw), "book.json")).toMatchObject({
+      kind: "lorebook",
+      raw,
+      format: Array.isArray(entries)
+        ? "Lorebook (card format)"
+        : "Lorebook (SillyTavern world info)",
+    });
+  },
+);
+it("still gives explicit spec markers precedence over lorebook entries", () => {
+  expect(detectFile(json({ ...makeV3Card(), entries: [] }), "card.json")).toHaveProperty(
+    "kind",
+    "character",
+  );
+  expect(detectFile(json({ spec: "unknown", entries: [] }), "unknown.json")).toHaveProperty(
+    "detected",
+    "unsupported spec",
+  );
+});

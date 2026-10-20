@@ -243,3 +243,19 @@ it("keeps large text and hundreds of embedded entries without truncation", () =>
   expect(item.character.lorebook?.entries).toHaveLength(300);
   expect(item.raw).toEqual(card);
 });
+
+it.each([[{}], [[]]])(
+  "imports a named lorebook with description without treating it as V1: %j",
+  (entries) => {
+    const raw = {
+      name: "Synthetic lorebook",
+      description: "  Description {{user}}\n你好。  ",
+      entries,
+    };
+    const item = imported(source("described-book.json", Buffer.from(JSON.stringify(raw))));
+    if (item.kind !== "lorebook") throw new Error("Expected lorebook");
+    expect(item.lorebook.name).toBe(raw.name);
+    expect(item.lorebook.description).toBe(raw.description);
+    expect(item.raw).toEqual(raw);
+  },
+);

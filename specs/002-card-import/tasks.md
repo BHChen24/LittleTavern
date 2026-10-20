@@ -150,9 +150,9 @@ to T-h). Keep them lightweight.
 
 ## Phase 7: Polish & Cross-Cutting
 
-- [ ] T016 [P] Add the real-sample test T-g in `packages/data/src/cards/samples.local.test.ts`. The directory is `process.env.LITTLETAVERN_TEST_CARDS ?? path.resolve(<repo root>, "../test-cards")`; skip the suite with `describe.skipIf(!existsSync(dir))`. Import all nine files from research R7's table into a temporary library and assert each label, name and entry count. Never copy the sample files into the repository
-- [ ] T017 Run `pnpm build && pnpm lint && pnpm test` and the automated part of quickstart. Fix any failures
-- [ ] T018 Write `specs/002-card-import/report.md` with the same sections as `specs/001-tui-chat/report.md`, including a "Development tool and token usage" section. Commit
+- [X] T016 [P] Add the real-sample test T-g in `packages/data/src/cards/samples.local.test.ts`. The directory is `process.env.LITTLETAVERN_TEST_CARDS ?? path.resolve(<repo root>, "../test-cards")`; skip the suite with `describe.skipIf(!existsSync(dir))`. Import all nine files from research R7's table into a temporary library and assert each label, name and entry count. Never copy the sample files into the repository
+- [X] T017 Run `pnpm build && pnpm lint && pnpm test` and the automated part of quickstart. Fix any failures
+- [X] T018 Write `specs/002-card-import/report.md` with the same sections as `specs/001-tui-chat/report.md`, including a "Development tool and token usage" section. Commit
 
 ---
 

@@ -34,16 +34,24 @@ the extension):
    All three are rejected.
 3. **Otherwise**: decode as UTF-8, strip a leading BOM and `JSON.parse`. If that fails and the
    text looks like YAML (its first non-blank line is `---`, or a `key:` line such as `name:`),
-   report "YAML card". If it fails otherwise, report damaged JSON. Node's error message already
-   includes the line and column, for example `at position 11 (line 3 column 1)`; pass it through.
+   report "YAML card". If it fails otherwise, report damaged JSON. Node's error message may
+   include the line and column, for example `at position 11 (line 3 column 1)`; pass it through.
 4. **JSON shape**:
    - `spec === "chara_card_v3"` → V3 JSON; `spec === "chara_card_v2"` → V2 JSON;
    - any other `spec` value → unsupported spec;
-   - no `spec`, but `name` plus any of `description`, `personality`, `first_mes` at the top level
-     → V1 card (rejected);
    - `entries` is an object (not an array) → SillyTavern world-info lorebook;
    - `entries` is an array → card-format lorebook;
+   - no `spec`, but `name` plus any of `description`, `personality`, `first_mes` at the top level
+     → V1 card (rejected);
    - otherwise → unrecognised JSON.
+
+- **Detection-priority correction (owner authorized)**: the original order checked the V1
+  heuristic before `entries`. Both lorebook shapes can legitimately contain `name` and
+  `description`, so that order rejected valid FR-002 inputs as V1. The more specific `entries`
+  shape now takes precedence over the V1 heuristic. Explicit `spec` markers retain their
+  priority, and V1 cards without a lorebook entries shape remain unsupported. This relaxes a
+  project-defined heuristic, not a format or library constraint. Detection and import regression
+  tests cover both described lorebook shapes.
 
 - **PNG payload**: base64-decode the chunk text (`Buffer.from(text, "base64")`), decode as UTF-8,
   then `JSON.parse`. Node's base64 decoding is lenient (it skips invalid characters), so

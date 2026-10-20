@@ -54,3 +54,29 @@ CLI failures, exact/prefix lookup, ignored temporary/malformed items, manual del
 large-card fidelity. The first typecheck required typing parsed library records at their
 JSON boundary. Non-null test assertions were replaced with explicit checks. Final build/lint
 and all 100 tests in 20 files passed with no warnings. No dependency was added.
+
+Phase 7: `exec_command` added the local-only nine-sample compatibility test from R7. All nine
+external samples passed; no third-party content was committed. Build/lint and 109 tests in
+21 files passed. Built-CLI smoke checks exercised import/list/show/prefix/duplicate handling
+and original-byte fidelity in a temporary home with no API key. A final source review found
+R2's V1 detection order conflicts with accepting named lorebooks that include descriptions;
+`request_user_input_async` requested the owner's decision while report work continued.
+
+Supplemental smoke detail: the first subprocess-based built-CLI check hit sandbox EPERM
+on spawnSync. It was replaced by an in-process check of the built runCli, consistent with
+T-f's test policy. The built import/list/show/prefix/duplicate/original checks then passed.
+This was a harness restriction, not an application failure; no escalation was requested.
+
+Detection-priority resolution: the owner explicitly approved relaxing R2 and recording the
+reason. `exec_command` added detection/import regressions before the fix and reproduced the
+V1 misclassification. The parameterized cases were wrapped as one-argument rows so the empty
+array is tested as a value, not treated as an empty argument list. It then moved entries-shape
+checks ahead of the V1 heuristic, retained explicit-spec priority, and synchronized research.md
+and questions.md with the rationale. Final validation follows before the checkpoint commit.
+
+Final implementation checks: build and lint passed, and all 114 tests in 21 files passed,
+including nine local samples and the new described-lorebook regressions. The CLI version
+printed LittleTavern 0.1.0. `exec_command` finalized report.md, marked T017/T018 complete,
+and checked the working tree before the checkpoint commit. No hooks file was present.
+Platform-reported total development tokens remain unknown; per-invocation records are in
+this conversation's tool transcript, including the final review and git commit commands.

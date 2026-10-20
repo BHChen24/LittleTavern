@@ -28,12 +28,13 @@ function detectJson(raw: unknown): Detection {
   if (raw.spec === "chara_card_v2") return character(raw, "V2", "JSON");
   if ("spec" in raw)
     return reject("unsupported spec", `unsupported spec: ${JSON.stringify(raw.spec)}`);
-  if ("name" in raw && ["description", "personality", "first_mes"].some((field) => field in raw))
-    return reject("V1 character card", "V1 character cards are not supported in this version");
+  // Lorebooks may have name/description too; entries takes precedence over the V1 heuristic.
   if (isRecord(raw.entries))
     return { kind: "lorebook", format: "Lorebook (SillyTavern world info)", raw };
   if (Array.isArray(raw.entries))
     return { kind: "lorebook", format: "Lorebook (card format)", raw };
+  if ("name" in raw && ["description", "personality", "first_mes"].some((field) => field in raw))
+    return reject("V1 character card", "V1 character cards are not supported in this version");
   return reject("unrecognised JSON", "unrecognised JSON is not supported in this version");
 }
 

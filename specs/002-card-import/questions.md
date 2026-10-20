@@ -24,3 +24,12 @@ The prompt now hands the three library commands back to app.submit without accep
 as credentials, then gives focus to the editor for further commands. A normal chat message
 without a key opens the key prompt again. This is the minimal wiring needed to make T015
 reachable through actual terminal input; there is no new screen or file browser.
+
+## Resolved: named lorebooks with description and R2 detection order
+
+The owner authorized relaxing the project-defined detection constraint and documenting why.
+R2 and detectJson now recognize object/array entries before the V1 heuristic, after handling
+explicit spec markers. The old name-plus-description heuristic was broad enough to reject
+valid named lorebooks, contradicting FR-002. Both supported lorebook shapes now import with
+their descriptions intact. Explicit unknown specs are still rejected, and ordinary V1 cards
+remain unsupported. Detection and library regression tests cover this correction.
