@@ -25,8 +25,11 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 - **Stay on branch `009-ui-polish`.** Never commit to `main`, and never switch, merge or rebase
   branches.
-- **Do not stop to ask.** If something is unclear, write it to `specs/009-ui-polish/questions.md`,
-  take the most conservative option, and continue.
+- **Do not stop to ask, but do not invent behaviour.** Two kinds of question:
+  - an *implementation detail* (naming, structure, which pi call to use): choose the simplest
+    option that satisfies the spec, and note it in `specs/009-ui-polish/questions.md`;
+  - *behaviour the spec, plan or research do not define*: do not decide it. Leave the affected
+    task unchecked, record the question for the owner, and continue with the other tasks.
 - **Too complex tests**: record them under "Deferred tests" in the report.
 - **Never**:
   - read, print or use `.env`;
@@ -109,7 +112,7 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 6: Polish
 
-- [ ] T013 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only`. Fix any failures
+- [ ] T013 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
 - [ ] T014 Run `speckit-converge` on this feature and complete any appended tasks
 - [ ] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
 
