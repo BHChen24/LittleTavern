@@ -34,7 +34,5 @@
 - `assemblePrompt` (FR-004) and "JSON Lines" (FR-010) are named on purpose. The first is the
   contract with 003. The second is the owner's chosen session format, decided earlier as the
   industry standard.
-- Best candidates for `/speckit-clarify`:
-  - whether resuming chats (US3) belongs in v1;
-  - whether lorebooks attach per character or per chat (US4);
-  - the regenerate key binding.
+- Clarified on 2026-10-19: resuming chats is in v1 (US3), and lorebooks attach per character.
+  The regenerate key binding is left to the plan.

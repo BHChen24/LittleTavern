@@ -18,6 +18,16 @@ lorebooks can be used with a character. Usage accounting from 001 keeps working.
 trace. This feature connects them into the v1 end result: **basic roleplay in the terminal with
 an imported card**. 005 then shows the trace (`--dry-run`, `/lore`) for the demo.
 
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: Does v1 include listing and resuming earlier chats (User Story 3), or only saving them?
+  → A: Include it. Chats are saved automatically, and `/sessions` lists them so one can be
+  resumed.
+- Q: Should standalone lorebooks be attached to a character or to a single chat? → A: To the
+  character. Every chat with that character uses them, and attachments persist per character.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Chat with an imported character (Priority: P1)
