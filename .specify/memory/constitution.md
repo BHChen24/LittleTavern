@@ -113,6 +113,11 @@ Rationale: code that cannot be explained by its owner is a liability, however we
 - **Stack.** Node with pnpm workspaces; TypeScript built with `tsc -b`; `erasableSyntaxOnly`
   (no `enum`, runtime `namespace`, or constructor parameter properties); explicit `.ts` import
   extensions; Vitest; Biome. pi packages as in Principle II.
+- **Language.** Code, comments, identifiers, user-facing strings, log messages, documentation and
+  specs MUST be written in English. Non-English text is allowed only in external resources
+  (character cards, lorebooks, and quotes of them), and in test data whose purpose is non-Latin
+  handling (CJK width, token estimates, keyword matching, lossless import) or which mirrors an
+  external sample. An automated test enforces this for non-test source files.
 - **Dependencies.** Each new dependency must be needed by the active spec. Install scripts stay
   denied by default in `pnpm-workspace.yaml`.
 
@@ -152,4 +157,4 @@ for clarifications. Each amendment updates the Sync Impact Report and the dates 
 and review checks compliance; an exception is allowed only when the plan records why it is needed
 and why the simpler compliant option was rejected.
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 3.1.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-20

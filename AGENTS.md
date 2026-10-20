@@ -42,6 +42,9 @@ unless the owner asks.
 - `../SillyTavern` and `../pi` are read-only. The licensing rules for reference projects are in
   the constitution.
 - Ask before running a local LLM or anything GPU-heavy.
+- **English only** for code, comments, identifiers, UI strings, logs, docs and specs. Non-English
+  text belongs only in external resources (cards, lorebooks) and in test data that exercises
+  non-Latin handling. See the constitution's Language rule.
 - Never commit secrets. `.env` and `.env.*` are ignored; `.env.example` is allowed and documents
   variable names without values.
 - **Do not read, print or use `.env`.** It holds the owner's real API key. Tests use the
