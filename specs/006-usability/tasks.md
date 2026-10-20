@@ -85,8 +85,8 @@ quickstart.md
 
 ## Phase 3: User Story 2 - Import by choosing a file (P1)
 
-- [ ] T006 [P] [US2] Create `FileBrowser` in `packages/tui/src/components/file-browser.ts` per research R2, reusing `ListPicker`. Write tests T-d in `file-browser.test.ts` using a temporary directory
-- [ ] T007 [US2] In `app.ts`:
+- [X] T006 [P] [US2] Create `FileBrowser` in `packages/tui/src/components/file-browser.ts` per research R2, reusing `ListPicker`. Write tests T-d in `file-browser.test.ts` using a temporary directory
+- [X] T007 [US2] In `app.ts`:
   - call `ensureImportFolders(paths)` at startup and show its notice if it returns one;
   - make `/import` with no argument open `FileBrowser` at `paths.importRoot` in an overlay;
   - on selecting a file, run `importFile` and show `formatImportReport` as a notice;

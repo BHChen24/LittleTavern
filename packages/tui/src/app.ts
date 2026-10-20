@@ -22,6 +22,7 @@ import {
   DEFAULT_MODEL_ID,
   DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
+  ensureImportFolders,
   findAllowedModel,
   forgetKey,
   getItem,
@@ -40,6 +41,7 @@ import {
   writeSettings,
 } from "@littletavern/engine";
 import { COMMANDS, helpText } from "./commands.ts";
+import { FileBrowser } from "./components/file-browser.ts";
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ListPicker } from "./components/list-picker.ts";
 import { ModelPicker } from "./components/model-picker.ts";
@@ -144,6 +146,8 @@ export function createApp(options: AppOptions = {}) {
     tui.showOverlay(keyPrompt, { width: "90%" });
     tui.requestRender();
   }
+  const importNotice = ensureImportFolders(paths);
+  if (importNotice) notice(importNotice);
   if (settings.model && !storedModel)
     notice(`Saved model ${settings.model} is unavailable; using ${DEFAULT_MODEL_ID}.`);
   if (saved.warning)
@@ -387,10 +391,16 @@ export function createApp(options: AppOptions = {}) {
       },
       import: async () => {
         const file = text.slice("/import".length).trim();
-        notice(
-          file ? formatImportReport(importFile(paths, file)).join("\n") : "Usage: /import <path>",
-        );
-        return;
+        if (file) notice(formatImportReport(importFile(paths, file)).join("\n"));
+        else {
+          const browser = new FileBrowser(paths.importRoot);
+          browser.onCancel = closeOverlay;
+          browser.onSelect = (selected) => {
+            closeOverlay();
+            notice(formatImportReport(importFile(paths, selected)).join("\n"));
+          };
+          tui.showOverlay(browser, { width: "90%" });
+        }
       },
       library: async () => {
         notice(formatLibraryList(listLibrary(paths)).join("\n"));

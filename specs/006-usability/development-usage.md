@@ -19,3 +19,9 @@ Every invocation is recorded below by purpose and outcome. Commands use local fi
 | Commit Phase 1 and wire command suggestions and dispatch (T004) | functions.exec → exec_command (including this recorder) | Exit 0 |
 | Commit Phase 1 outside sandbox and wait for Phase 2 checks | functions.exec → exec_command (escalated Git), write_stdin | Committed ae68668; 223 tests, build and lint passed |
 | Mark Phase 2 complete and record commit metadata limitation | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Write file browser tests (T006) | functions.exec → exec_command (including this recorder) | Exit 1 |
+| Commit Phase 2 | functions.exec → exec_command (escalated Git) | Committed a277135 |
+| Wait for browser test baseline | functions.exec → write_stdin | Expected missing-module failure before implementation |
+| Implement browser and import startup wiring (T006–T007) | functions.exec → exec_command (including this recorder) | Exit 0 |
+| Wait for Phase 3 validation | functions.exec → write_stdin | Build, lint and 227 tests passed |
+| Mark Phase 3 complete and prepare home screen tests (T008) | functions.exec → exec_command (including this recorder) | Exit 0 |
