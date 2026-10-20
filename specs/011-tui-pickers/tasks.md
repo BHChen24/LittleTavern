@@ -71,9 +71,9 @@ quickstart.md
 
 ## Phase 2: Foundational
 
-- [ ] T002 [P] In `packages/engine/src/character-chat.ts`, add `attachedLorebookIds(): string[]`, which returns `readSettings(paths).lorebookAttachments?.[libraryId] ?? []` unchanged, including ids that no longer resolve (research R4). Export nothing new from the barrel unless the type is needed. Add a unit test next to the existing character-chat tests
-- [ ] T003 [P] In `packages/engine/src/chat-session.ts`, add `clearConversation(): void`, which sets the agent's messages to an empty list (`this.agent.state.messages = []`), the mechanism `generate()` already uses (research R6). Add a unit test with the faux provider: after one `send` and `clearConversation()`, the next request contains only the new user message
-- [ ] T004 In `packages/tui/src/app.ts`:
+- [X] T002 [P] In `packages/engine/src/character-chat.ts`, add `attachedLorebookIds(): string[]`, which returns `readSettings(paths).lorebookAttachments?.[libraryId] ?? []` unchanged, including ids that no longer resolve (research R4). Export nothing new from the barrel unless the type is needed. Add a unit test next to the existing character-chat tests
+- [X] T003 [P] In `packages/engine/src/chat-session.ts`, add `clearConversation(): void`, which sets the agent's messages to an empty list (`this.agent.state.messages = []`), the mechanism `generate()` already uses (research R6). Add a unit test with the faux provider: after one `send` and `clearConversation()`, the next request contains only the new user message
+- [X] T004 In `packages/tui/src/app.ts`:
   - add `showPanel(component, options)` and route **every** `tui.showOverlay(...)` call through it. For now it calls `tui.showOverlay` unchanged; US4 adds the frame;
   - extract the `/import` selection logic into `importSelected(selected): ImportReport | null` (research R5): the realpath check against the import root, the existing "<name> is outside the import folders." message (`null`), the existing error handling, and otherwise `importFile`, the report notice, and the returned report;
   - `/import` uses `importSelected`, with unchanged behaviour. Existing `/import` tests must still pass (T-i)

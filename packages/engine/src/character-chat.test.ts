@@ -318,10 +318,19 @@ it("skips a missing attached lorebook with a single notice", async () => {
   };
   chat.attachLorebook(book.id);
   rmSync(join(paths.dataDir, "library", "lorebooks", book.id), { recursive: true });
+  expect(chat.attachedLorebookIds()).toEqual([book.id]);
   await chat.send("one");
   await chat.send("two");
   expect(notices).toHaveLength(1);
   expect(notices[0]).toContain("no longer in the library");
+});
+
+it("returns the stored attached lorebook ids, including missing ids", () => {
+  const item = importCharacter();
+  const chat = CharacterChat.start({ paths, session: simulated([]), item });
+  expect(chat.attachedLorebookIds()).toEqual([]);
+  writeSettings(paths, { lorebookAttachments: { [item.id]: ["missing-id", "another-id"] } });
+  expect(chat.attachedLorebookIds()).toEqual(["missing-id", "another-id"]);
 });
 
 it("writes session files only inside the app's own data directory", async () => {

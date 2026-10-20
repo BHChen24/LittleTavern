@@ -12,10 +12,12 @@ import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, relative, sep } from "node:path";
 import {
   CombinedAutocompleteProvider,
+  type Component,
   Container,
   Editor,
   Loader,
   matchesKey,
+  type OverlayOptions,
   ProcessTerminal,
   ScrollView,
   Spacer,
@@ -44,6 +46,7 @@ import {
   findAllowedModel,
   forgetKey,
   getItem,
+  type ImportReport,
   importFile,
   listChats,
   listLibrary,
@@ -198,9 +201,25 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
-  function showImportReport(file: string): void {
-    const report = importFile(paths, file);
-    notice(formatImportReport(report).join("\n"), { kind: report.ok ? "notice" : "error" });
+  function showPanel(component: Component, options?: OverlayOptions): void {
+    tui.showOverlay(component, options);
+  }
+  function importSelected(selected: string): ImportReport | null {
+    try {
+      const location = relative(realpathSync(paths.importRoot), realpathSync(selected));
+      if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) {
+        errorNotice(`${basename(selected)} is outside the import folders.`);
+        return null;
+      }
+      const report = importFile(paths, selected);
+      notice(formatImportReport(report).join("\n"), { kind: report.ok ? "notice" : "error" });
+      return report;
+    } catch (error) {
+      errorNotice(
+        `Could not import ${basename(selected)}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    }
   }
   function promptForKey(): void {
     const keyPrompt = new KeyPrompt(paths.credentialsFile);
@@ -224,7 +243,7 @@ export function createApp(options: AppOptions = {}) {
         notice("OPENROUTER_API_KEY in the environment will be used again next launch.");
       openModelPicker();
     };
-    tui.showOverlay(keyPrompt, { width: "90%" });
+    showPanel(keyPrompt, { width: "90%" });
     tui.requestRender();
   }
   function openApiKeyPicker(): void {
@@ -270,9 +289,9 @@ export function createApp(options: AppOptions = {}) {
         }
         closeOverlay();
       };
-      tui.showOverlay(actions, { width: "90%" });
+      showPanel(actions, { width: "90%" });
     };
-    tui.showOverlay(provider, { width: "90%" });
+    showPanel(provider, { width: "90%" });
   }
   function setupSteps(): string[] {
     const steps: string[] = [];
@@ -380,7 +399,7 @@ export function createApp(options: AppOptions = {}) {
       if (item === "new") newCharacter();
       else startChat(item);
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
   function editCharacter(draftPath?: string): void {
     let draft = draftPath;
@@ -445,7 +464,7 @@ export function createApp(options: AppOptions = {}) {
         closeOverlay();
         editCharacter(draft);
       };
-      tui.showOverlay(picker, { width: "90%" });
+      showPanel(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
       errorNotice(
@@ -540,7 +559,7 @@ export function createApp(options: AppOptions = {}) {
           updateStatus();
         }
       };
-      tui.showOverlay(picker, { width: "90%" });
+      showPanel(picker, { width: "90%" });
       tui.requestRender();
     } catch (error) {
       errorNotice(error instanceof Error ? error.message : String(error));
@@ -567,7 +586,7 @@ export function createApp(options: AppOptions = {}) {
         errorNotice(error instanceof Error ? error.message : "Could not resume the chat.");
       }
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
   async function regenerate(value = editor.getText()): Promise<void> {
     if (interceptIncompleteSetup(value)) return;
@@ -729,7 +748,7 @@ export function createApp(options: AppOptions = {}) {
       updateStatus();
       tui.requestRender();
     };
-    tui.showOverlay(picker, { width: "90%" });
+    showPanel(picker, { width: "90%" });
   }
 
   async function submit(value: string): Promise<void> {
@@ -788,20 +807,9 @@ export function createApp(options: AppOptions = {}) {
           browser.onCancel = closeOverlay;
           browser.onSelect = (selected) => {
             closeOverlay();
-            try {
-              const location = relative(realpathSync(paths.importRoot), realpathSync(selected));
-              if (location === ".." || location.startsWith(`..${sep}`) || isAbsolute(location)) {
-                errorNotice(`${basename(selected)} is outside the import folders.`);
-                return;
-              }
-              showImportReport(selected);
-            } catch (error) {
-              errorNotice(
-                `Could not import ${basename(selected)}: ${error instanceof Error ? error.message : String(error)}`,
-              );
-            }
+            importSelected(selected);
           };
-          tui.showOverlay(browser, { width: "90%" });
+          showPanel(browser, { width: "90%" });
         }
       },
       library: async () => {
@@ -864,7 +872,7 @@ export function createApp(options: AppOptions = {}) {
         );
         const overlay = new TraceOverlay(lines, Math.max(5, tui.terminal.rows - 6));
         overlay.onClose = closeOverlay;
-        tui.showOverlay(overlay, { width: "90%" });
+        showPanel(overlay, { width: "90%" });
         tui.requestRender();
         return;
       },
@@ -883,7 +891,7 @@ export function createApp(options: AppOptions = {}) {
       model: openModelPicker,
       help: async () => {
         const help = new Text(helpText());
-        tui.showOverlay(help);
+        showPanel(help);
         helpOpen = true;
         return;
       },

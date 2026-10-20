@@ -25,3 +25,18 @@ with `write_stdin` when needed. No secrets are included.
 
 Phase 1 checkpoint: T-j passed (`push.branches = [main]`, `pull_request` present).
 `pnpm build`, `pnpm lint` (134 files) and `pnpm test` (61 files, 345 tests) passed.
+
+## Phase 2: Foundational
+
+- `exec_command`: inspected the pinned pi overlay, component and agent message APIs and release
+  allowlist. Confirmed pi `v1.3.0`; no new dependency or ignore-file change is needed.
+- `apply_patch` / `exec_command`: wrote unit tests before the two engine methods; the focused
+  run failed as expected because those methods did not yet exist (3 failures, 18 passes).
+- `exec_command`: implemented `attachedLorebookIds`, `clearConversation`, `showPanel` and the
+  shared `importSelected` path; formatted the edited files and ran all required checks.
+  The conversation reset follows the plan exactly: the next request contains only the new user
+  message. Existing import validation and messages are preserved.
+- `exec_command`: the first Phase 1 commit attempt failed because `.git` is read-only in the
+  sandbox. The authorized escalated retry succeeded as `06b966d`, with gitleaks and lint hooks.
+- `exec_command`: marked T002–T004 complete and committed this phase with normal hooks after
+  the successful build, lint and test checkpoint.

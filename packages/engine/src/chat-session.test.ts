@@ -48,6 +48,26 @@ it("streams text and supplies the earlier conversation on a second turn", async 
   expect(session.isStreaming).toBe(false);
 });
 
+it("clears earlier conversation before the next request", async () => {
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: DEFAULT_SYSTEM_PROMPT,
+    getApiKey: () => "synthetic-key",
+    simulated: {
+      replies: [
+        "Earlier reply.",
+        (history) => {
+          expect(history).toEqual([{ role: "user", text: "New conversation." }]);
+          return "Fresh reply.";
+        },
+      ],
+    },
+  });
+  await session.send("Earlier message.");
+  session.clearConversation();
+  expect((await session.send("New conversation."))?.text).toBe("Fresh reply.");
+});
+
 it("interrupts streaming while retaining partial text", async () => {
   const session = new ChatSession({
     modelId: DEFAULT_MODEL_ID,
