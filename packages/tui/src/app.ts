@@ -19,6 +19,9 @@ import {
   describeProviderError,
   findAllowedModel,
   forgetKey,
+  getItem,
+  importFile,
+  listLibrary,
   readSavedKey,
   readSettings,
   resolveApiKey,
@@ -33,10 +36,14 @@ import {
 import { KeyPrompt } from "./components/key-prompt.ts";
 import { ModelPicker } from "./components/model-picker.ts";
 import { StatusBar } from "./components/status-bar.ts";
+import { formatImportReport, formatItemDetails, formatLibraryList } from "./library-format.ts";
 import { editorTheme, markdownTheme } from "./theme.ts";
 import { VERSION } from "./version.ts";
 
-export const APP_HELP = `/help        Show commands and key bindings
+export const APP_HELP = `/import <path>  Import a card or lorebook
+/library        List the library
+/show <id>      Inspect an item
+/help        Show commands and key bindings
 /model       Choose a model
 /key         Replace the key
 /forget-key  Forget the saved key
@@ -102,6 +109,13 @@ export function createApp(options: AppOptions = {}) {
     needsKey = true;
     editor.disableSubmit = true;
     keyPrompt = new KeyPrompt(paths.credentialsFile);
+    keyPrompt.onCommand = (command) => {
+      tui.hideOverlay();
+      keyPrompt = undefined;
+      tui.setFocus(editor);
+      editor.disableSubmit = false;
+      void submit(command);
+    };
     keyPrompt.onResult = ({ key, save }) => {
       secrets.push(key);
       let source: "saved" | "session" = "session";
@@ -232,7 +246,37 @@ export function createApp(options: AppOptions = {}) {
       } else notice("Saved key forgotten; the environment key remains active.");
       return;
     }
-    if (needsKey) return;
+    if (text === "/import" || text.startsWith("/import ")) {
+      const file = text.slice("/import".length).trim();
+      notice(
+        file ? formatImportReport(importFile(paths, file)).join("\n") : "Usage: /import <path>",
+      );
+      return;
+    }
+    if (text === "/library") {
+      notice(formatLibraryList(listLibrary(paths)).join("\n"));
+      return;
+    }
+    if (text === "/show" || text.startsWith("/show ")) {
+      const id = text.slice("/show".length).trim();
+      if (!id) {
+        notice("Usage: /show <id>");
+        return;
+      }
+      const item = getItem(paths, id);
+      notice(
+        item === "ambiguous"
+          ? `Ambiguous item prefix: ${id}`
+          : item
+            ? formatItemDetails(item).join("\n")
+            : `Item not found: ${id}`,
+      );
+      return;
+    }
+    if (needsKey) {
+      promptForKey();
+      return;
+    }
     if (text === "/model") {
       const picker = new ModelPicker();
       picker.onCancel = () => {

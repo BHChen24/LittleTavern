@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   renameSync,
   rmdirSync,
@@ -11,7 +12,7 @@ import {
 } from "node:fs";
 import { basename, extname, join } from "node:path";
 import { detectFile } from "./cards/detect.ts";
-import { preservedUnusedFields, toCharacter, toLorebook } from "./cards/normalize.ts";
+import { isRecord, preservedUnusedFields, toCharacter, toLorebook } from "./cards/normalize.ts";
 import type { ImportReport, LibraryItem } from "./cards/types.ts";
 import type { AppPaths } from "./paths.ts";
 
@@ -113,4 +114,47 @@ export function importFile(paths: AppPaths, filePath: string): ImportReport {
       reason: "could not write the library item",
     };
   }
+}
+
+export function listLibrary(paths: AppPaths): LibraryItem[] {
+  const items: LibraryItem[] = [];
+  for (const group of ["characters", "lorebooks"]) {
+    const directory = join(paths.dataDir, "library", group);
+    let names: string[];
+    try {
+      names = readdirSync(directory);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      if (name.startsWith(".tmp-")) continue;
+      try {
+        const item: LibraryItem = JSON.parse(
+          readFileSync(join(directory, name, "item.json"), "utf8"),
+        );
+        if (
+          isRecord(item) &&
+          item.v === 1 &&
+          typeof item.id === "string" &&
+          typeof item.importedAt === "string" &&
+          typeof item.name === "string" &&
+          (item.kind === "character" || item.kind === "lorebook")
+        ) {
+          items.push(item);
+        }
+      } catch {
+        /* Unreadable or malformed items are skipped. */
+      }
+    }
+  }
+  return items.sort((left, right) => left.importedAt.localeCompare(right.importedAt));
+}
+
+export function getItem(paths: AppPaths, idOrPrefix: string): LibraryItem | "ambiguous" | null {
+  const items = listLibrary(paths);
+  const exact = items.find((item) => item.id === idOrPrefix);
+  if (exact) return exact;
+  const matches = items.filter((item) => item.id.startsWith(idOrPrefix));
+  if (matches.length > 1) return "ambiguous";
+  return matches[0] ?? null;
 }

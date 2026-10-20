@@ -129,20 +129,20 @@ to T-h). Keep them lightweight.
 
 **Goal**: list and show work from the CLI and the app, with identical output.
 
-- [ ] T011 [US4] Implement `listLibrary(paths): LibraryItem[]` and `getItem(paths, idOrPrefix): LibraryItem | "ambiguous" | null` in `packages/data/src/library.ts`.
+- [X] T011 [US4] Implement `listLibrary(paths): LibraryItem[]` and `getItem(paths, idOrPrefix): LibraryItem | "ambiguous" | null` in `packages/data/src/library.ts`.
   - `listLibrary` reads every `item.json` under `characters/` and `lorebooks/`, skips `.tmp-*` folders and unreadable items, and sorts by `importedAt`.
   - `getItem` matches by exact id or by a unique prefix.
 
   Re-export both from the engine barrel.
-- [ ] T012 [US4] Extend `packages/data/src/library.test.ts`: listing ignores `.tmp-*` folders, a prefix lookup works, and an ambiguous prefix is reported
-- [ ] T013 [P] [US4] Implement `formatImportReport(report)`, `formatLibraryList(items)` and `formatItemDetails(item)` in `packages/tui/src/library-format.ts`, returning `string[]` exactly as in `contracts/cli-and-library.md`:
+- [X] T012 [US4] Extend `packages/data/src/library.test.ts`: listing ignores `.tmp-*` folders, a prefix lookup works, and an ambiguous prefix is reported
+- [X] T013 [P] [US4] Implement `formatImportReport(report)`, `formatLibraryList(items)` and `formatItemDetails(item)` in `packages/tui/src/library-format.ts`, returning `string[]` exactly as in `contracts/cli-and-library.md`:
   - report lines start with `✓`, `•` or `✗`;
   - the list has two groups and shows the empty-library hint when there is nothing;
   - details cut long text to 200 characters plus `…`, and show one line per entry in the form `[on|off] [const] order=<n> keys=<…> — <first 60 characters>`.
 
   Write tests T-e in `packages/tui/src/library-format.test.ts`.
-- [ ] T014 [US4] In `packages/tui/src/cli.ts`, add the subcommands `import <file…>`, `list` and `show <id>`, which print the formatter lines via `out` without starting the TUI. `import` returns 1 if any file failed, and `show` returns 1 when the item is not found or the prefix is ambiguous. Add the three subcommands to `CLI_HELP`. Write tests T-f in `packages/tui/src/cli.test.ts`, calling `runCli` in process with a temporary `LITTLETAVERN_HOME`
-- [ ] T015 [US4] In `packages/tui/src/app.ts`, add `/import <path>`, `/library` and `/show <id>`. Print each line via `notice(...)`, or one notice joined with `\n`. **Put these handlers before the `if (needsKey) return;` line**, because importing must work without an API key. Add the three commands to `APP_HELP`
+- [X] T014 [US4] In `packages/tui/src/cli.ts`, add the subcommands `import <file…>`, `list` and `show <id>`, which print the formatter lines via `out` without starting the TUI. `import` returns 1 if any file failed, and `show` returns 1 when the item is not found or the prefix is ambiguous. Add the three subcommands to `CLI_HELP`. Write tests T-f in `packages/tui/src/cli.test.ts`, calling `runCli` in process with a temporary `LITTLETAVERN_HOME`
+- [X] T015 [US4] In `packages/tui/src/app.ts`, add `/import <path>`, `/library` and `/show <id>`. Print each line via `notice(...)`, or one notice joined with `\n`. **Put these handlers before the `if (needsKey) return;` line**, because importing must work without an API key. Add the three commands to `APP_HELP`
 
 **Checkpoint**: checks pass. Commit.
 

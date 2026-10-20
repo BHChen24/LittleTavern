@@ -31,3 +31,19 @@ it("rejects blank input and asks consent with the full destination path", () => 
   prompt.handleInput("\r");
   expect(result).toEqual({ key: "synthetic-key", save: false });
 });
+
+it("hands library commands back without accepting them as keys", () => {
+  const prompt = new KeyPrompt("/tmp/synthetic/credentials.json");
+  let command = "";
+  let keyAccepted = false;
+  prompt.onCommand = (value) => {
+    command = value;
+  };
+  prompt.onResult = () => {
+    keyAccepted = true;
+  };
+  prompt.handleInput("/library");
+  prompt.handleInput("\r");
+  expect(command).toBe("/library");
+  expect(keyAccepted).toBe(false);
+});

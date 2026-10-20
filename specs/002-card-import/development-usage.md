@@ -46,3 +46,11 @@ and all 89 tests in 19 files passed. No rejected input creates or changes librar
 Phase 5: `exec_command` verified the importer already handles both lorebook branches and
 extended library tests for world-info/card-format books, disabled entries, correct storage
 and source-file name fallback. Build/lint and all 91 tests in 19 files passed.
+
+Phase 6: `exec_command` implemented listing/prefix lookup, shared report/list/details
+formatters, CLI dispatch and TUI commands, including command handoff from the key prompt.
+Tests cover both formatter kinds, display truncation without mutating stored text, partial
+CLI failures, exact/prefix lookup, ignored temporary/malformed items, manual deletion and
+large-card fidelity. The first typecheck required typing parsed library records at their
+JSON boundary. Non-null test assertions were replaced with explicit checks. Final build/lint
+and all 100 tests in 20 files passed with no warnings. No dependency was added.

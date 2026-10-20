@@ -1,10 +1,10 @@
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, it } from "vitest";
 import { makePng, makeV2Card, makeV3Card, makeZip } from "./cards/fixtures.ts";
 import type { LibraryItem } from "./cards/types.ts";
-import { importFile } from "./library.ts";
+import { getItem, importFile, listLibrary } from "./library.ts";
 import { type AppPaths, resolveAppPaths } from "./paths.ts";
 
 let home: string;
@@ -191,4 +191,55 @@ it("imports a standalone card-format lorebook", () => {
   if (!report.ok || report.item.kind !== "lorebook") throw new Error("Expected lorebook");
   expect(report.item.lorebook.entries).toHaveLength(1);
   expect(report.item.lorebook.entries[0]?.enabled).toBe(false);
+});
+
+it("lists characters and lorebooks in import order, ignores temporary and malformed items", () => {
+  const first = imported(source("one.json", Buffer.from(JSON.stringify(makeV3Card()))));
+  const book = imported(source("book.json", Buffer.from(JSON.stringify({ entries: [] }))));
+  const library = join(paths.dataDir, "library");
+  for (const directory of [
+    join(library, ".tmp-orphan"),
+    join(library, "characters", ".tmp-orphan"),
+  ]) {
+    mkdirSync(directory);
+    writeFileSync(join(directory, "item.json"), JSON.stringify(first));
+  }
+  const broken = join(library, "characters", "broken");
+  mkdirSync(broken);
+  writeFileSync(join(broken, "item.json"), "invalid JSON");
+  expect(listLibrary(paths).map((item) => item.id)).toEqual([first.id, book.id]);
+  expect(getItem(paths, first.id)).toMatchObject({ id: first.id });
+  expect(getItem(paths, first.id.slice(0, 6))).toMatchObject({ id: first.id });
+  expect(getItem(paths, "nonexistent")).toBeNull();
+  expect(getItem(paths, "")).toBe("ambiguous");
+  rmSync(join(library, "characters", first.id), { recursive: true });
+  expect(listLibrary(paths).map((item) => item.id)).toEqual([book.id]);
+});
+
+it("reports a shared non-empty id prefix as ambiguous and still prefers an exact id", () => {
+  const prototype = imported(source("card.json", Buffer.from(JSON.stringify(makeV3Card()))));
+  for (const id of ["aaa111111111", "aaa222222222"]) {
+    const folder = join(paths.dataDir, "library", "characters", id);
+    mkdirSync(folder);
+    writeFileSync(join(folder, "item.json"), JSON.stringify({ ...prototype, id }));
+  }
+  expect(getItem(paths, "aaa")).toBe("ambiguous");
+  expect(getItem(paths, "aaa111111111")).toMatchObject({ id: "aaa111111111" });
+});
+it("keeps large text and hundreds of embedded entries without truncation", () => {
+  const text = "{{char}}你好。 ".repeat(100000);
+  const card = makeV3Card({
+    description: text,
+    character_book: {
+      entries: Array.from({ length: 300 }, (_, index) => ({
+        keys: [`key-${index}`],
+        content: `entry ${index}`,
+      })),
+    },
+  });
+  const item = imported(source("large.json", Buffer.from(JSON.stringify(card))));
+  if (item.kind !== "character") throw new Error("Expected character");
+  expect(item.character.description).toBe(text);
+  expect(item.character.lorebook?.entries).toHaveLength(300);
+  expect(item.raw).toEqual(card);
 });

@@ -13,10 +13,15 @@ export class KeyPrompt implements Component {
   private key = "";
   private error = "";
   private credentialsFile: string;
+  onCommand?: (command: string) => void;
   onResult?: (result: KeyPromptResult) => void;
   constructor(credentialsFile: string) {
     this.credentialsFile = credentialsFile;
     this.input.onSubmit = (key) => {
+      if (this.onCommand && /^(?:\/library$|\/(?:import|show)(?: |$))/.test(key.trim())) {
+        this.onCommand(key.trim());
+        return;
+      }
       if (isBlank(key)) {
         this.error = "Key cannot be empty";
         return;
@@ -54,6 +59,11 @@ export class KeyPrompt implements Component {
       : "An OpenRouter API key is needed. Get one at https://openrouter.ai/keys";
     return [
       ...new Text(explanation).render(width),
+      ...(!this.choice && this.onCommand
+        ? new Text("Library commands also work here: /import <path>, /library, /show <id>").render(
+            width,
+          )
+        : []),
       ...(this.error ? new Text(this.error).render(width) : []),
       ...(this.choice ?? this.input).render(width),
     ];

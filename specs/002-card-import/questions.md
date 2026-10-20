@@ -16,3 +16,11 @@ An embedded unnamed lorebook uses its character's name as the normalization fall
 lorebooks use the source file's base name. Non-object entries get a warning and are omitted
 from the normalized list while remaining intact in raw. PNG chunk bounds errors are reported
 as damaged PNG; CRC, zTXt and iTXt handling remain out of scope.
+
+## Library commands without a key
+
+T015 requires importing without an API key, but 001 focuses a masked key prompt at launch.
+The prompt now hands the three library commands back to app.submit without accepting them
+as credentials, then gives focus to the editor for further commands. A normal chat message
+without a key opens the key prompt again. This is the minimal wiring needed to make T015
+reachable through actual terminal input; there is no new screen or file browser.
