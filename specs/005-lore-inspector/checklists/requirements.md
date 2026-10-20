@@ -31,8 +31,8 @@
 
 ## Notes
 
-- The names `--dry-run` and `/lore` come from the owner's agreed feature split (2026-10-19). The
-  exact command syntax is settled in the plan.
-- Candidates for `/speckit-clarify`:
-  - whether an in-app preview (dry run before sending) belongs in v1;
-  - whether the dry run should accept several scripted messages.
+- The dry run comes from the owner's agreed feature split (2026-10-19). The in-app command is
+  `/trace`, clarified the same day, because `/lore` was ambiguous. The exact command-line syntax is
+  settled in the plan.
+- Clarified: there is no in-app preview in v1. The dry run takes a single message (plus an
+  optional saved chat).

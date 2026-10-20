@@ -7,7 +7,7 @@
 **Status**: Draft
 
 **Input**: User description: "005-lore-inspector: show 003's trace to people. A `--dry-run` command
-prints what would be sent to the model and why, without calling it. A `/lore` overlay in the app
+prints what would be sent to the model and why, without calling it. A `/trace` overlay in the app
 shows the trace of the last request in a character chat: which lorebook entries fired and why,
 which were left out and why, and the token cost of each part. This is the demo piece for 'the
 right lore at the right time', and it can be cut if time runs out."
@@ -22,6 +22,14 @@ right lore at the right time', and it can be cut if time runs out."
   model sees, rather than just forwarding chat text.
 
 Nothing here changes what is sent to the model.
+
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: Does v1 offer an in-app preview, assembling for a draft message before sending? → A: No. The
+  inspector shows only the last request; previews use the command-line dry run. The in-app
+  command is named `/trace`, because `/lore` was ambiguous next to 004's `/lorebooks`.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -157,8 +165,8 @@ and every fired entry, and the not-fired entries are grouped by reason with a co
 
 **Inspector**
 
-- **FR-005**: The app MUST offer a command that opens an inspector overlay for the last request of
-  the current character chat. The overlay is scrollable and closes with Esc.
+- **FR-005**: The app MUST offer a `/trace` command that opens an inspector overlay for the last
+  request of the current character chat. The overlay is scrollable and closes with Esc.
 - **FR-006**: The inspector MUST read the trace kept by 004. It MUST NOT re-run the assembly.
 
 **Presentation (shared)**
