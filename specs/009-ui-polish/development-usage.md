@@ -111,3 +111,27 @@ Subsequent commits and verification invocations are recorded in the next phase's
     Outcome: convergence workflow loaded; acceptance writes only its results and temporary app home.
 62. `exec_command`: mark T011-T012, record allowed light/dark deferral and implementation notes.
     Outcome: Phase 5 ready for commit; final validation still pending.
+
+## Phase 6 and convergence
+
+63. `exec_command` (escalated): commit validated Phase 5. Outcome: commit `f93db2a`.
+64. `exec_command`: run the final task-required build/lint/test gate. Outcome: gate started.
+65. `exec_command` (escalated): run external offline acceptance against this checkout.
+    Outcome: run started with temporary home and no key.
+66. `exec_command`: initialize T014 convergence, check hooks and inspect current implementation/tasks.
+    Outcome: artifacts present; no extension hooks; scoped code checked against intent.
+67. `write_stdin`: collect final gate. Outcome: build/lint passed; 55 files, 304 tests passed.
+68. `write_stdin`: collect external acceptance. Outcome: 19 passed, 0 failed;
+    record `../acceptance/results/v1-acceptance-20261020-050410.md`.
+69. `exec_command`: write the detailed implementation report, test evidence and owner manual checks.
+    Outcome: report created; convergence result pending final recording.
+70. `exec_command`: initialize the additional owner-requested convergence pass and reload intent.
+    Outcome: current artifacts confirmed; no hooks; no convergence tasks appended.
+71. `exec_command`: inspect scoped components, integration and tests against the reloaded intent.
+    Outcome: zero actionable findings; allowed light/dark deferral and manual checks retained.
+72. `exec_command`: check post hooks, finalize report, mark original T013-T015 and record usage.
+    Outcome: no hooks; implementation documentation finalized.
+
+The next invocation verifies the documentation, unchanged design/checklist artifacts and task
+completion; the final invocation commits the validated Phase 6 documents and checks status.
+Their final outcomes are available in the session transcript and final commit history.

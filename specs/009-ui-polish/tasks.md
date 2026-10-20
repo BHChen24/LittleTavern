@@ -113,9 +113,9 @@ fails, stop and report it in `questions.md`. Do not rebase yourself.
 
 ## Phase 6: Polish
 
-- [ ] T013 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
-- [ ] T014 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, a terminal smaller than 40 columns and 10 rows, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
+- [X] T013 Run `pnpm build && pnpm lint && pnpm test`, then `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`, so that it tests this checkout's build. Fix any failures
+- [X] T014 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T015 Write `specs/009-ui-polish/report.md` with the same sections as the earlier reports. Include the manual full-screen checks for the owner (T-j): wheel, selection and copy, resizing, a terminal smaller than 40 columns and 10 rows, and the terminal restored on Ctrl+C, `/quit` and an error. Commit
 
 ## Dependencies & Execution Order
 
