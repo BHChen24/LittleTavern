@@ -12,11 +12,13 @@ import { messageStyles } from "../theme.ts";
 export class InputBox extends Container {
   private editor: Editor;
   private placeholder: () => string;
+  private banner?: () => string | undefined;
 
-  constructor(editor: Editor, placeholder: () => string) {
+  constructor(editor: Editor, placeholder: () => string, banner?: () => string | undefined) {
     super();
     this.editor = editor;
     this.placeholder = placeholder;
+    this.banner = banner;
     this.addChild(editor);
   }
 
@@ -25,12 +27,17 @@ export class InputBox extends Container {
   }
 
   override render(width: number): string[] {
-    const lines = this.editor.render(width);
-    if (this.editor.getText() || !lines[1]) return lines;
-    const hint = messageStyles.muted(
-      truncateToWidth(stripControls(this.placeholder()), Math.max(0, width - 1)),
-    );
-    const cursor = (this.editor.focused ? CURSOR_MARKER : "") + renderFakeCursor(" ");
-    return [lines[0] ?? "", cursor + hint, ...lines.slice(2)];
+    let lines = this.editor.render(width);
+    if (!this.editor.getText() && lines[1]) {
+      const hint = messageStyles.muted(
+        truncateToWidth(stripControls(this.placeholder()), Math.max(0, width - 1)),
+      );
+      const cursor = (this.editor.focused ? CURSOR_MARKER : "") + renderFakeCursor(" ");
+      lines = [lines[0] ?? "", cursor + hint, ...lines.slice(2)];
+    }
+    const banner = this.banner?.();
+    return banner
+      ? [messageStyles.muted(truncateToWidth(stripControls(banner), Math.max(0, width))), ...lines]
+      : lines;
   }
 }

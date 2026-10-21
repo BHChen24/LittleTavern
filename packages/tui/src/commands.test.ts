@@ -9,6 +9,8 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     "sessions",
     "regenerate",
     "prev",
+    "undo",
+    "edit",
     "trace",
     "lorebooks",
     "innkeeper",

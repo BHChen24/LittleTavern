@@ -29,6 +29,7 @@ export interface ChatHistoryItem {
   role: "user" | "character";
   text: string;
   interrupted?: boolean;
+  entryId?: string;
 }
 
 export interface ChatListEntry {
@@ -115,7 +116,7 @@ function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
         typeof message.content === "string"
           ? message.content
           : message.content.map((block) => (block.type === "text" ? block.text : "")).join("");
-      history.push({ role: "user", text });
+      history.push({ role: "user", text, entryId: entry.id });
     }
     if (message.role === "assistant") {
       const text = message.content
@@ -123,8 +124,8 @@ function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
         .join("");
       history.push(
         message.stopReason === "aborted"
-          ? { role: "character", text, interrupted: true }
-          : { role: "character", text },
+          ? { role: "character", text, interrupted: true, entryId: entry.id }
+          : { role: "character", text, entryId: entry.id },
       );
     }
   }
@@ -238,6 +239,66 @@ export class CharacterChat {
 
   history(): ChatHistoryItem[] {
     return historyFromEntries(this.manager.getBranch());
+  }
+
+  private messageEntry(entryId: string, role: "user" | "assistant") {
+    const entry = this.manager.getBranch().find((item) => item.id === entryId);
+    if (entry?.type !== "message" || entry.message.role !== role)
+      throw new Error(`The ${role} message is not on the current branch.`);
+    return entry;
+  }
+
+  undo(): { text: string } | "nothing-to-undo" {
+    if (this.isStreaming) return "nothing-to-undo";
+    const branch = this.manager.getBranch();
+    const index = branch.findLastIndex(
+      (entry) => entry.type === "message" && entry.message.role === "user",
+    );
+    if (index < 0) return "nothing-to-undo";
+    const entry = branch[index];
+    const before = branch[index - 1];
+    if (entry?.type !== "message" || entry.message.role !== "user" || !before)
+      throw new Error("The last player message has no preceding entry.");
+    if (before.type !== "message" && before.type !== "custom" && before.type !== "session_info")
+      throw new Error("Cannot undo after this session entry type.");
+    if (before.parentId) this.manager.branch(before.parentId);
+    else this.manager.resetLeaf();
+    if (before.type === "message") {
+      const message = before.message;
+      if (message.role !== "user" && message.role !== "assistant")
+        throw new Error("Cannot copy this message role during undo.");
+      this.manager.appendMessage(message);
+    } else if (before.type === "custom")
+      this.manager.appendCustomEntry(before.customType, before.data);
+    else this.manager.appendSessionInfo(before.name ?? "");
+    this.replaced = undefined;
+    const content = entry.message.content;
+    const text =
+      typeof content === "string"
+        ? content
+        : content.map((block) => (block.type === "text" ? block.text : "")).join("");
+    return { text };
+  }
+
+  async resendFrom(entryId: string, text: string): Promise<TurnResult | null> {
+    if (this.isStreaming) return null;
+    const entry = this.messageEntry(entryId, "user");
+    if (!entry.parentId) throw new Error("The player message has no parent.");
+    this.manager.branch(entry.parentId);
+    return this.send(text);
+  }
+
+  editReply(entryId: string, text: string): void {
+    const entry = this.messageEntry(entryId, "assistant");
+    if (!entry.parentId) throw new Error("The character reply has no parent.");
+    const message = entry.message as AssistantMessage;
+    this.manager.branch(entry.parentId);
+    this.manager.appendMessage({
+      ...message,
+      content: [{ type: "text", text }],
+      stopReason: "stop",
+    });
+    this.replaced = undefined;
   }
 
   async send(text: string): Promise<TurnResult | null> {

@@ -31,3 +31,24 @@ it("shows the state placeholder while preserving the editor border and cursor", 
   expect(box.render(80).join("\n")).toContain("hello");
   expect(box.render(80).join("\n")).not.toContain(placeholder);
 });
+
+it("renders a sanitized editing banner above both empty and populated editor lines", () => {
+  const editor = new Editor(new TuiAltScreen(new ProcessTerminal()), editorTheme);
+  editor.focused = true;
+  let banner: string | undefined = "Editing \x1b[31mAlice\x1b[0m · Enter saves · Esc cancels";
+  const box = new InputBox(
+    editor,
+    () => "Placeholder",
+    () => banner,
+  );
+  for (const text of ["", "A multi-line\nreply"]) {
+    editor.setText(text);
+    const lines = box.render(80);
+    expect(lines[0]).toContain("Editing Alice");
+    expect(lines[0]).not.toContain("\x1b[31m");
+    expect(lines.slice(1).join("\n")).toContain(text ? "A multi-line" : "Placeholder");
+    expect(box.render(15).every((line) => visibleWidth(line) <= 15)).toBe(true);
+  }
+  banner = undefined;
+  expect(box.render(80)).toEqual(editor.render(80));
+});
