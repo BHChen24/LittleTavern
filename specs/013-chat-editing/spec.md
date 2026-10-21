@@ -147,10 +147,14 @@ streams each show their message and change nothing.
 
 - Saving an edited player message whose text is unchanged: it still restarts the chat from that
   message and sends it again. This is a way to continue from an earlier point.
-- Saving an edited character message whose text is unchanged: nothing changes.
+- Saving an edited character message whose text is unchanged: it is not a saved edit. The app
+  says so, and nothing changes: later messages stay, an interrupted mark stays, and `/prev` keeps
+  what it could bring back.
 - Saving an empty edit (only spaces): refused with a short message; the editing state stays.
 - While a message is being edited, Enter saves the input as the message's new text, even if it
-  starts with `/`. Commands and Ctrl+R are not run; Esc ends the editing first.
+  starts with `/`. Commands and Ctrl+R are not run; Esc ends the editing first. The input offers
+  no command or file suggestions while editing, so Enter never completes the text into
+  something else and Esc always cancels.
 - An edited player message whose reply fails: the edited message stays, later messages are gone,
   and the 012 failure notice appears; Ctrl+R retries it, as after a failed send.
 - Editing an interrupted reply (stopped with Esc): the saved text is the edited text, and it is no
@@ -182,7 +186,8 @@ streams each show their message and change nothing.
 - **FR-004**: Choosing a message MUST put its full text into the input and enter an editing
   state that the screen makes visible, with how to save (Enter) and cancel (Esc).
 - **FR-005**: Saving an edit MUST replace the chosen message with the edited text and drop every
-  later message from the chat. An edited player message MUST then be sent, as with a normal
+  later message from the chat. An edited character message whose text is unchanged is not a
+  saved edit: the chat stays as it was. An edited player message MUST then be sent, as with a normal
   send, including the spend limit check. An edited character message MUST NOT trigger a request.
 - **FR-006**: Cancelling an edit MUST leave the chat unchanged and clear the input.
 - **FR-007**: An empty edit MUST be refused with a short message, keeping the editing state.
@@ -196,6 +201,8 @@ streams each show their message and change nothing.
   changes.
 - **FR-011**: After `/undo` or a saved `/edit`, `/prev` MUST have nothing to bring back.
 - **FR-012**: Help, the command contract and the README MUST describe `/undo` and `/edit`.
+- **FR-013**: While a message is being edited, the input MUST NOT offer command or file
+  suggestions; Enter saves exactly the typed text.
 
 ### Key Entities
 

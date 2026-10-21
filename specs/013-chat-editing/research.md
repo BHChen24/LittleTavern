@@ -18,14 +18,19 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
     `_buildIndex`).
   - The file is first written once it contains a user or assistant message; after that every
     entry is appended (`session-manager.ts:1166–1190`).
-  - `CharacterChat` writes only two kinds of entries: custom entries (`littletavern.character`
-    and `littletavern.greeting`, `character-chat.ts:203`, `:206`) and messages
-    (`character-chat.ts:246`, `:287`, `:366`). The character entry is the root.
+  - `CharacterChat` writes three kinds of entries: custom entries (`littletavern.character`
+    and `littletavern.greeting`, `character-chat.ts:203`, `:206`), one `session_info` entry with
+    the character's name (`character-chat.ts:204`; pi's `appendSessionInfo(name)`,
+    `session-manager.ts:1303–1314`, a distinct entry type with `name`, not `customType`/`data`)
+    and messages (`character-chat.ts:246`, `:287`, `:366`). A new chat's chain is
+    `character → session_info → greeting (if the card has one)`. The character entry is the
+    root. (Analysis I1.)
   - `history()` follows `getBranch()` from the leaf (`character-chat.ts:240`).
-  - `regenerateTarget()`, `regenerate()` and `prev()` all read the leaf directly and expect it to
+  - `regenerate()`, `prev()` and `regenerateTarget()` all read the leaf directly and expect it to
     be the last visible message (`character-chat.ts:254–273`, `:276–290`, `:293–299`).
-- **Consequence**: whatever undo and edit do, the last entry in the file must be the last item
-  the chat shows. Otherwise a restart shows something else (spec FR-009), and regenerate and
+- **Consequence**: whatever undo and edit do, the last entry in the file must be the chat's
+  current point: the last message the chat shows or, when it shows no message, the entry the
+  next message will follow (the greeting, the `session_info` entry or the character entry). Otherwise a restart shows something else (spec FR-009), and regenerate and
   `/prev` act on the wrong entry.
 
 ## R2. Undo: branch, then append a copy of the entry before the undone message
@@ -34,15 +39,22 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
   1. Find the last user message on the current branch (`getBranch()`, scanning backwards). If
      there is none, return `"nothing-to-undo"`.
   2. Let `before` be the entry just before it on the branch (its parent). It is the previous
-     reply, an earlier user message without a reply, the greeting, or the character entry.
+     reply, an earlier user message without a reply, the greeting, the `session_info` entry (a
+     card without a greeting), or the character entry (a chat file without `session_info`).
   3. Move the leaf to `before`'s parent with `branch()`, or `resetLeaf()` when `before` is the
      root.
-  4. Append a copy of `before`: `appendMessage(before.message)` for a message, or
-     `appendCustomEntry(before.customType, before.data)` for a custom entry.
+  4. Append a copy of `before`: `appendMessage(before.message)` for a message,
+     `appendCustomEntry(before.customType, before.data)` for a custom entry, or
+     `appendSessionInfo(before.name)` for a `session_info` entry. Any other entry type is an
+     error (throw); `CharacterChat` writes no other type.
   5. Clear `replaced` and return the undone user message's text.
 - **Rationale**: it is the same move as `/prev` (012 research R6): branch, then append a copy so
-  the current point is the last entry in the file. The leaf stays a visible item, so
-  `regenerateTarget()`, `regenerate()` and `prev()` need no change. For example, after undoing
+  the current point is the last entry in the file. When messages remain, the leaf is the last
+  visible message, so `regenerateTarget()`, `regenerate()` and `prev()` need no change. When
+  none remain, the leaf is the greeting, `session_info` or character copy; `regenerateTarget()`
+  returns `null` for a non-message leaf (`character-chat.ts:293–299`), which is right: there is
+  nothing to regenerate. `characterIdOf()` scans all entries (`character-chat.ts:134–143`), so
+  resuming still finds the character, and a copied `session_info` keeps the session's name. For example, after undoing
   turn 2, the leaf is a copy of reply 1, and Ctrl+R regenerates reply 1, as it would have before
   turn 2 was sent.
 - **Alternatives considered**:
@@ -98,10 +110,19 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
   - `submit()` checks `editing` first, before the empty-text return and the command parsing. An
     empty value shows the contract message and keeps editing; anything else is the new text,
     even if it starts with `/` (spec edge case).
+  - Autocomplete is off while editing (spec FR-013; analysis I3). The editor handles its menu
+    before `onSubmit`: with the menu open, Enter applies the selected slash completion and then
+    submits (`editor.ts:790–815`), so `/un` could reach `submit()` as `/undo`; Esc closes the
+    menu (`editor.ts:759–761`). The app installs the normal provider once
+    (`app.ts:241`, `CombinedAutocompleteProvider` for commands and import files). When editing
+    starts, the app calls `editor.setAutocompleteProvider(NO_SUGGESTIONS)`, a provider whose
+    `getSuggestions` resolves `null` and whose `applyCompletion` returns its input unchanged
+    (`AutocompleteProvider`, `../pi/packages/tui/src/autocomplete.ts:271–300`). When editing
+    ends (save, cancel), it puts the normal provider back. `setAutocompleteProvider` cancels an
+    open menu (`editor.ts:418–420`), and Tab completion also goes through the provider
+    (`editor.ts:2287–2300`), so no menu can open while editing.
   - The input listener, while `editing` is set and the editor is focused:
-    - Esc cancels the edit (contract), unless the editor's autocomplete menu is showing
-      (`editor.isShowingAutocomplete()`, `editor.ts:2465`). In that case the Esc goes to the
-      editor and closes the menu.
+    - Esc cancels the edit (contract). No menu can be open, so the Esc is always the app's.
     - Ctrl+R is consumed with the contract message.
     - Ctrl+O (compose in `$EDITOR`, `app.ts:834–857`) and Ctrl+C keep working. Ctrl+O only
       changes the input's text, and Ctrl+C quits, which discards the edit (spec edge case).

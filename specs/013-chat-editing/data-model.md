@@ -7,12 +7,14 @@ There is no new entry type and no format change. Undo and edit use pi's existing
 
 | Operation | What is appended | The new last entry |
 |---|---|---|
-| `/undo` | a copy of the entry just before the undone user message: a message (`appendMessage`) or a custom entry (`appendCustomEntry`), after `branch()` to its parent, or `resetLeaf()` if it is the root | the copy |
+| `/undo` | a copy of the entry just before the undone user message: a message (`appendMessage`), a custom entry (`appendCustomEntry`) or a `session_info` entry (`appendSessionInfo(name)`), after `branch()` to its parent, or `resetLeaf()` if it is the root | the copy |
 | Save an edited player message | a new user message after `branch()` to the edited message's parent, then the reply as with any send | the reply, or the user message if the request failed |
 | Save an edited character message | `{ ...original, content: [{ type: "text", text }], stopReason: "stop" }` after `branch()` to the edited message's parent | the edited reply |
 
-Invariant: **the last entry in the file is the last item the chat shows.** `history()`,
-`regenerateTarget()`, `regenerate()` and `prev()` rely on it (research R1).
+Invariant: **the last entry in the file is the chat's current point**: the last message the
+chat shows or, when it shows none, the greeting, `session_info` or character entry that the next
+message follows. `history()`, `regenerateTarget()`, `regenerate()` and `prev()` rely on it
+(research R1).
 
 Nothing is deleted. Taken-back and dropped messages remain as earlier branches.
 
@@ -41,7 +43,7 @@ interface ChatHistoryItem {
 
 | Name | Meaning |
 |---|---|
-| `editing: { entryId, role: "user" \| "character", text } \| null` | the message being edited; `text` is the original. Set by the `/edit` picker. Cleared by a save, Esc, or a chat switch (not reachable while editing) |
+| `editing: { entryId, role: "user" \| "character", text } \| null` | the message being edited; `text` is the original. Set by the `/edit` picker. Cleared by a save, Esc, or a chat switch (not reachable while editing). While set, the editor's autocomplete provider is `NO_SUGGESTIONS` (research R4) |
 
 ## State transitions
 
@@ -51,8 +53,10 @@ editing:  null ──/edit, choose──▶ { entryId, role, text }
           editing ──Enter, empty──▶ editing (message)
           editing(user) ──Enter──▶ spend check ──Stop──▶ editing (text back in input)
                                               └─go───▶ null, resendFrom → stream
-          editing(character) ──Enter, unchanged──▶ null ("No changes.")
+          editing(character) ──Enter, unchanged──▶ null ("No changes."; chat, interrupted
+                                                   mark and replaced all untouched)
           editing(character) ──Enter, changed──▶ null, editReply
 
 replaced (/prev): any ──undo, resendFrom, editReply──▶ none
+                  (an unchanged character save calls none of them, so it stays)
 ```

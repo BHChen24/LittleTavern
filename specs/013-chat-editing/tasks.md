@@ -81,10 +81,10 @@ the input; reopening the file shows one turn.
   1. scan `getBranch()` backwards for the last user message; none → `"nothing-to-undo"`;
   2. `before` = the entry just before it on the branch;
   3. `branch(before.parentId)`, or `resetLeaf()` when `before.parentId` is null;
-  4. append a copy of `before`: `appendMessage(before.message)` for a message entry, `appendCustomEntry(before.customType, before.data)` for a custom entry;
+  4. append a copy of `before`: `appendMessage(before.message)` for a message entry, `appendCustomEntry(before.customType, before.data)` for a custom entry, `appendSessionInfo(before.name)` for a `session_info` entry (a card without a greeting); throw for any other entry type;
   5. clear `replaced`; return the user message's text (joined text blocks, as `historyFromEntries` does).
 
-  Return `"nothing-to-undo"` while streaming. Do not change `regenerateTarget`, `regenerate` or `prev`. Write T-b with every case in plan.md, including the card without a greeting and reopening the file with `CharacterChat.resume`
+  Return `"nothing-to-undo"` while streaming. Do not change `regenerateTarget`, `regenerate` or `prev`. Write T-b with every case in plan.md, including the card without a greeting (undo the first turn, reopen with `CharacterChat.resume`, send again), the entry ids kept in the file, and the unchanged usage totals and `lastTrace`
 - [ ] T003 [US1] Add `undo` to `COMMANDS()` in `packages/tui/src/commands.ts`, right after `prev`, with the contract description. In `packages/tui/src/app.ts`, add the handler (research R5):
   - no character chat: `/undo works in character chats.`;
   - `"nothing-to-undo"`: `There is nothing to undo.`;
@@ -108,20 +108,21 @@ reply shows the new text.
   - `resendFrom(entryId, text)`: return `null` while streaming; check that the entry is a user message on the current branch (T001 helper); `branch(entry.parentId)`; `return this.send(text)`;
   - `editReply(entryId, text)`: check that the entry is an assistant message on the current branch; `branch(entry.parentId)`; `appendMessage({ ...entry.message, content: [{ type: "text", text }], stopReason: "stop" })`; clear `replaced`.
 
-  Write T-c and T-d
+  Write T-c and T-d with every case in plan.md, including the Ctrl+R retry after a failed resend, the next request after `editReply`, regenerate then `prev()` after `editReply`, the entry ids kept in the file, and the usage totals and `lastTrace`
 - [ ] T005 [US2] In `packages/tui/src/components/input-box.ts`, add an optional `banner?: () => string | undefined` constructor argument. When it returns text, render it as one muted line (through `stripControls` and `truncateToWidth`) above the editor's lines; otherwise render as today. Extend `input-box.test.ts`
 - [ ] T006 [US2] Add `edit` to `COMMANDS()` right after `undo`, with the contract description. In `packages/tui/src/app.ts` (research R4, R5; contract "/edit" and "Editing state"):
   - state `editing: { entryId: string; role: "user" | "character"; text: string } | null`;
+  - keep the `CombinedAutocompleteProvider` created at `app.ts:241` in a variable, and add a module-level `NO_SUGGESTIONS: AutocompleteProvider` whose `getSuggestions` resolves `null` and whose `applyCompletion` returns `{ lines, cursorLine, cursorCol }` unchanged (research R4, spec FR-013). Whenever `editing` is set, call `editor.setAutocompleteProvider(NO_SUGGESTIONS)`; whenever it is cleared (save, Esc), put the normal provider back;
   - pass a banner callback to `InputBox` that returns the contract banner while `editing` is set;
   - the `/edit` handler: no character chat → contract message; history items with `entryId`, newest first; none → contract message; otherwise a `ListPicker` with the contract title and placeholder, label `You` or the character's name, description the first line of the text, search the full text. Selecting closes the picker, sets `editing` and calls `editor.setText(text)`;
   - add `/edit` to both streaming wait-message lists.
 - [ ] T007 [US2] In `submit()` in `packages/tui/src/app.ts`, before the empty-text return and the command parsing, when `editing` is set:
   - empty text → the contract error; editing continues;
   - role `user`: `interceptIncompleteSetup(value)`, then `allowSpend(value)`; if either stops it, editing stays (the text is already back in the input). Otherwise clear `editing` and `retries`; render the history up to (not including) the edited item; `addMessage("user", display(value))`; `stream(() => chat.resendFrom(entryId, value))`;
-  - role `character`: if `value` equals the original text trimmed → clear `editing`, `No changes.`; otherwise `chat.editReply(entryId, value)`, clear `editing`, `renderHistory(chat.history())`.
+  - role `character`: if `value` equals the original text trimmed → clear `editing`, `No changes.`, and nothing else (no engine call: later messages, an interrupted mark and `/prev` stay; spec FR-005 and edge cases); otherwise `chat.editReply(entryId, value)`, clear `editing`, `renderHistory(chat.history())`.
 
   In the input listener, while `editing` is set and the editor has focus:
-  - Esc: if `editor.isShowingAutocomplete()`, do not consume it; otherwise clear `editing`, `editor.setText("")`, show `Edit cancelled.`, consume;
+  - Esc: clear `editing` (which restores the provider), `editor.setText("")`, show `Edit cancelled.`, consume. No menu can be open while editing (research R4);
   - Ctrl+R: show the contract message and consume, without regenerating.
 
   Ctrl+O and Ctrl+C keep their behaviour. Write T-f and T-g in `packages/tui/src/app-editing.test.ts`, with every case in plan.md
