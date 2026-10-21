@@ -49,3 +49,21 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 41 | functions.exec / write_stdin | Collect corrected Phase 2 validation | Exit 0 |
 | 42 | functions.exec / exec_command | Mark T003 and T004 complete after Phase 2 passed | Completed |
 | 43 | functions.exec / apply_patch | Refresh development accounting snapshot | Patch rejected because delete/add targeted the same file; retrying with a direct write |
+| 44 | functions.exec / exec_command | Refresh development accounting using a literal Python heredoc | Completed |
+| 45 | functions.exec / exec_command | Commit Phase 2 with normal hooks after all required checks passed | Started |
+| 46 | functions.exec / write_stdin | Collect Phase 2 commit and normal hook results | Commit completed |
+| 47 | functions.exec / apply_patch | Add setting-tool validation/write tests and app Yes/No/Esc, live-apply and abort cases | Applied before change-tool implementation |
+| 48 | functions.exec / apply_patch | Implement validated confirmed setting changes, backup reporting, app live state and abortable confirmation | Applied |
+| 49 | functions.exec / exec_command | Extract request builder, format, typecheck and run Phase 3 focused tests | Started |
+| 50 | functions.exec / write_stdin | Collect Phase 3 focused test and typecheck results | Exit 2 |
+| 51 | functions.exec / apply_patch | Narrow validated pi tool arguments inside the adapter | Applied TypeScript fix |
+| 52 | functions.exec / exec_command | Rerun Phase 3 focused checks after argument narrowing | Started |
+| 53 | functions.exec / write_stdin | Collect Phase 3 focused results | Exit 0 |
+| 54 | functions.exec / apply_patch | Add live spend/round-limit tests | Patch context mismatch; no changes applied; inspect current formatting |
+| 55 | functions.exec / exec_command | Read formatted test context after patch mismatch | Completed |
+| 56 | functions.exec / apply_patch | Add live spend allowance and next-message round-limit tests with corrected patch context | Applied |
+| 57 | functions.exec / exec_command | Run required Phase 3 build, lint and full tests | Started |
+| 58 | functions.exec / exec_command | Inspect import ids, saved-chat creation and offline acceptance entrypoint for remaining tasks | Completed |
+| 59 | functions.exec / write_stdin | Collect Phase 3 required validation results | Exit running |
+| 60 | functions.exec / write_stdin | Collect final Phase 3 validation | Exit 0 |
+| 61 | functions.exec / exec_command | Mark Phase 3 tasks and save accounting snapshot | Completed |

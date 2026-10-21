@@ -124,7 +124,7 @@ rules` before the answer, and the answer request contained the help text.
 line and the picker; Yes writes the file and a backup, and the next character request asks for
 1000 tokens; No writes nothing.
 
-- [ ] T005 [US2] Add `change_settings` to `packages/engine/src/innkeeper-tools.ts` (research R5, R6). Its schema is `{ changes: [{ setting: one of the data-model keys, value: number | boolean | null }] }`. It:
+- [X] T005 [US2] Add `change_settings` to `packages/engine/src/innkeeper-tools.ts` (research R5, R6). Its schema is `{ changes: [{ setting: one of the data-model keys, value: number | boolean | null }] }`. It:
   1. validates every change with `checkSettingChange`; on the first failure, returns the contract error result and asks nothing;
   2. reads the old values;
   3. calls `context.confirm({ lines, title })` with the contract lines and title. On `false`, it returns `The guest declined.`;
@@ -132,7 +132,7 @@ line and the picker; Yes writes the file and a backup, and the next character re
   5. calls `context.applied(changes, backupPath)` and returns the saved result.
 
   Write the `change_settings` part of T-c
-- [ ] T006 [US2] In `packages/tui/src/app.ts` (research R7, R9):
+- [X] T006 [US2] In `packages/tui/src/app.ts` (research R7, R9):
   - `confirm`: show the lines as a muted notice, open a `ListPicker` with `Yes` and `No` and the title, and set `confirming` while it is open. Esc or `onCancel` answers No. An abort of `signal` closes it and answers No. In the input listener, Esc does not abort while `confirming`;
   - move the request building into `buildRequest(requestSettings)`;
   - `applied(changes, backupPath)`: update `requestSettings` with only these changes; `session.setRequest(buildRequest(requestSettings))`; set `allowedSpend` when `runSpendUsd` changes; set `session.toolRounds` when it changes; show the contract saved notice (with `backupPath`, or the no-backup text when it is `null`) and, when `mouse` changed, the restart notice.

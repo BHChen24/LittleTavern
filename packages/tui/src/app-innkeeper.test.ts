@@ -1,4 +1,12 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
@@ -11,7 +19,11 @@ import {
 import { afterEach, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
-const script = vi.hoisted(() => ({ replies: [] as SimulatedReply[], requests: [] as unknown[] }));
+const script = vi.hoisted(() => ({
+  replies: [] as SimulatedReply[],
+  requests: [] as unknown[],
+  spend: 0,
+}));
 vi.mock("@littletavern/engine", async (importOriginal) => {
   const original = await importOriginal<typeof import("@littletavern/engine")>();
   return {
@@ -24,6 +36,16 @@ vi.mock("@littletavern/engine", async (importOriginal) => {
             replies: script.replies,
             onRequest: (options) => script.requests.push(options),
           },
+        });
+        this.onFinish((turn) => {
+          if (script.spend)
+            turn.usage.cost = {
+              input: script.spend,
+              output: 0,
+              cacheRead: 0,
+              cacheWrite: 0,
+              total: script.spend,
+            };
         });
       }
     },
@@ -55,6 +77,7 @@ function fixture(replies: SimulatedReply[], settings: Record<string, unknown> = 
   if (!imported.ok) throw new Error(imported.reason);
   script.replies = replies;
   script.requests = [];
+  script.spend = 0;
   let onInput: ((data: string) => void) | undefined;
   const terminal: Terminal = {
     columns: 160,
@@ -137,4 +160,142 @@ it("shows tool calls between reply segments and restores the innkeeper conversat
   await f.app.submit("/new");
   expect(f.screen()).not.toContain("How do I import?");
   expect(f.app.session.innkeeperHistory()).toEqual([]);
+});
+
+it.each(["Yes", "No", "Esc"])("handles %s in the settings confirmation", async (choice) => {
+  const f = fixture(
+    [
+      {
+        toolCalls: [
+          {
+            name: "change_settings",
+            args: { changes: [{ setting: "limits.replyTokens", value: 1000 }] },
+          },
+        ],
+      },
+      (history) => {
+        expect(history.at(-1)?.text).toContain(choice === "Yes" ? "Saved:" : "The guest declined.");
+        return "Finished.";
+      },
+    ],
+    { limits: { replyTokens: 4096 } },
+  );
+  f.app.start();
+  await f.app.submit("/innkeeper");
+  const original = readFileSync(f.paths.settingsFile, "utf8");
+  const sending = f.app.submit("Cap replies");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Apply these settings changes?"));
+  expect(f.screen()).toContain("limits.replyTokens: 4096 → 1000");
+  if (choice === "Esc") f.terminalInput("\x1b");
+  else {
+    f.input(choice);
+    f.input("\r");
+  }
+  await sending;
+  expect(f.screen()).toContain("Finished.");
+  if (choice === "Yes") {
+    const [backup] = readdirSync(join(f.paths.configDir, "backups"));
+    expect(readFileSync(join(f.paths.configDir, "backups", backup as string), "utf8")).toBe(
+      original,
+    );
+    expect(f.screen()).toContain("Settings saved.");
+    expect(f.screen()).toContain(backup);
+    expect(script.requests[1]).toMatchObject({ maxTokens: 1000 });
+  } else {
+    expect(readFileSync(f.paths.settingsFile, "utf8")).toBe(original);
+    expect(existsSync(join(f.paths.configDir, "backups"))).toBe(false);
+    expect(script.requests[1]).toMatchObject({ maxTokens: 4096 });
+  }
+});
+
+it("applies only confirmed settings to both chats, removes sampling parameters, and reports mouse restart", async () => {
+  const f = fixture(
+    [
+      {
+        toolCalls: [
+          {
+            name: "change_settings",
+            args: {
+              changes: [
+                { setting: "limits.replyTokens", value: 1000 },
+                { setting: "generation.topP", value: null },
+                { setting: "mouse", value: false },
+              ],
+            },
+          },
+        ],
+      },
+      "Saved changes.",
+      "Character reply.",
+    ],
+    { generation: { topP: 0.8, temperature: 0.3 } },
+  );
+  await f.app.submit("/innkeeper");
+  const saved = JSON.parse(readFileSync(f.paths.settingsFile, "utf8"));
+  saved.generation.temperature = 1.5;
+  saved.future = true;
+  writeFileSync(f.paths.settingsFile, JSON.stringify(saved));
+  const sending = f.app.submit("Apply changes");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Apply these settings changes?"));
+  f.input("\r");
+  await sending;
+  expect(f.screen()).toContain("The mouse setting applies after a restart.");
+  expect(script.requests[1]).toMatchObject({ maxTokens: 1000, temperature: 0.3 });
+  expect((script.requests[1] as { samplingParams?: unknown }).samplingParams).toBeUndefined();
+  expect(JSON.parse(readFileSync(f.paths.settingsFile, "utf8"))).toMatchObject({
+    generation: { temperature: 1.5 },
+    future: true,
+  });
+  await f.character();
+  await f.app.submit("Hello Alice");
+  expect(script.requests[2]).toMatchObject({ maxTokens: 1000, temperature: 0.3 });
+});
+
+it("closes a pending confirmation on abort without writing", async () => {
+  const f = fixture([
+    {
+      toolCalls: [
+        { name: "change_settings", args: { changes: [{ setting: "mouse", value: false }] } },
+      ],
+    },
+  ]);
+  await f.app.submit("/innkeeper");
+  const original = readFileSync(f.paths.settingsFile, "utf8");
+  const sending = f.app.submit("Disable mouse");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Apply these settings changes?"));
+  f.app.session.abort();
+  await sending;
+  expect(f.overlay()).not.toContain("Apply these settings changes?");
+  expect(readFileSync(f.paths.settingsFile, "utf8")).toBe(original);
+});
+
+it("uses a confirmed spend cap as the new run allowance", async () => {
+  const f = fixture(
+    [
+      {
+        toolCalls: [
+          {
+            name: "change_settings",
+            args: { changes: [{ setting: "limits.runSpendUsd", value: 0.005 }] },
+          },
+        ],
+      },
+      "Cap saved.",
+      "Unused reply.",
+    ],
+    { limits: { runSpendUsd: 1 } },
+  );
+  script.spend = 0.012;
+  await f.app.submit("/innkeeper");
+  const changing = f.app.submit("Lower spend cap");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Apply these settings changes?"));
+  f.input("\r");
+  await changing;
+  const sending = f.app.submit("Another message");
+  await vi.waitFor(() => expect(f.overlay()).toContain("of $0.01. Send anyway?"));
+  f.input("Stop");
+  f.input("\r");
+  await sending;
+  expect(script.requests).toHaveLength(2);
+  expect(f.app.editor.getText()).toBe("Another message");
 });

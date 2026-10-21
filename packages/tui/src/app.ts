@@ -36,6 +36,7 @@ import {
   type CharacterItem,
   type ChatHistoryItem,
   ChatSession,
+  type ConfirmRequest,
   copyText,
   createCharacterFromDraft,
   createLogger,
@@ -59,6 +60,7 @@ import {
   type PersonaItem,
   parsePersona,
   type RequestOptions,
+  type RequestSettings,
   readActivePersona,
   readRequestSettings,
   readSavedKey,
@@ -110,19 +112,7 @@ export interface AppOptions {
   session?: ChatSession;
 }
 
-export function createApp(options: AppOptions = {}) {
-  const env = options.env ?? process.env;
-  const paths = options.paths ?? resolveAppPaths(env);
-  const settings = readSettings(paths);
-  const requestSettings = readRequestSettings(paths);
-  let allowedSpend = requestSettings.runSpendUsd;
-  let cutOffNoteShown = false;
-  let unknownPriceNoteShown = false;
-  const limitsLine = formatLimits(
-    requestSettings.replyTokens,
-    requestSettings.runSpendUsd,
-    paths.settingsFile,
-  );
+function buildRequest(requestSettings: RequestSettings): RequestOptions {
   const request: RequestOptions = {};
   if (requestSettings.replyTokens > 0) request.maxTokens = requestSettings.replyTokens;
   if (requestSettings.generation.temperature !== undefined)
@@ -138,6 +128,23 @@ export function createApp(options: AppOptions = {}) {
     if (value !== undefined) samplingParams[key] = value;
   }
   if (Object.keys(samplingParams).length) request.samplingParams = samplingParams;
+  return request;
+}
+
+export function createApp(options: AppOptions = {}) {
+  const env = options.env ?? process.env;
+  const paths = options.paths ?? resolveAppPaths(env);
+  const settings = readSettings(paths);
+  const requestSettings = readRequestSettings(paths);
+  let allowedSpend = requestSettings.runSpendUsd;
+  let cutOffNoteShown = false;
+  let unknownPriceNoteShown = false;
+  const limitsLine = formatLimits(
+    requestSettings.replyTokens,
+    requestSettings.runSpendUsd,
+    paths.settingsFile,
+  );
+  const request = buildRequest(requestSettings);
   const storedModel = findAllowedModel(settings.model);
   let modelId = storedModel?.id ?? DEFAULT_MODEL_ID;
   let modelSelected = Boolean(storedModel);
@@ -149,14 +156,38 @@ export function createApp(options: AppOptions = {}) {
   const sessionId = randomUUID();
   const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
+  let confirming = false;
   const innkeeper: InnkeeperToolContext = {
     paths,
     help: () =>
       `${helpText()}\nCharacter import folder: ${paths.importCharactersDir}\nLorebook import folder: ${paths.importLorebooksDir}\nPersona import folder: ${paths.importPersonasDir}\nSettings file: ${paths.settingsFile}\nSettings backups: ${join(paths.configDir, "backups")}/`,
     requestSettings: () => requestSettings,
-    confirm: async () => false,
+    confirm: confirmInnkeeper,
     openChat: () => {},
-    applied: () => {},
+    applied: (changes, backupPath) => {
+      for (const { setting, value } of changes) {
+        if (setting === "limits.replyTokens") requestSettings.replyTokens = value as number;
+        else if (setting === "limits.runSpendUsd") {
+          requestSettings.runSpendUsd = value as number;
+          allowedSpend = value as number;
+        } else if (setting === "limits.toolRounds") {
+          requestSettings.toolRounds = value as number;
+          session.toolRounds = value as number;
+        } else if (setting.startsWith("generation.")) {
+          const key = setting.slice("generation.".length) as keyof RequestSettings["generation"];
+          if (value === null) delete requestSettings.generation[key];
+          else requestSettings.generation[key] = value as number;
+        }
+      }
+      session.setRequest(buildRequest(requestSettings));
+      notice(
+        backupPath
+          ? `Settings saved. The previous settings were backed up to ${backupPath}.`
+          : "Settings saved.",
+      );
+      if (changes.some((change) => change.setting === "mouse"))
+        notice("The mouse setting applies after a restart.");
+    },
   };
   const session =
     options.session ??
@@ -297,6 +328,29 @@ export function createApp(options: AppOptions = {}) {
   }
   function showPanel(component: Component, options?: OverlayOptions): void {
     tui.showOverlay(new Frame(component, () => tui.terminal.rows), options);
+  }
+  function confirmInnkeeper(request: ConfirmRequest, signal?: AbortSignal): Promise<boolean> {
+    if (signal?.aborted) return Promise.resolve(false);
+    if (request.lines.length) notice(request.lines.join("\n"));
+    return new Promise((resolve) => {
+      confirming = true;
+      const picker = new ListPicker<boolean>(request.title, [
+        { value: true, label: "Yes", search: "Yes" },
+        { value: false, label: "No", search: "No" },
+      ]);
+      const choose = (accepted: boolean) => {
+        if (!confirming) return;
+        confirming = false;
+        signal?.removeEventListener("abort", abort);
+        closeOverlay();
+        resolve(accepted);
+      };
+      const abort = () => choose(false);
+      picker.onSelect = choose;
+      picker.onCancel = abort;
+      signal?.addEventListener("abort", abort, { once: true });
+      showPanel(picker);
+    });
   }
   function importSelected(selected: string): ImportReport | null {
     try {
@@ -1309,7 +1363,7 @@ export function createApp(options: AppOptions = {}) {
       void regenerate();
       return { consume: true };
     }
-    if (matchesKey(data, "escape") && session.isStreaming) {
+    if (matchesKey(data, "escape") && session.isStreaming && !confirming) {
       clearWaiting();
       session.abort();
       return { consume: true };

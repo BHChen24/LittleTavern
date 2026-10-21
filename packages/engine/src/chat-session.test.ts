@@ -320,3 +320,40 @@ it("caps each innkeeper message and applies changed request options to its next 
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+it("applies a changed round limit to the next message without extending the current run", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-round-live-"));
+  try {
+    const innkeeper = toolContext(home);
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: "",
+      getApiKey: () => "synthetic-key",
+      innkeeper,
+      toolRounds: 1,
+      simulated: {
+        replies: [
+          {
+            toolCalls: [
+              {
+                name: "change_settings",
+                args: { changes: [{ setting: "limits.toolRounds", value: 9 }] },
+              },
+            ],
+          },
+          { toolCalls: [{ name: "get_help", args: {} }] },
+          "Next message answer.",
+        ],
+      },
+    });
+    innkeeper.confirm = async () => true;
+    innkeeper.applied = () => {
+      session.toolRounds = 9;
+    };
+    expect(await session.send("Raise rounds")).toMatchObject({ toolLimitReached: true });
+    expect(session.toolRounds).toBe(9);
+    expect(await session.send("Help again")).toMatchObject({ text: "Next message answer." });
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

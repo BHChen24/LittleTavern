@@ -1,4 +1,12 @@
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -92,4 +100,91 @@ it("lists only characters and returns built-in help", async () => {
     content: [{ type: "text", text: f.context.help() }],
   });
   expect(readFileSync(f.paths.settingsFile, "utf8")).not.toContain("Alice");
+});
+
+it("validates every proposed change before asking, and refuses non-removable settings", async () => {
+  const f = fixture();
+  for (const [setting, value, message] of [
+    ["generation.topP", 2, "generation.topP must be number 0–1. Nothing was changed."],
+    ["limits.replyTokens", null, "limits.replyTokens cannot be removed. Nothing was changed."],
+    ["userName", 1, "userName must be a supported setting. Nothing was changed."],
+  ] as const) {
+    expect(await f.call("change_settings", { changes: [{ setting, value }] })).toMatchObject({
+      isError: true,
+      content: [{ type: "text", text: message }],
+    });
+  }
+  expect(f.context.confirm).not.toHaveBeenCalled();
+  expect(existsSync(join(f.paths.configDir, "backups"))).toBe(false);
+});
+
+it("leaves declined changes untouched and passes accepted changes and backup path to the app", async () => {
+  const f = fixture();
+  writeFileSync(
+    f.paths.settingsFile,
+    JSON.stringify({
+      limits: { replyTokens: 4096, runSpendUsd: 3 },
+      generation: { topP: 0.8 },
+      scanDepth: 3,
+      future: true,
+    }),
+  );
+  const original = readFileSync(f.paths.settingsFile, "utf8");
+  const changes = [
+    { setting: "limits.replyTokens", value: 1000 },
+    { setting: "generation.topP", value: null },
+    { setting: "scanDepth", value: null },
+  ];
+  expect(await f.call("change_settings", { changes })).toMatchObject({
+    content: [{ text: "The guest declined." }],
+  });
+  expect(readFileSync(f.paths.settingsFile, "utf8")).toBe(original);
+  expect(f.context.applied).not.toHaveBeenCalled();
+  expect(f.context.confirm).toHaveBeenCalledWith(
+    {
+      title: "Apply these settings changes?",
+      lines: [
+        "limits.replyTokens: 4096 → 1000",
+        "generation.topP: 0.8 → default",
+        "scanDepth: 3 → default",
+      ],
+    },
+    undefined,
+  );
+  f.context.confirm = vi.fn(async () => true);
+  const result = await f.call("change_settings", { changes });
+  const backups = readdirSync(join(f.paths.configDir, "backups"));
+  expect(backups).toHaveLength(1);
+  const backupPath = join(f.paths.configDir, "backups", backups[0] as string);
+  expect(readFileSync(backupPath, "utf8")).toBe(original);
+  expect(f.context.applied).toHaveBeenCalledExactlyOnceWith(changes, backupPath);
+  expect(JSON.stringify(result)).toContain(backupPath);
+  expect(JSON.parse(readFileSync(f.paths.settingsFile, "utf8"))).toEqual({
+    limits: { replyTokens: 1000, runSpendUsd: 3 },
+    generation: {},
+    future: true,
+  });
+});
+
+it("reports malformed settings and write failures without applying changes", async () => {
+  const f = fixture();
+  f.context.confirm = vi.fn(async () => true);
+  writeFileSync(f.paths.settingsFile, "{broken");
+  expect(
+    await f.call("change_settings", { changes: [{ setting: "mouse", value: false }] }),
+  ).toMatchObject({
+    isError: true,
+    content: [
+      { text: "settings.json is not valid JSON. Fix or remove it first. Nothing was changed." },
+    ],
+  });
+  expect(readFileSync(f.paths.settingsFile, "utf8")).toBe("{broken");
+  writeFileSync(f.paths.settingsFile, "{}");
+  // A file at the backups directory path makes the backup fail on every platform.
+  writeFileSync(join(f.paths.configDir, "backups"), "blocked");
+  expect(
+    await f.call("change_settings", { changes: [{ setting: "mouse", value: false }] }),
+  ).toMatchObject({ isError: true });
+  expect(readFileSync(f.paths.settingsFile, "utf8")).toBe("{}");
+  expect(f.context.applied).not.toHaveBeenCalled();
 });
