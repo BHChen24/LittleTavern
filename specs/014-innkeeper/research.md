@@ -1,6 +1,6 @@
 # Research: The Innkeeper
 
-Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`. `agent/` means
+Facts were read from the code at `main` 4d8fd4d (after 013 merged) and from `../pi` at tag `v1.3.0`. `agent/` means
 `../pi/packages/agent/src/`, `ai/` means `../pi/packages/ai/`.
 
 ## R1. Tools in pi-agent-core
@@ -47,7 +47,7 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
     (character chats) share it. `generate()` swaps the messages out and back so the plain chat
     survives (`packages/engine/src/chat-session.ts:128–145`, `:193–208`).
   - The app uses one `session` for both: `onDelta`, `onFinish`, `abort`, `setModel`,
-    `isStreaming`, `send` and `clearConversation` (`packages/tui/src/app.ts:147`, `:706–712`,
+    `isStreaming`, `send` and `clearConversation` (`packages/tui/src/app.ts:153`, `:726–732`,
     `:809`, `:867`, `:889`, `:1055`, `:1147`, `:1154`, `:1174`).
   - `run()` reports only the final assistant message's usage (`chat-session.ts:238–271`, usage at `:264`).
 - **Decision**:
@@ -70,9 +70,9 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
 
 - **Facts**:
   - The dependency rule is tui → engine → data (constitution). `helpText()` lives in
-    `packages/tui/src/commands.ts:31`, so the engine cannot call it.
+    `packages/tui/src/commands.ts:33`, so the engine cannot call it.
   - The app opens chats (`startChat`, `setCharacterChat(CharacterChat.resume(...))`,
-    `app.ts:421–441`, `:647`) and shows pickers.
+    `app.ts:441–461`, `:667`) and shows pickers.
 - **Decision**: `createInnkeeperTools(context)` in a new `packages/engine/src/innkeeper-tools.ts`
   returns the six tools. `context` is:
   - `paths`;
@@ -126,13 +126,13 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
 ## R7. Applying a change immediately
 
 - **Facts**:
-  - The app builds the request options from `requestSettings` once (`app.ts:110–133`) and
+  - The app builds the request options from `requestSettings` once (`app.ts:116–139`) and
     passes them to `ChatSession`.
-  - `CharacterChat` passes `session.request.maxTokens` to assembly (`character-chat.ts:352`).
-  - The lore settings are read from `settings.json` on every request (`character-chat.ts:76–78`).
-  - `mouse` is a terminal option at start (`app.ts:154`).
-  - The spend check uses `requestSettings.runSpendUsd` and `allowedSpend` (`app.ts:775–777`);
-    the cut-off note uses `requestSettings.replyTokens` (`app.ts:765–771`).
+  - `CharacterChat` passes `session.request.maxTokens` to assembly (`character-chat.ts:413`).
+  - The lore settings are read from `settings.json` on every request (`character-chat.ts:77–79`).
+  - `mouse` is a terminal option at start (`app.ts:160`).
+  - The spend check uses `requestSettings.runSpendUsd` and `allowedSpend` (`app.ts:795–797`);
+    the cut-off note uses `requestSettings.replyTokens` (`app.ts:785–791`).
 - **Decision**:
   - Move the request building into a function `buildRequest(requestSettings)`.
   - `applied(changes)` updates the in-memory `requestSettings` with **only the confirmed
@@ -146,12 +146,12 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
 
 - **Facts**:
   - `startChat(item)` and `setCharacterChat()` clear the transcript and switch `chat`
-    (`app.ts:421–441`).
-  - `onFinish` records usage under `chat?.sessionId ?? sessionId` (`app.ts:714–718`). Switching
+    (`app.ts:441–461`).
+  - `onFinish` records usage under `chat?.sessionId ?? sessionId` (`app.ts:734–738`). Switching
     during the run would file the innkeeper's usage under the character chat.
   - `listChats` returns saved chats, newest first, without the library id
-    (`character-chat.ts:162–175`). `readChatCharacter(paths, path)` gives it
-    (`character-chat.ts:151–156`).
+    (`character-chat.ts:163–176`). `readChatCharacter(paths, path)` gives it
+    (`character-chat.ts:152–157`).
 - **Decision**:
   - The `openChat` callback only records `pendingOpen`. After `stream()` returns for an innkeeper
     send, the app opens it: `startChat(item)` for `"new"`, or `setCharacterChat(
@@ -165,10 +165,10 @@ Facts were read from the code at `main` 15a64b5 and from `../pi` at tag `v1.3.0`
 ## R9. Showing the innkeeper's work
 
 - **Facts**:
-  - The app streams into one `reply` view per send (`app.ts:683–711`).
-  - `/innkeeper` clears the transcript (`app.ts:1092–1099`). The agent's messages survive, so
+  - The app streams into one `reply` view per send (`app.ts:703–731`).
+  - `/innkeeper` clears the transcript (`app.ts:1142–1149`). The agent's messages survive, so
     the screen and the model's view differ today.
-  - The input listener aborts on Esc whenever a reply streams (`app.ts:1174–1178`), even with an
+  - The input listener aborts on Esc whenever a reply streams (`app.ts:1281–1285`), even with an
     overlay open.
 - **Decision**:
   - On `onToolCall`, the app removes the current reply view if it is still empty, adds the muted

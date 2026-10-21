@@ -22,8 +22,8 @@ quickstart.md
 - `contracts/messages.md`: the prompt and every user-visible or model-visible text. Use the texts
   exactly.
 - `data-model.md`: the setting keys, rules, backups, and the engine and app types.
-- plan.md "Integration note: 013": the owner brings `main` into this branch before the run if
-  013 has merged. Do not merge anything yourself.
+- plan.md "Integration note: 013": 013 is already merged into this branch. Do not merge
+  anything yourself, and keep 013's `/undo` and `/edit` code and tests working.
 - The current code:
   - `packages/data/src/settings.ts`;
   - `packages/engine/src/chat-session.ts` (the whole file), `system-prompt.ts`, `index.ts`,

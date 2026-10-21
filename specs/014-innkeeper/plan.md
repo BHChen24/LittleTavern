@@ -98,11 +98,13 @@ agent and the tools in `engine`; the questions and wording in `tui`.
 
 ## Integration note: 013
 
-013 (chat editing) is planned on its own branch and also edits `app.ts`. If 013 merges first, the
-owner (or Claude, when asked) merges `main` into this branch before implementation starts, as
-was done for 012 after 011. The implementer does not merge. The two features touch
-different parts of `app.ts`: 013 the character-chat commands and editing state, 014 the
-innkeeper send path and settings state.
+013 (chat editing) merged into `main` at 4d8fd4d, and `main` was merged into this branch at
+91985ef before implementation. The research citations were refreshed against that code. The
+implementer does not merge. The two features touch different parts of `app.ts`: 013 the
+character-chat commands and editing state (`/undo`, `/edit`, the `editing` branch at the top of
+`submit()` and its Esc and Ctrl+R handling in the input listener), 014 the innkeeper send path
+and settings state. 013's editing state exists only in a character chat, so it never meets the
+innkeeper's confirmations; keep 013's code and tests as they are.
 
 ## Test Plan (complexity-assessed)
 
