@@ -80,3 +80,12 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 72 | functions.exec / write_stdin | Collect final Phase 4 validation | Exit 0 |
 | 73 | functions.exec / exec_command | Inspect status totals, documentation locations, and upcoming convergence workflow | Completed |
 | 74 | functions.exec / exec_command | Mark T007 and T008 complete and refresh accounting | Completed |
+| 75 | functions.exec / exec_command | Commit Phase 4 after build, lint and 505 tests passed | Started |
+| 76 | functions.exec / write_stdin | Collect Phase 4 commit and hook results | Commit completed |
+| 77 | functions.exec / apply_patch | Add all-field usage summation and app round-limit/failure accounting tests | Applied before limit-notice implementation |
+| 78 | functions.exec / apply_patch | Show the round-limit notice with the limit captured for this run | Applied |
+| 79 | functions.exec / exec_command | Run required Phase 5 build, lint and full tests | Started |
+| 80 | functions.exec / exec_command | Read README limits/help sections and prior command contract for Phase 6 documentation | Completed |
+| 81 | functions.exec / write_stdin | Collect Phase 5 validation results | Exit running |
+| 82 | functions.exec / write_stdin | Collect final Phase 5 validation | Exit 0 |
+| 83 | functions.exec / exec_command | Mark T009 complete and refresh accounting snapshot | Completed |

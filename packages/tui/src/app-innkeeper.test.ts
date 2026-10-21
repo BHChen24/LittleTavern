@@ -16,6 +16,7 @@ import {
   readUsageRecords,
   resolveAppPaths,
   type SimulatedReply,
+  type TurnResult,
 } from "@littletavern/engine";
 import { afterEach, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
@@ -54,6 +55,53 @@ vi.mock("@littletavern/engine", async (importOriginal) => {
 });
 
 const cleanups: (() => Promise<void>)[] = [];
+
+it("shows the round-limit notice and counts the turn's usage in status and ledger", async () => {
+  const f = fixture([{ toolCalls: [{ name: "get_help", args: {} }] }, "Must not be requested."], {
+    limits: { toolRounds: 1 },
+  });
+  script.spend = 0.012;
+  let turn: TurnResult | undefined;
+  f.app.session.onFinish((finished) => {
+    turn = finished;
+  });
+  await f.app.submit("/innkeeper");
+  await f.app.submit("Keep looking things up");
+  expect(script.requests).toHaveLength(1);
+  expect(f.screen()).toContain("The innkeeper stopped after 1 rounds of tool calls.");
+  expect(f.screen()).toContain(`raise limits.toolRounds in ${f.paths.settingsFile}`);
+  const [record] = readUsageRecords(f.paths.usageLedgerFile);
+  expect(record).toMatchObject({
+    inputTokens: turn?.usage.input,
+    outputTokens: turn?.usage.output,
+    cost: { total: 0.012 },
+  });
+  expect(f.screen()).toContain(`Tokens: ${turn?.usage.input} in / ${turn?.usage.output} out`);
+  expect(f.screen()).toContain("$0.0120");
+});
+
+it("records all requests before an innkeeper provider failure and shows its retry hint", async () => {
+  const f = fixture([
+    { text: "Looking.", toolCalls: [{ name: "get_help", args: {} }] },
+    { text: "", errorMessage: "fetch failed" },
+  ]);
+  let turn: TurnResult | undefined;
+  f.app.session.onFinish((finished) => {
+    turn = finished;
+  });
+  await f.app.submit("/innkeeper");
+  await f.app.submit("Help me");
+  expect(script.requests).toHaveLength(2);
+  expect(f.screen()).toContain("Send your message again to retry.");
+  expect(f.screen()).not.toContain("Retries so far:");
+  const [record] = readUsageRecords(f.paths.usageLedgerFile);
+  expect(record).toMatchObject({
+    outcome: "error",
+    inputTokens: turn?.usage.input,
+    outputTokens: turn?.usage.output,
+  });
+  expect(record?.outputTokens).toBeGreaterThan(0);
+});
 
 it.each(["Yes", "No", "Esc"])("handles %s when opening a new character chat", async (choice) => {
   const f = fixture([

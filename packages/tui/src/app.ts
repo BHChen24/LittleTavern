@@ -157,6 +157,7 @@ export function createApp(options: AppOptions = {}) {
   const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
   let confirming = false;
+  let innkeeperRoundLimit = requestSettings.toolRounds;
   let pendingOpen: { item: CharacterItem; sessionPath?: string } | null = null;
   const innkeeper: InnkeeperToolContext = {
     paths,
@@ -785,6 +786,7 @@ export function createApp(options: AppOptions = {}) {
     editor.disableSubmit = true;
     tui.requestRender();
     try {
+      innkeeperRoundLimit = session.toolRounds;
       running = run();
       await running;
     } catch (error) {
@@ -812,6 +814,10 @@ export function createApp(options: AppOptions = {}) {
   });
   const onFinish = session.onFinish((turn) => {
     clearWaiting();
+    if (turn.toolLimitReached)
+      notice(
+        `The innkeeper stopped after ${innkeeperRoundLimit} rounds of tool calls. Ask again, or raise limits.toolRounds in ${paths.settingsFile}.`,
+      );
     const record = toUsageRecord(turn, {
       sessionId: chat?.sessionId ?? sessionId,
       modelPrice: findAllowedModel(turn.model)?.price ?? null,

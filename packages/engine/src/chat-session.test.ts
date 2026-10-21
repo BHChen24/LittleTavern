@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Agent } from "@earendil-works/pi-agent-core";
 import {
   appendUsageRecord,
   importFile,
@@ -238,6 +239,52 @@ function toolContext(home: string): InnkeeperToolContext {
     applied: () => {},
   };
 }
+
+it("sums every reported token and cost field across the tool loop", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-usage-sum-"));
+  const subscribe = Agent.prototype.subscribe;
+  const spy = vi.spyOn(Agent.prototype, "subscribe").mockImplementation(function (
+    this: Agent,
+    listener,
+  ) {
+    return subscribe.call(this, (event) => {
+      if (event.type === "message_end" && event.message.role === "assistant") {
+        // Faux reports zero prices; supply deterministic provider usage at the adapter boundary.
+        event.message.usage = {
+          input: 1,
+          output: 2,
+          cacheRead: 3,
+          cacheWrite: 4,
+          reasoning: 5,
+          totalTokens: 10,
+          cost: { input: 0.1, output: 0.2, cacheRead: 0.3, cacheWrite: 0.4, total: 1 },
+        };
+      }
+      listener(event);
+    });
+  });
+  try {
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: "",
+      getApiKey: () => "synthetic-key",
+      innkeeper: toolContext(home),
+      simulated: { replies: [{ toolCalls: [{ name: "get_help", args: {} }] }, "Answer."] },
+    });
+    expect((await session.send("Help"))?.usage).toEqual({
+      input: 2,
+      output: 4,
+      cacheRead: 6,
+      cacheWrite: 8,
+      reasoning: 10,
+      totalTokens: 20,
+      cost: { input: 0.2, output: 0.4, cacheRead: 0.6, cacheWrite: 0.8, total: 2 },
+    });
+  } finally {
+    spy.mockRestore();
+    rmSync(home, { recursive: true, force: true });
+  }
+});
 
 it("ends an accepted open_chat without making a further provider request", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-open-end-"));

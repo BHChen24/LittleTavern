@@ -164,7 +164,7 @@ and the usage record of the run carries the innkeeper's session id.
 **Independent test**: with `limits.toolRounds` 1 and a faux reply list that keeps calling tools,
 the turn stops with the contract notice; the status bar cost equals the summed usage.
 
-- [ ] T009 [US4] In `packages/tui/src/app.ts` `onFinish`: when `turn.toolLimitReached`, show the contract round-limit notice. Check that the usage record uses the summed usage from T002 and that the 012 spend question and innkeeper failure notice still apply to innkeeper sends. Write the matching parts of T-e
+- [X] T009 [US4] In `packages/tui/src/app.ts` `onFinish`: when `turn.toolLimitReached`, show the contract round-limit notice. Check that the usage record uses the summed usage from T002 and that the 012 spend question and innkeeper failure notice still apply to innkeeper sends. Write the matching parts of T-e
 
 **Checkpoint**: checks pass. Commit.
 
