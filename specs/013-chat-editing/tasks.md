@@ -156,9 +156,9 @@ acceptance scenario of US3 has a test.
 
 ## Phase 6: Polish
 
-- [ ] T011 Run `pnpm build && pnpm lint && pnpm test` and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
-- [ ] T012 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T013 Write `specs/013-chat-editing/report.md` with the same sections as `specs/012-chat-safeguards/report.md`. Include test results, deferred tests, and the owner's manual checks from `quickstart.md`. Commit
+- [X] T011 Run `pnpm build && pnpm lint && pnpm test` and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
+- [X] T012 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T013 Write `specs/013-chat-editing/report.md` with the same sections as `specs/012-chat-safeguards/report.md`. Include test results, deferred tests, and the owner's manual checks from `quickstart.md`. Commit
 
 ## Dependencies & Execution Order
 

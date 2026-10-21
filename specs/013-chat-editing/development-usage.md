@@ -65,3 +65,19 @@ unknown. No estimates or output-size counts are substituted for development toke
 | 70 | `exec_command` | Check whitespace and inspect final engine/app decision paths | No whitespace errors; implementation matches updated decisions |
 | 71 | `exec_command` | Mark T009/T010 complete and record checkpoint | Phase 5 complete |
 | 72 | `exec_command` (escalated) | Commit phase 5 with normal hooks | Feature-branch checkpoint requested |
+| 73 | `write_stdin` | Collect phase 5 commit | Commit b3cc649 created; hooks passed |
+| 74–75 | `exec_command` (escalated), `write_stdin` | Run and collect required external offline acceptance | 19 checks passed, 0 failed; result written outside worktree as requested |
+| 76 | `exec_command` | Run final phase 6 build/lint/test checkpoint | Checkpoint started |
+| 77 | `exec_command` | Check converge hooks, run prerequisites once, inventory acceptance criteria and inspect command paths | Feature resolved; no hooks; task hash captured |
+| 78 | `apply_patch` | Write the T013 implementation report | Report created with test evidence and owner manual checks |
+| 79 | `write_stdin` | Collect final checkpoint | Build/lint passed without warnings; all 462 tests passed |
+| 80 | `exec_command` | Finish scope assessment, count requirements/scenarios/edges and verify task hash/post-hooks | Converged: 13 FRs, 4 SCs, 17 scenarios, 12 edges; no additional tasks; task file unchanged during assessment |
+| 81 | `exec_command` | Finalize report, completion markers and usage record | All 13 tasks complete; no source-code changes after final tests |
+| 82 | `exec_command` | Check final whitespace, completed markers, hooks and changed-file scope | Final review before commit |
+| 83 | `exec_command` (escalated) | Commit phase 6 report and validation records with normal hooks | Task-required final checkpoint requested |
+| 84 | `write_stdin` | Collect final commit result | Commit outcome retained in conversation |
+| 85 | `exec_command` | Verify clean feature branch and final task/report state | Final workspace verification retained in conversation |
+
+External acceptance result: `../acceptance/results/v1-acceptance-20261020-214617.md`.
+All automated checks are offline; no real API key, app settings, editor, local LLM or GPU is used.
+The `.env` file is never read, printed or used. Normal Git hooks remain enabled.
