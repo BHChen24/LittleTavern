@@ -2,7 +2,9 @@
 
 Platform-reported total token usage: **unknown**. No estimate is substituted.
 Each row records an invocation through `functions.exec`; detailed arguments and outputs remain
-in the conversation. Checkpoint snapshots include subsequent calls.
+in the conversation. The final commit and post-commit inspection results are recorded there
+without creating a recursive bookkeeping commit. Earlier analysis accounting remains in
+[analysis.md](./analysis.md).
 
 | # | Tool | Purpose | Outcome |
 |---|---|---|---|
@@ -29,7 +31,7 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 21 | functions.exec / write_stdin | Collect final Phase 1 validation | Exit 0 |
 | 22 | functions.exec / exec_command | Mark T001 and T002 complete after passing Phase 1 checks | Completed |
 | 23 | functions.exec / apply_patch | Write development accounting snapshot | Written |
-| 24 | functions.exec / exec_command | Commit Phase 1 with normal hooks after all required checks passed | Commit command started |
+| 24 | functions.exec / exec_command | Commit Phase 1 with normal hooks after all required checks passed | Sandbox rejected index.lock write; scoped retry succeeded |
 | 25 | functions.exec / exec_command | Retry authorized feature-branch commit with access to external worktree Git metadata | running; prior sandbox attempt failed on index.lock |
 | 26 | functions.exec / write_stdin | Collect Phase 1 commit and hook results | Exit 0 |
 | 27 | functions.exec / exec_command | Inspect app lifetime, submit/reset paths, message rendering and synthetic credential format | Completed |
@@ -97,3 +99,17 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 89 | functions.exec / write_stdin | Collect Phase 6 validation | Exit 0 |
 | 90 | functions.exec / exec_command | Read full convergence skill and verify offline acceptance behavior | Completed |
 | 91 | functions.exec / exec_command | Mark T010 and T011 complete and refresh accounting | Completed |
+| 92 | functions.exec / exec_command | Commit Phase 6 after build, lint and 509 tests passed | Started |
+| 93 | functions.exec / write_stdin | Collect Phase 6 commit and hook results | Commit completed |
+| 94 | functions.exec / exec_command | Run T012 final build, lint and full tests | Started |
+| 95 | functions.exec / exec_command | Initialize convergence, capture task hash, inspect tool implementation and report structure | Completed; no extension hooks |
+| 96 | functions.exec / exec_command | Assess scoped settings, session, callbacks, transcript and public declarations against convergence inventory | Completed; relevant output reviewed |
+| 97 | functions.exec / write_stdin | Collect T012 final build/lint/test results | Passed: build, lint and 509 tests |
+| 98 | functions.exec / exec_command | Run required external offline acceptance suite with temporary app home | running; result directory outside worktree authorized |
+| 99 | functions.exec / exec_command | Verify scenario inventory, exact prompt, public API boundary and unchanged tasks during convergence; check hooks | Completed |
+| 100 | functions.exec / write_stdin | Collect offline acceptance results | Exit 0 |
+| 101 | functions.exec / apply_patch | Write T014 implementation report with final verification and convergence; document routine details | Applied |
+| 102 | functions.exec / exec_command | Mark final tasks complete, check whitespace/status and dispatch-or-skip post-implementation hooks | All 14 tasks complete; no hooks; only report/accounting/task metadata pending |
+| 103 | functions.exec / exec_command | Write final development accounting snapshot | Completed |
+| 104 | functions.exec / exec_command | Commit Phase 7 report, final task markers and accounting using normal hooks | Final result recorded in conversation after this snapshot |
+| 105 | functions.exec / exec_command | Verify final commit, clean feature worktree and completed task markers | Final result recorded in conversation after this snapshot |

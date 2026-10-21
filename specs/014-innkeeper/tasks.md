@@ -181,9 +181,9 @@ the turn stops with the contract notice; the status bar cost equals the summed u
 
 ## Phase 7: Polish
 
-- [ ] T012 Run `pnpm build && pnpm lint && pnpm test` and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
-- [ ] T013 Run `speckit-converge` on this feature and complete any appended tasks
-- [ ] T014 Write `specs/014-innkeeper/report.md` with the same sections as `specs/012-chat-safeguards/report.md`. Include test results, deferred tests, and the owner's manual checks from `quickstart.md`. Commit
+- [X] T012 Run `pnpm build && pnpm lint && pnpm test` and `bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"`. Fix any failures
+- [X] T013 Run `speckit-converge` on this feature and complete any appended tasks
+- [X] T014 Write `specs/014-innkeeper/report.md` with the same sections as `specs/012-chat-safeguards/report.md`. Include test results, deferred tests, and the owner's manual checks from `quickstart.md`. Commit
 
 ## Dependencies & Execution Order
 
