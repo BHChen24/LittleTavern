@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
@@ -163,4 +163,221 @@ it("refuses undo during streaming through submit and terminal Enter without chan
     release();
     await pending;
   }
+});
+
+it("lists messages newest first, labels their speakers, searches full text and omits the greeting", async () => {
+  const f = fixture(["First reply\nHidden word", "Second reply"]);
+  await f.character();
+  await f.app.submit("First message");
+  await f.app.submit("Second message");
+  await f.app.submit("/edit");
+  const choices = f.overlay();
+  expect(choices).toContain("Edit a message (Enter edits, Esc cancels)");
+  expect(choices).toMatch(/F.*ilter messages/);
+  expect(choices).toContain("You");
+  expect(choices).toContain("Alice");
+  expect(choices.indexOf("Second reply")).toBeLessThan(choices.indexOf("Second message"));
+  expect(choices.indexOf("Second message")).toBeLessThan(choices.indexOf("First reply"));
+  expect(choices).not.toContain("Welcome, Traveler.");
+  f.pick("Hidden word");
+  expect(f.app.tui.hasOverlay()).toBe(false);
+  expect(f.app.editor.getText()).toBe("First reply\nHidden word");
+  expect(f.screen()).toContain("Editing Alice's message · Enter saves · Esc cancels");
+});
+
+it.each([false, true])(
+  "explains edit outside a character chat, innkeeper=%s",
+  async (innkeeper) => {
+    const f = fixture();
+    if (innkeeper) await f.app.submit("/innkeeper");
+    await f.app.submit("/edit");
+    expect(f.screen()).toContain("/edit works in character chats.");
+    expect(f.app.tui.hasOverlay()).toBe(false);
+  },
+);
+
+it("does not open an edit list for the greeting alone", async () => {
+  const f = fixture();
+  await f.character();
+  await f.app.submit("/edit");
+  expect(f.screen()).toContain("There are no messages to edit.");
+  expect(f.app.tui.hasOverlay()).toBe(false);
+});
+
+it.each([false, true])(
+  "resends a selected player message and drops later turns, unchanged=%s",
+  async (unchanged) => {
+    const f = fixture(["First reply", "Second reply", "Fresh reply"]);
+    await f.character();
+    await f.app.submit("First message");
+    await f.app.submit("Second message");
+    await f.app.submit("/edit");
+    f.pick("First message");
+    expect(f.screen()).toContain("Editing your message · Enter saves and resends · Esc cancels");
+    const edited = unchanged ? "First message" : "Corrected message";
+    await f.app.submit(edited);
+    expect(f.app.chat?.history().map((item) => item.text)).toEqual([
+      "Welcome, Traveler.",
+      edited,
+      "Fresh reply",
+    ]);
+    expect(f.screen()).not.toContain("Second message");
+    expect(f.screen()).not.toContain("Second reply");
+    expect(f.screen()).not.toContain("Editing your message");
+    expect(f.app.editor.getText()).toBe("");
+    expect(readUsageRecords(f.paths.usageLedgerFile)).toHaveLength(3);
+    expect(f.screen()).toContain("$0.0360");
+  },
+);
+
+it("saves a character edit without a request and retains usage and the last trace", async () => {
+  const f = fixture(["First reply", "Second reply"]);
+  await f.character();
+  await f.app.submit("First message");
+  await f.app.submit("Second message");
+  const trace = f.app.chat?.lastTrace;
+  const usage = readUsageRecords(f.paths.usageLedgerFile);
+  await f.app.submit("/edit");
+  f.pick("First reply");
+  await f.app.submit("Hand-edited reply");
+  expect(f.app.chat?.history().map((item) => item.text)).toEqual([
+    "Welcome, Traveler.",
+    "First message",
+    "Hand-edited reply",
+  ]);
+  expect(f.screen()).not.toContain("Second message");
+  expect(f.screen()).not.toContain("Editing Alice");
+  expect(readUsageRecords(f.paths.usageLedgerFile)).toEqual(usage);
+  expect(f.app.chat?.lastTrace).toBe(trace);
+  expect(f.screen()).toContain("$0.0240");
+});
+
+it("treats an unchanged character edit as a no-op, preserving later messages and the restore slot", async () => {
+  const f = fixture(["First reply", "Second reply", "Replacement"]);
+  await f.character();
+  await f.app.submit("First message");
+  await f.app.submit("Second message");
+  await f.app.submit("/regenerate");
+  const history = f.app.chat?.history();
+  const file = await f.file();
+  const bytes = readFileSync(file, "utf8");
+  await f.app.submit("/edit");
+  f.pick("First reply");
+  await f.app.submit("First reply");
+  expect(f.screen()).toContain("No changes.");
+  expect(f.app.chat?.history()).toEqual(history);
+  expect(readFileSync(file, "utf8")).toBe(bytes);
+  await f.app.submit("/prev");
+  expect(f.app.chat?.history().at(-1)?.text).toBe("Second reply");
+});
+
+it("leaves an interrupted mark on an unchanged character submission", async () => {
+  const f = fixture(["Interrupted reply".repeat(20)]);
+  await f.character();
+  const remove = f.session.onDelta(() => f.session.abort());
+  await f.app.submit("Message");
+  remove();
+  const original = f.app.chat?.history().at(-1);
+  expect(original?.interrupted).toBe(true);
+  await f.app.submit("/edit");
+  f.pick();
+  await f.app.submit(original?.text ?? "");
+  expect(f.screen()).toContain("No changes.");
+  expect(f.app.chat?.history().at(-1)).toEqual(original);
+});
+
+it("rejects empty edits, blocks regenerate, cancels with Esc and never writes an unsaved edit", async () => {
+  const f = fixture(["Reply"]);
+  await f.character();
+  await f.app.submit("Message");
+  f.app.start();
+  const file = await f.file();
+  const bytes = readFileSync(file, "utf8");
+  const history = f.app.chat?.history();
+  await f.app.submit("/edit");
+  f.pick();
+  await f.app.submit("  ");
+  expect(f.screen()).toContain("Please enter the message text, or press Esc to cancel.");
+  expect(f.screen()).toContain("Editing Alice");
+  f.terminalInput("\x12");
+  expect(f.screen()).toContain("Finish the edit first: Enter saves, Esc cancels.");
+  expect(readUsageRecords(f.paths.usageLedgerFile)).toHaveLength(1);
+  f.app.editor.setText("Discard this draft");
+  expect(readFileSync(file, "utf8")).toBe(bytes);
+  f.terminalInput("\x1b");
+  expect(f.app.editor.getText()).toBe("");
+  expect(f.screen()).toContain("Edit cancelled.");
+  expect(f.screen()).not.toContain("Editing Alice");
+  expect(f.app.chat?.history()).toEqual(history);
+  expect(readFileSync(file, "utf8")).toBe(bytes);
+});
+
+it.each(["save", "cancel"])(
+  "disables slash/file completion while editing and restores it after %s",
+  async (finish) => {
+    const f = fixture(["Reply"]);
+    await f.character();
+    await f.app.submit("Message");
+    f.app.start();
+    await f.app.submit("/edit");
+    f.pick();
+    f.app.editor.setText("");
+    for (const key of "/un") f.app.editor.handleInput(key);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(f.app.editor.isShowingAutocomplete()).toBe(false);
+    f.app.editor.handleInput("\t");
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(f.app.editor.isShowingAutocomplete()).toBe(false);
+    if (finish === "save") {
+      f.app.editor.handleInput("\r");
+      await vi.waitFor(() => expect(f.app.chat?.history().at(-1)?.text).toBe("/un"));
+    } else {
+      f.terminalInput("\x1b");
+      expect(f.app.chat?.history().at(-1)?.text).toBe("Reply");
+    }
+    f.app.editor.handleInput("/");
+    await vi.waitFor(() => expect(f.app.editor.isShowingAutocomplete()).toBe(true));
+  },
+);
+
+it("keeps an edited player message pending on spend Stop, then sends it on Continue", async () => {
+  const f = fixture(["Reply", "Fresh reply"], 0.01);
+  await f.character();
+  await f.app.submit("Message");
+  const history = f.app.chat?.history();
+  const bytes = readFileSync(await f.file(), "utf8");
+  await f.app.submit("/edit");
+  f.pick("Message");
+  const stopped = f.app.submit("Corrected");
+  expect(f.overlay()).toContain("Send anyway?");
+  f.pick("Stop");
+  await stopped;
+  expect(f.app.editor.getText()).toBe("Corrected");
+  expect(f.app.chat?.history()).toEqual(history);
+  expect(f.screen()).toContain("Editing your message");
+  expect(readFileSync(await f.file(), "utf8")).toBe(bytes);
+  const continued = f.app.submit("Corrected");
+  f.pick("Continue");
+  await continued;
+  expect(f.app.chat?.history().at(-1)?.text).toBe("Fresh reply");
+  expect(f.screen()).not.toContain("Editing your message");
+});
+
+it("shows the failure notice for a saved player edit and retries it with Ctrl+R", async () => {
+  const f = fixture([
+    "Old reply",
+    { text: "Partial", errorMessage: "fetch failed" },
+    "Retried reply",
+  ]);
+  await f.character();
+  await f.app.submit("Original");
+  f.app.start();
+  await f.app.submit("/edit");
+  f.pick("Original");
+  await f.app.submit("Corrected");
+  expect(f.app.chat?.history().at(-1)?.text).toBe("Corrected");
+  expect(f.screen()).toContain("The reply failed: network error.");
+  expect(f.screen()).not.toContain("Editing your message");
+  f.terminalInput("\x12");
+  await vi.waitFor(() => expect(f.app.chat?.history().at(-1)?.text).toBe("Retried reply"));
 });

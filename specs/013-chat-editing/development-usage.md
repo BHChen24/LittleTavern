@@ -37,3 +37,19 @@ unknown. No estimates or output-size counts are substituted for development toke
 | 36 | `exec_command` | Inspect app setup and command regression tests for edit integration | Existing integration points confirmed |
 | 37 | `exec_command` | Mark phase 2 complete and record checkpoint | T002/T003 marked complete |
 | 38 | `exec_command` (escalated) | Commit phase 2 with normal hooks | Worktree metadata access required; commit requested |
+| 39 | `write_stdin` | Collect phase 2 commit | Commit 26df3d7 created; hooks passed |
+| 40 | `apply_patch` | Add engine edit and InputBox banner tests before code | Tests written |
+| 41–42 | `exec_command`, `write_stdin` | Run/collect tests before engine edit implementation | Five expected failures for missing methods/banner |
+| 43 | `apply_patch` | Implement resendFrom, editReply and optional banner | Changes written; expected-role helper now used |
+| 44 | `exec_command` | Format, build and run engine/banner tests | Started targeted checkpoint |
+| 45 | `exec_command` | Simplify failed-resend test; add editing-state app tests and run before app implementation | App tests written and started |
+| 46 | `write_stdin` | Collect engine/banner results | 30 tests passed |
+| 47 | `write_stdin` | Collect pre-implementation app tests | Fourteen expected failures for missing edit integration |
+| 48 | `apply_patch` | Implement edit picker, submit state, input listener and autocomplete provider swap | Changes written |
+| 49–50 | `exec_command`, `write_stdin` | Format and run phase 3 checkpoint | Build/lint passed without warnings; 454 tests passed, one placeholder assertion split by cursor marker |
+| 51–54 | `exec_command` ×4 | Inspect artifact exceptions, app context, sanitization and pi cursor rendering | Confirmed cursor marker behavior; one guessed pi cursor.ts path absent, actual definitions found |
+| 55 | `exec_command` | Adjust placeholder assertion and record progress; rerun checkpoint | Checkpoint started |
+| 56 | `write_stdin` | Collect phase 3 checkpoint | Build/lint passed without warnings; 455 tests passed |
+| 57 | `exec_command` | Inspect change summary and external acceptance script | Offline script uses temporary home; result write needs scoped access outside workspace |
+| 58 | `exec_command` | Mark T004–T007 complete and record checkpoint | Phase 3 complete |
+| 59 | `exec_command` (escalated) | Commit phase 3 with normal hooks | Feature-branch checkpoint requested |

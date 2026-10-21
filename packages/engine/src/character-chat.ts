@@ -280,6 +280,27 @@ export class CharacterChat {
     return { text };
   }
 
+  async resendFrom(entryId: string, text: string): Promise<TurnResult | null> {
+    if (this.isStreaming) return null;
+    const entry = this.messageEntry(entryId, "user");
+    if (!entry.parentId) throw new Error("The player message has no parent.");
+    this.manager.branch(entry.parentId);
+    return this.send(text);
+  }
+
+  editReply(entryId: string, text: string): void {
+    const entry = this.messageEntry(entryId, "assistant");
+    if (!entry.parentId) throw new Error("The character reply has no parent.");
+    const message = entry.message as AssistantMessage;
+    this.manager.branch(entry.parentId);
+    this.manager.appendMessage({
+      ...message,
+      content: [{ type: "text", text }],
+      stopReason: "stop",
+    });
+    this.replaced = undefined;
+  }
+
   async send(text: string): Promise<TurnResult | null> {
     if (this.isStreaming || !text.trim()) return null;
     this.replaced = undefined;

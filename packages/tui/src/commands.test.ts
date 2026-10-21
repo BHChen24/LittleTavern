@@ -10,6 +10,7 @@ it("generates help for exactly the contracted commands and key bindings", () => 
     "regenerate",
     "prev",
     "undo",
+    "edit",
     "trace",
     "lorebooks",
     "innkeeper",

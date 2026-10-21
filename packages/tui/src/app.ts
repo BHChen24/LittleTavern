@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, isAbsolute, join, relative, sep } from "node:path";
 import {
+  type AutocompleteProvider,
   CombinedAutocompleteProvider,
   type Component,
   Container,
@@ -94,6 +95,11 @@ import { stripControls } from "./sanitize.ts";
 import { editorTheme, markdownTheme, messageStyles } from "./theme.ts";
 import { formatTraceReport } from "./trace-format.ts";
 import { VERSION } from "./version.ts";
+
+const NO_SUGGESTIONS: AutocompleteProvider = {
+  getSuggestions: async () => null,
+  applyCompletion: (lines, cursorLine, cursorCol) => ({ lines, cursorLine, cursorCol }),
+};
 
 export interface AppOptions {
   startupNotices?: string[];
@@ -217,17 +223,26 @@ export function createApp(options: AppOptions = {}) {
   }
   let reply: MessageView | undefined;
   let chat: CharacterChat | null = null;
+  let editing: { entryId: string; role: "user" | "character"; text: string } | null = null;
   let innkeeperSelected = false;
-  const inputBox = new InputBox(editor, () =>
-    !activeKey
-      ? "Add your key with /apikey to start talking"
-      : !modelSelected
-        ? "Select a model with /model to start talking"
-        : !chat && !innkeeperSelected
-          ? "Choose /characters or /innkeeper to start talking"
-          : chat
-            ? `Talk to ${display(chat.character.name)}… (/ for commands)`
-            : "Talk to the innkeeper… (/ for commands)",
+  const inputBox = new InputBox(
+    editor,
+    () =>
+      !activeKey
+        ? "Add your key with /apikey to start talking"
+        : !modelSelected
+          ? "Select a model with /model to start talking"
+          : !chat && !innkeeperSelected
+            ? "Choose /characters or /innkeeper to start talking"
+            : chat
+              ? `Talk to ${display(chat.character.name)}… (/ for commands)`
+              : "Talk to the innkeeper… (/ for commands)",
+    () =>
+      editing
+        ? editing.role === "user"
+          ? "Editing your message · Enter saves and resends · Esc cancels"
+          : `Editing ${stripControls(chat?.character.name ?? "")}'s message · Enter saves · Esc cancels`
+        : undefined,
   );
   let waiting: Loader | undefined;
   function clearWaiting(): void {
@@ -238,7 +253,12 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   }
   const commands = COMMANDS();
-  editor.setAutocompleteProvider(new CombinedAutocompleteProvider(commands, paths.importRoot));
+  const autocomplete = new CombinedAutocompleteProvider(commands, paths.importRoot);
+  editor.setAutocompleteProvider(autocomplete);
+  function clearEditing(): void {
+    editing = null;
+    editor.setAutocompleteProvider(autocomplete);
+  }
   let response = "";
   let retries: number | null = null;
   let running: Promise<unknown> | undefined;
@@ -885,9 +905,39 @@ export function createApp(options: AppOptions = {}) {
 
   async function submit(value: string): Promise<void> {
     const text = value.trim();
-    if (closing || !text) return;
+    if (closing) return;
+    if (editing && chat) {
+      editor.setText("");
+      if (!text) {
+        errorNotice("Please enter the message text, or press Esc to cancel.");
+        return;
+      }
+      const target = editing;
+      const current = chat;
+      if (target.role === "user") {
+        if (interceptIncompleteSetup(value)) return;
+        const allowance = allowSpend(value);
+        if (allowance !== true && !(await allowance)) return;
+        clearEditing();
+        retries = null;
+        const history = current.history();
+        const index = history.findIndex((item) => item.entryId === target.entryId);
+        renderHistory(history.slice(0, index));
+        addMessage("user", display(value));
+        await stream(() => current.resendFrom(target.entryId, value));
+      } else if (text === target.text.trim()) {
+        clearEditing();
+        notice("No changes.");
+      } else {
+        current.editReply(target.entryId, value);
+        clearEditing();
+        renderHistory(current.history());
+      }
+      return;
+    }
+    if (!text) return;
     if (session.isStreaming) {
-      if (["/new", "/prev", "/undo"].includes(text))
+      if (["/new", "/prev", "/undo", "/edit"].includes(text))
         notice("Wait for the reply, or press Esc to stop it.");
       return;
     }
@@ -1120,6 +1170,39 @@ export function createApp(options: AppOptions = {}) {
           editor.setText(result.text);
         }
       },
+      edit: () => {
+        if (!chat) {
+          notice("/edit works in character chats.");
+          return;
+        }
+        const items = chat
+          .history()
+          .filter((item): item is ChatHistoryItem & { entryId: string } => Boolean(item.entryId))
+          .reverse();
+        if (!items.length) {
+          notice("There are no messages to edit.");
+          return;
+        }
+        const picker = new ListPicker(
+          "Edit a message (Enter edits, Esc cancels)",
+          items.map((item) => ({
+            value: item,
+            label: item.role === "user" ? "You" : stripControls(chat?.character.name ?? ""),
+            description: stripControls(item.text.split("\n", 1)[0] ?? ""),
+            search: item.text,
+          })),
+          "Filter messages",
+        );
+        picker.onCancel = closeOverlay;
+        picker.onSelect = (item) => {
+          closeOverlay();
+          editing = { entryId: item.entryId, role: item.role, text: item.text };
+          editor.setAutocompleteProvider(NO_SUGGESTIONS);
+          editor.setText(item.text);
+          tui.requestRender();
+        };
+        showPanel(picker, { width: "90%" });
+      },
       model: openModelPicker,
       help: async () => {
         const innerWidth = Math.max(1, Math.min(80, tui.terminal.columns) - 4);
@@ -1162,11 +1245,23 @@ export function createApp(options: AppOptions = {}) {
     void submit(value);
   };
   tui.addInputListener((data) => {
+    if (editing && tui.getFocusedComponent() === editor) {
+      if (matchesKey(data, "escape")) {
+        clearEditing();
+        editor.setText("");
+        notice("Edit cancelled.");
+        return { consume: true };
+      }
+      if (matchesKey(data, "ctrl+r")) {
+        notice("Finish the edit first: Enter saves, Esc cancels.");
+        return { consume: true };
+      }
+    }
     if (
       session.isStreaming &&
       tui.getFocusedComponent() === editor &&
       matchesKey(data, "enter") &&
-      ["/new", "/prev", "/undo"].includes(editor.getText().trim())
+      ["/new", "/prev", "/undo", "/edit"].includes(editor.getText().trim())
     ) {
       notice("Wait for the reply, or press Esc to stop it.");
       return { consume: true };
