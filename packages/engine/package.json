@@ -1,6 +1,6 @@
 {
   "name": "@littletavern/engine",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Prompt assembly, output segmentation and game state for LittleTavern.",
   "private": true,
   "type": "module",
