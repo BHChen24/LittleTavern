@@ -72,6 +72,8 @@ Type `/` at any time to see the commands, with completion.
 | `/sessions` | Resume a saved chat |
 | `/regenerate` | Regenerate the last reply (also Ctrl+R) |
 | `/prev` | Bring back the reply that the last regenerate replaced; use again to swap back |
+| `/undo` | Take back your last message and the reply to it |
+| `/edit` | Edit a message and continue the chat from it |
 | `/trace` | Show why the last request looked the way it did |
 | `/lorebooks` | Choose, attach or import lorebooks for the current character |
 | `/persona` | Choose, create or edit who you are in the story |
@@ -96,6 +98,11 @@ Type `/` at any time to see the commands, with completion.
 `/prev` keeps the latest replaced reply for this run only, in character chats. Sending a new
 message, starting another regenerate, switching chats or quitting clears that slot. A successful
 regenerate fills it with the reply it replaced. The shown reply is saved and used in later requests.
+
+In character chats, `/undo` puts your last message back into the input so you can fix and send it
+again. `/edit` lets you choose a message and continue the chat from the edited text, dropping
+later messages. Enter saves; Esc cancels. An edited player message is sent again; an edited
+character reply is saved without a request. Earlier versions stay in the session file.
 
 If a reply fails, the notice tells you how to retry or fix the cause and where to find the
 technical details in the diagnostic log. In character chats, retry with Ctrl+R or `/regenerate`;

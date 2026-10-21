@@ -243,7 +243,11 @@ it("regenerates a reply for a trailing user message and refuses to regenerate th
   expect(await chat.regenerate()).toBe("nothing-to-regenerate");
   const failed = await chat.send("hello");
   expect(failed?.outcome).toBe("error");
-  expect(chat.history().at(-1)).toEqual({ role: "user", text: "hello" });
+  expect(chat.history().at(-1)).toEqual({
+    role: "user",
+    text: "hello",
+    entryId: expect.any(String),
+  });
   const retried = await chat.regenerate();
   expect(retried).toMatchObject({ outcome: "completed", text: "Recovered." });
 });
@@ -423,4 +427,262 @@ it("records the session's configured options in the last-request trace", async (
   const chat = CharacterChat.start({ paths, session, item: importCharacter() });
   await chat.send("hello");
   expect(chat.lastTrace?.request).toEqual(request);
+});
+
+it("identifies stored messages while keeping the greeting out of editing", async () => {
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated(["Reply"]),
+    item: importCharacter(),
+  });
+  await chat.send("Player text");
+  const history = chat.history();
+  expect(history[0]).not.toHaveProperty("entryId");
+  expect(history[1]).toMatchObject({ role: "user", entryId: expect.any(String) });
+  expect(history[2]).toMatchObject({ role: "character", entryId: expect.any(String) });
+  expect(history[1]?.entryId).not.toBe(history[2]?.entryId);
+  const [saved] = await listChats(paths);
+  expect(readChatHistory(paths, saved?.path ?? "")).toEqual(history);
+});
+
+async function savedPath(chat: CharacterChat): Promise<string> {
+  const saved = (await listChats(paths)).find((entry) => entry.sessionId === chat.sessionId);
+  if (!saved) throw new Error("Expected a saved chat");
+  return saved.path;
+}
+
+it("undoes a full turn without losing saved entries, paid usage or the last trace", async () => {
+  const seen: Seen[] = [];
+  const session = simulated(["First reply", "Second reply", "Replacement", recorder(seen, "Next")]);
+  let requests = 0;
+  session.onFinish(() => {
+    requests += 1;
+  });
+  const item = importCharacter();
+  const chat = CharacterChat.start({ paths, session, item });
+  await chat.send("First message");
+  await chat.send("Second message");
+  await chat.regenerate();
+  const file = await savedPath(chat);
+  const before = readFileSync(file, "utf8");
+  const trace = chat.lastTrace;
+  expect(chat.undo()).toEqual({ text: "Second message" });
+  expect(chat.history().map((entry) => entry.text)).toEqual([
+    greetingFor(paths, item),
+    "First message",
+    "First reply",
+  ]);
+  expect(chat.prev()).toBe("nothing-to-restore");
+  expect(chat.regenerateTarget()).toBe("reply");
+  expect(chat.lastTrace).toBe(trace);
+  expect(requests).toBe(3);
+  expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+  expect(
+    CharacterChat.resume({ paths, session: simulated([]), sessionPath: file }).history(),
+  ).toEqual(chat.history());
+  await chat.send("Continue");
+  expect(seen[0]?.filter((message) => message.role !== "system")).toEqual([
+    { role: "assistant", text: greetingFor(paths, item) },
+    { role: "user", text: "First message" },
+    { role: "assistant", text: "First reply" },
+    { role: "user", text: "Continue" },
+  ]);
+});
+
+it.each([true, false])(
+  "undoes back to the start, reopens and sends again, greeting=%s",
+  async (greeting) => {
+    const item = importCharacter(greeting ? "Greeting" : "");
+    const chat = CharacterChat.start({ paths, session: simulated(["One", "Two"]), item });
+    expect(chat.undo()).toBe("nothing-to-undo");
+    await chat.send("First");
+    await chat.send("Second");
+    const file = await savedPath(chat);
+    const before = readFileSync(file, "utf8");
+    expect(chat.undo()).toEqual({ text: "Second" });
+    expect(chat.undo()).toEqual({ text: "First" });
+    expect(chat.undo()).toBe("nothing-to-undo");
+    expect(chat.history()).toEqual(greeting ? [{ role: "character", text: "Greeting" }] : []);
+    expect(chat.regenerateTarget()).toBeNull();
+    expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+    const reopened = CharacterChat.resume({
+      paths,
+      session: simulated(["New reply"]),
+      sessionPath: file,
+    });
+    expect(reopened.history()).toEqual(chat.history());
+    expect(reopened.libraryId).toBe(item.id);
+    await reopened.send("Fresh");
+    expect(
+      reopened
+        .history()
+        .slice(-2)
+        .map((entry) => entry.text),
+    ).toEqual(["Fresh", "New reply"]);
+  },
+);
+
+it("undoes reply-less messages including one preceded by another failed send", async () => {
+  const session = simulated([
+    { text: "", errorMessage: "failure" },
+    { text: "", errorMessage: "failure" },
+  ]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("First failed");
+  await chat.send("Second failed");
+  expect(chat.undo()).toEqual({ text: "Second failed" });
+  expect(chat.history().at(-1)?.text).toBe("First failed");
+  expect(chat.regenerateTarget()).toBe("user");
+  expect(chat.undo()).toEqual({ text: "First failed" });
+  expect(chat.history()).toHaveLength(1);
+  expect(
+    CharacterChat.resume({ paths, session, sessionPath: await savedPath(chat) }).history(),
+  ).toEqual(chat.history());
+});
+
+it("regenerates the previous reply after undo and refuses undo during a request", async () => {
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const session = simulated([
+    "First",
+    "Second",
+    async () => {
+      await gate;
+      return "New first";
+    },
+  ]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("One");
+  await chat.send("Two");
+  chat.undo();
+  const pending = chat.regenerate();
+  try {
+    expect(chat.undo()).toBe("nothing-to-undo");
+  } finally {
+    release();
+    await pending;
+  }
+  expect(chat.history().at(-1)?.text).toBe("New first");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("First");
+});
+
+it("resends an earlier player message on a new branch and keeps the original records", async () => {
+  const seen: Seen[] = [];
+  const session = simulated([
+    "Reply one",
+    "Reply two",
+    "Reply three",
+    recorder(seen, "Edited reply"),
+  ]);
+  let paidRequests = 0;
+  session.onFinish(() => {
+    paidRequests += 1;
+  });
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("Message one");
+  await chat.send("Message two");
+  await chat.send("Message three");
+  const edited = chat.history()[3]?.entryId ?? "";
+  const replyId = chat.history()[4]?.entryId ?? "";
+  const file = await savedPath(chat);
+  const before = readFileSync(file, "utf8");
+  await expect(chat.resendFrom("missing", "Text")).rejects.toThrow();
+  await expect(chat.resendFrom(replyId, "Text")).rejects.toThrow();
+  await chat.resendFrom(edited, "Corrected two");
+  expect(
+    chat
+      .history()
+      .map((entry) => entry.text)
+      .slice(1),
+  ).toEqual(["Message one", "Reply one", "Corrected two", "Edited reply"]);
+  expect(chat.prev()).toBe("nothing-to-restore");
+  expect(
+    seen[0]?.filter((message) => message.role !== "system").map((message) => message.text),
+  ).toEqual([greetingFor(paths, chat.item), "Message one", "Reply one", "Corrected two"]);
+  expect(paidRequests).toBe(4);
+  expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+  expect(
+    CharacterChat.resume({ paths, session: simulated([]), sessionPath: file }).history(),
+  ).toEqual(chat.history());
+  await expect(chat.resendFrom(edited, "Old branch")).rejects.toThrow();
+});
+
+it("keeps a failed edited player message and regenerates its missing reply", async () => {
+  const session = simulated([
+    "Old reply",
+    { text: "Partial", errorMessage: "failure" },
+    "Retried reply",
+  ]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("Original");
+  const playerId = chat.history()[1]?.entryId ?? "";
+  expect(await chat.resendFrom(playerId, "Corrected")).toMatchObject({ outcome: "error" });
+  expect(chat.history().at(-1)?.text).toBe("Corrected");
+  expect(chat.regenerateTarget()).toBe("user");
+  expect(chat.prev()).toBe("nothing-to-restore");
+  const file = await savedPath(chat);
+  expect(
+    CharacterChat.resume({ paths, session: simulated([]), sessionPath: file }).history(),
+  ).toEqual(chat.history());
+  expect(await chat.regenerate()).toMatchObject({ text: "Retried reply" });
+});
+
+it("edits a character reply without sending and uses only that branch in the next request", async () => {
+  const seen: Seen[] = [];
+  const session = simulated(["Reply one", "Reply two", "Replacement", recorder(seen, "Next")]);
+  let paidRequests = 0;
+  session.onFinish(() => {
+    paidRequests += 1;
+  });
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("Message one");
+  await chat.send("Message two");
+  await chat.regenerate();
+  const id = chat.history()[2]?.entryId ?? "";
+  const userId = chat.history()[1]?.entryId ?? "";
+  const droppedId = chat.history()[4]?.entryId ?? "";
+  const file = await savedPath(chat);
+  const before = readFileSync(file, "utf8");
+  const trace = chat.lastTrace;
+  expect(() => chat.editReply("missing", "Text")).toThrow();
+  expect(() => chat.editReply(userId, "Text")).toThrow();
+  chat.editReply(id, "Edited character text");
+  expect(
+    chat
+      .history()
+      .map((entry) => entry.text)
+      .slice(1),
+  ).toEqual(["Message one", "Edited character text"]);
+  expect(paidRequests).toBe(3);
+  expect(seen).toEqual([]);
+  expect(chat.lastTrace).toBe(trace);
+  expect(chat.prev()).toBe("nothing-to-restore");
+  expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+  expect(
+    CharacterChat.resume({ paths, session: simulated([]), sessionPath: file }).history(),
+  ).toEqual(chat.history());
+  expect(() => chat.editReply(droppedId, "Old branch")).toThrow();
+  await chat.send("Continue");
+  expect(
+    seen[0]?.filter((message) => message.role !== "system").map((message) => message.text),
+  ).toEqual([greetingFor(paths, chat.item), "Message one", "Edited character text", "Continue"]);
+});
+
+it("removes an interrupted mark when editing and restores edited text after regenerate", async () => {
+  const session = simulated(["Interrupted reply".repeat(30), "Generated replacement"]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  const remove = session.onDelta(() => session.abort());
+  await chat.send("Message");
+  remove();
+  expect(chat.history().at(-1)?.interrupted).toBe(true);
+  chat.editReply(chat.history().at(-1)?.entryId ?? "", "Hand-edited text");
+  expect(chat.history().at(-1)).toMatchObject({ text: "Hand-edited text" });
+  expect(chat.history().at(-1)).not.toHaveProperty("interrupted");
+  await chat.regenerate();
+  expect(chat.history().at(-1)?.text).toBe("Generated replacement");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("Hand-edited text");
 });
