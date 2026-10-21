@@ -51,21 +51,29 @@ interface ConfirmRequest {
 
 interface InnkeeperToolContext {
   paths: AppPaths;
-  help(): string;
+  help(): string;                       // help text, import folders, settings file, backups folder
+  requestSettings(): RequestSettings;   // the values in use (data's type, now with toolRounds)
   confirm(request: ConfirmRequest, signal?: AbortSignal): Promise<boolean>;
   openChat(item: CharacterItem, sessionPath?: string): void;
-  applied(changes: { setting: string; value: number | boolean | null }[]): void;
+  applied(
+    changes: { setting: string; value: number | boolean | null }[],
+    backupPath: string | null,
+  ): void;
 }
 ```
 
-`ChatSessionOptions` gains `tools?: AgentTool[]` and `toolRounds?: number`. `ChatSession` gains
-`setRequest(request)`, a `toolRounds` setter, `onToolCall(listener)` and `innkeeperHistory()`.
+All of these are LittleTavern types, exported from the engine barrel. `ChatSessionOptions` gains
+`innkeeper?: InnkeeperToolContext` and `toolRounds?: number`; `ChatSession` builds the tools
+from the context. `ChatSession` gains `setRequest(request)`, a `toolRounds` setter,
+`onToolCall(listener)` and `innkeeperHistory()`. `createInnkeeperTools` and every pi type
+(`AgentTool`, typebox schemas) stay inside `innkeeper-tools.ts` and `chat-session.ts`, which are
+not exported as pi types (constitution II).
 
 ## App state (in memory)
 
 | Name | Meaning |
 |---|---|
-| `requestSettings` | now updated by confirmed changes (only the changed keys) |
+| `requestSettings` | now holds `toolRounds` too, is updated by confirmed changes (only the changed keys), and is what `context.requestSettings()` returns |
 | `allowedSpend` | set to the new `runSpendUsd` when it changes |
 | `pendingOpen: { item, sessionPath? } \| null` | a chat to open when the innkeeper's run ends |
 | `confirming: boolean` | a confirmation picker is open; Esc answers No instead of aborting |
@@ -81,5 +89,5 @@ innkeeper send ──▶ run (rounds 0)
 
 change_settings ──validate──fail──▶ error result (nothing asked)
                  └─ok──▶ confirm ──No/Esc/abort──▶ "The guest declined."
-                                 └─Yes──▶ updateSettings (backup, write) ──▶ applied ──▶ saved result
+                                 └─Yes──▶ updateSettings (backup, write) ──▶ applied(changes, backupPath) ──▶ saved result
 ```

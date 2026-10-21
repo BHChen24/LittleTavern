@@ -73,28 +73,40 @@ Facts were read from the code at `main` 4d8fd4d (after 013 merged) and from `../
     `packages/tui/src/commands.ts:33`, so the engine cannot call it.
   - The app opens chats (`startChat`, `setCharacterChat(CharacterChat.resume(...))`,
     `app.ts:441–461`, `:667`) and shows pickers.
+- **Fact**: constitution II requires the public APIs of `engine` to expose only LittleTavern
+  types, with pi imports confined to adapter modules. `AgentTool` is a pi type
+  (`../pi/packages/agent/src/types.ts:466`), so neither `ChatSessionOptions` nor an exported
+  function may carry it (analysis C1).
 - **Decision**: `createInnkeeperTools(context)` in a new `packages/engine/src/innkeeper-tools.ts`
-  returns the six tools. `context` is:
+  returns the six tools as `AgentTool[]`. It is an adapter module like `chat-session.ts`: it is
+  **not** exported from the engine barrel, and only `ChatSession` and the engine's own tests
+  import it. `context` is an `InnkeeperToolContext`, a LittleTavern type (data-model.md):
   - `paths`;
-  - `help(): string`, the app's help text plus folders and the settings file;
+  - `help(): string`, the app's help text plus the import folders, the settings file and the
+    backups folder (spec FR-014);
+  - `requestSettings(): RequestSettings`, the request settings the app is using now (R7), so
+    `read_settings` reports the values in use (analysis I1);
   - `confirm(request, signal): Promise<boolean>`, where the app shows the question; an abort
     closes it and resolves `false`;
   - `openChat(item, sessionPath?)`, where the app records the request and opens the chat after
     the run ends (R8);
-  - `applied(changes)`, where the app applies confirmed changes to its in-memory state (R7).
+  - `applied(changes, backupPath)`, where the app applies confirmed changes to its in-memory
+    state and shows the saved notice with the backup path (R7; analysis U1).
 
-  The app passes the tools to `ChatSession` through a new `tools?: AgentTool[]` option, and the
-  round limit through `toolRounds`, with a setter for live changes.
+  The app passes the context to `ChatSession` through a new `innkeeper?: InnkeeperToolContext`
+  option; `ChatSession` calls `createInnkeeperTools` for its innkeeper agent. Without the option,
+  the innkeeper agent has no tools. The round limit comes through `toolRounds`, with a setter for
+  live changes. The TUI never sees a pi tool type.
 
 ## R5. The tools
 
 | Name | Label (the muted line) | Arguments | Result |
 |---|---|---|---|
-| `read_settings` | `checked the settings` | none | JSON: `model`, `userName`, active persona name, `limits` (effective, defaults included), `generation` (set values), lore settings (effective, `DEFAULT_ASSEMBLY_SETTINGS` for unset), `mouse`, the settings file path. Built field by field; never the credentials |
+| `read_settings` | `checked the settings` | none | JSON: `model`, `userName`, active persona name (from the file); `limits` (`replyTokens`, `runSpendUsd`, `toolRounds`) and `generation` (set values) from `context.requestSettings()`, the values in use; lore settings from the file (effective, `DEFAULT_ASSEMBLY_SETTINGS` for unset; they are read on every request); `mouse` from the file; the settings file path. Built field by field; never the credentials |
 | `list_characters` | `looked at the guest book` | none | `[{ id, name }]` from `listLibrary` |
 | `list_personas` | `looked at the personas` | none | `[{ name, active }]` from `listPersonas` and `settings.persona` |
 | `get_help` | `read the house rules` | none | `context.help()` |
-| `change_settings` | `proposed a settings change` | `{ changes: [{ setting, value }] }`; `setting` is one of the FR-005 keys; `value` is a number, a boolean, or `null` (remove; `generation` and lore keys only) | validates all, then confirms, then writes (R6) and calls `applied`. Returns the saved values and the backup path, `declined`, or the rule that failed (`isError`) |
+| `change_settings` | `proposed a settings change` | `{ changes: [{ setting, value }] }`; `setting` is one of the FR-005 keys; `value` is a number, a boolean, or `null` (remove; `generation` and lore keys only) | validates all, then confirms, then writes (R6) and calls `applied(changes, backupPath)`. Returns the saved values and the backup path, `declined`, or the rule that failed (`isError`) |
 | `open_chat` | `offered to open a chat` | `{ character, mode: "new" \| "resume" }`; `character` is a name or library id | resolves the character (R8), confirms, calls `openChat`, returns with `details.endTurn: true`. Unknown, ambiguous or no saved chat: an error result, nothing asked |
 
 ## R6. Writing settings safely
@@ -140,7 +152,13 @@ Facts were read from the code at `main` 4d8fd4d (after 013 merged) and from `../
   - For `runSpendUsd`, it sets `allowedSpend` to the new value. For `toolRounds`, it calls
     `session.toolRounds = n`.
   - The lore settings need nothing. For `mouse`, it shows the restart notice.
-  - Hand edits to the file made while the app runs are not applied this way (spec edge case).
+  - It shows the saved notice with `backupPath` (contract), then the mouse notice if any.
+  - `requestSettings` gains `toolRounds` (R6), so the context's `requestSettings()` returns the
+    app's in-memory object, which holds every limit in use.
+  - Hand edits to `limits`, `generation`, `model` and `mouse` made while the app runs are not
+    applied this way; they wait for a restart. The lore settings, `userName`, the persona and
+    lorebook attachments are read on every request (`character-chat.ts:63–79`), so hand edits
+    to them apply at once, as today (spec edge case; analysis I2).
 
 ## R8. Opening a chat from inside a run
 

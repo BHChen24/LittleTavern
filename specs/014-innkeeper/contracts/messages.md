@@ -77,5 +77,15 @@ Shown as `· Innkeeper <label>`. The labels:
 ## Help and README
 
 - `COMMANDS()`: `/innkeeper` → `Ask the innkeeper for help or to change settings`.
+- `get_help` (the app's `help()`) returns `helpText()`, then these lines, with absolute paths
+  from `AppPaths`:
+
+  ```text
+  Character import folder: <importCharactersDir>
+  Lorebook import folder: <importLorebooksDir>
+  Persona import folder: <importPersonasDir>
+  Settings file: <settingsFile>
+  Settings backups: <configDir>/backups/
+  ```
 - README: what the innkeeper can look up and change, the confirmation, the backups folder
   (`<configDir>/backups/`), and `limits.toolRounds`.

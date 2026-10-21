@@ -200,8 +200,11 @@ Every innkeeper message can make several requests. They are capped, counted and 
 - A tool call with invalid arguments: the innkeeper is told what was wrong; nothing changes.
 - Several settings in one request: one question lists all of them; one backup is made.
 - A setting changed by hand while the app runs, then by the innkeeper: the innkeeper's change
-  reads the file at that moment, so the other hand edits are kept. They still only apply after a
-  restart.
+  reads the file at that moment, so the other hand edits are kept. Hand edits to what the app
+  reads only at start (`limits`, `generation`, `model`, `mouse`) still apply only after a
+  restart; everything else (the lore settings, `userName`, the persona, lorebook attachments) is
+  read on every request, as today. When the innkeeper reads the settings, it sees the `limits`
+  and `generation` values in use, not hand edits waiting for a restart.
 - A settings file that exists but is not valid JSON, or cannot be written: nothing changes, and
   the innkeeper is told the error. The file is never replaced by one built from defaults.
 - Esc while the innkeeper is replying stops it, as today. Esc while the question is open counts
@@ -256,8 +259,10 @@ Every innkeeper message can make several requests. They are capped, counted and 
 - **FR-012**: The usage of every request in an innkeeper turn MUST count toward the status bar,
   the run's spend and the usage ledger.
 - **FR-013**: Each tool call MUST show one muted line in the transcript.
-- **FR-014**: Help and the README MUST describe what the innkeeper can do, the confirmation, the
-  backups and `limits.toolRounds`.
+- **FR-014**: Help MUST list `/innkeeper` with a description of what it is for. The README MUST
+  describe what the innkeeper can do, the confirmation, the backups and `limits.toolRounds`. The
+  innkeeper's own help (its help tool) MUST name the backups folder, so it can answer where
+  backups are.
 
 ### Key Entities
 
