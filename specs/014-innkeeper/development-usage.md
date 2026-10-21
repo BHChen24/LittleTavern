@@ -1,8 +1,8 @@
 # Development Usage: The Innkeeper
 
 Platform-reported total token usage: **unknown**. No estimate is substituted.
-Each row records an invocation of the named tool through `functions.exec`. Detailed arguments
-and outputs remain in the conversation. Later checkpoint snapshots include subsequent calls.
+Each row records an invocation through `functions.exec`; detailed arguments and outputs remain
+in the conversation. Checkpoint snapshots include subsequent calls.
 
 | # | Tool | Purpose | Outcome |
 |---|---|---|---|
@@ -29,4 +29,23 @@ and outputs remain in the conversation. Later checkpoint snapshots include subse
 | 21 | functions.exec / write_stdin | Collect final Phase 1 validation | Exit 0 |
 | 22 | functions.exec / exec_command | Mark T001 and T002 complete after passing Phase 1 checks | Completed |
 | 23 | functions.exec / apply_patch | Write development accounting snapshot | Written |
-
+| 24 | functions.exec / exec_command | Commit Phase 1 with normal hooks after all required checks passed | Commit command started |
+| 25 | functions.exec / exec_command | Retry authorized feature-branch commit with access to external worktree Git metadata | running; prior sandbox attempt failed on index.lock |
+| 26 | functions.exec / write_stdin | Collect Phase 1 commit and hook results | Exit 0 |
+| 27 | functions.exec / exec_command | Inspect app lifetime, submit/reset paths, message rendering and synthetic credential format | Completed |
+| 28 | functions.exec / exec_command | Locate app test injection patterns, reset handler, notices and picker behavior | Completed; optional startup filename glob had no match |
+| 29 | functions.exec / apply_patch | Add read-only tool tests including active snapshots and credential exclusion | Applied before read-only tool implementation |
+| 30 | functions.exec / apply_patch | Implement read-only tools and exact prompt; add app integration test before wiring | Applied |
+| 31 | functions.exec / exec_command | Verify notice formatting, reset behavior, and public engine exports before app wiring | Completed |
+| 32 | functions.exec / apply_patch | Wire read-only context, exact prompt, tool lines, history replay and command help into app | Applied |
+| 33 | functions.exec / exec_command | Format, typecheck and run Phase 2 focused tests | Started |
+| 34 | functions.exec / write_stdin | Collect Phase 2 focused validation | Exit 0 |
+| 35 | functions.exec / exec_command | Check muted styling and existing prompt/notice expectations for regressions | Completed |
+| 36 | functions.exec / apply_patch | Use muted tool-line styling and update existing expectations for required wording changes | Applied |
+| 37 | functions.exec / exec_command | Run required Phase 2 build, lint and full tests | Started |
+| 38 | functions.exec / write_stdin | Collect Phase 2 full validation | Exit 1 |
+| 39 | functions.exec / apply_patch | Make existing notice-prefix assertion independent of terminal line wrapping | Applied |
+| 40 | functions.exec / exec_command | Rerun Phase 2 required checks after fixing wrapped notice assertion | Started |
+| 41 | functions.exec / write_stdin | Collect corrected Phase 2 validation | Exit 0 |
+| 42 | functions.exec / exec_command | Mark T003 and T004 complete after Phase 2 passed | Completed |
+| 43 | functions.exec / apply_patch | Refresh development accounting snapshot | Patch rejected because delete/add targeted the same file; retrying with a direct write |

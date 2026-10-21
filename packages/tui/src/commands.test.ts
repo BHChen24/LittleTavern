@@ -29,7 +29,7 @@ it("generates help for exactly the contracted commands and key bindings", () => 
   }
   expect(helpText()).not.toContain("/new-character");
   expect(helpText()).not.toContain("/plain");
-  expect(helpText()).toContain("/innkeeper  Talk to the innkeeper");
+  expect(helpText()).toContain("/innkeeper  Ask the innkeeper for help or to change settings");
   expect(helpText()).not.toContain("/key");
   expect(helpText()).not.toContain("/forget-key");
   for (const key of ["Ctrl+C", "Ctrl+R", "Esc", "Enter"]) expect(helpText()).toContain(key);

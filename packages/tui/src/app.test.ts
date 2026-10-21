@@ -212,9 +212,7 @@ it("prefixes failed commands and provider errors while keeping ordinary notices 
     await app.submit("/invalid-command");
     expect(screen()).toContain("Error: Unknown command");
     await app.submit("/innkeeper");
-    expect(screen()).toContain(
-      "· You are talking to the innkeeper. Use /characters to start a character chat.",
-    );
+    expect(screen()).toContain("· You are talking to the innkeeper.");
     for (const removed of ["/plain", "/new-character"]) {
       const errors = screen().match(/Error: Unknown command/g) ?? [];
       await app.submit(removed);

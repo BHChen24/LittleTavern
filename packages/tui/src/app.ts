@@ -42,13 +42,14 @@ import {
   createPersonaFromDraft,
   DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_MODEL_ID,
-  DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
   ensureImportFolders,
   findAllowedModel,
   forgetKey,
   getItem,
   type ImportReport,
+  INNKEEPER_SYSTEM_PROMPT,
+  type InnkeeperToolContext,
   importFile,
   type LorebookItem,
   listChats,
@@ -148,12 +149,23 @@ export function createApp(options: AppOptions = {}) {
   const sessionId = randomUUID();
   const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
+  const innkeeper: InnkeeperToolContext = {
+    paths,
+    help: () =>
+      `${helpText()}\nCharacter import folder: ${paths.importCharactersDir}\nLorebook import folder: ${paths.importLorebooksDir}\nPersona import folder: ${paths.importPersonasDir}\nSettings file: ${paths.settingsFile}\nSettings backups: ${join(paths.configDir, "backups")}/`,
+    requestSettings: () => requestSettings,
+    confirm: async () => false,
+    openChat: () => {},
+    applied: () => {},
+  };
   const session =
     options.session ??
     new ChatSession({
       request,
       modelId,
-      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      systemPrompt: INNKEEPER_SYSTEM_PROMPT,
+      innkeeper,
+      toolRounds: requestSettings.toolRounds,
       getApiKey: () => activeKey?.value,
     });
   const tui = new TuiAltScreen(options.terminal ?? new ProcessTerminal(), undefined, undefined, {
@@ -279,6 +291,10 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
+  function toolLine(label: string): void {
+    transcript.addChild(new Text(messageStyles.muted(`· Innkeeper ${display(label)}`)));
+    tui.requestRender();
+  }
   function showPanel(component: Component, options?: OverlayOptions): void {
     tui.showOverlay(new Frame(component, () => tui.terminal.rows), options);
   }
@@ -729,6 +745,14 @@ export function createApp(options: AppOptions = {}) {
     reply?.setText(display(response));
     tui.requestRender();
   });
+  const onToolCall = session.onToolCall((call) => {
+    clearWaiting();
+    if (reply && !response) transcript.removeChild(reply);
+    toolLine(call.label);
+    reply = addMessage("character", "");
+    response = "";
+    tui.requestRender();
+  });
   const onFinish = session.onFinish((turn) => {
     clearWaiting();
     const record = toUsageRecord(turn, {
@@ -831,6 +855,7 @@ export function createApp(options: AppOptions = {}) {
         await running;
       } finally {
         onDelta();
+        onToolCall();
         onFinish();
         if (started) tui.stop();
         process.off("SIGINT", onSignal);
@@ -1144,7 +1169,13 @@ export function createApp(options: AppOptions = {}) {
         retries = null;
         innkeeperSelected = true;
         transcript.clear();
-        notice("You are talking to the innkeeper. Use /characters to start a character chat.");
+        for (const item of session.innkeeperHistory()) {
+          if (item.kind === "tool") toolLine(item.text);
+          else addMessage(item.kind === "user" ? "user" : "character", display(item.text));
+        }
+        notice(
+          "You are talking to the innkeeper. Ask how anything works, or ask to change the hard settings. Use /characters to start a character chat.",
+        );
         updateStatus();
         return;
       },

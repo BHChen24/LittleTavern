@@ -12,7 +12,7 @@ export function COMMANDS(): SlashCommand[] {
     { name: "edit", description: "Edit a message and continue the chat from it" },
     { name: "trace", description: "Show why the last request looked the way it did" },
     { name: "lorebooks", description: "Choose or import lorebooks for the current character" },
-    { name: "innkeeper", description: "Talk to the innkeeper" },
+    { name: "innkeeper", description: "Ask the innkeeper for help or to change settings" },
     {
       name: "import",
       description: "Import a card or lorebook from the import folders",
