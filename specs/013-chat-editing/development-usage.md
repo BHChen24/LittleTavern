@@ -59,3 +59,9 @@ unknown. No estimates or output-size counts are substituted for development toke
 | 63 | `write_stdin` | Collect phase 4 checkpoint | Build/lint passed; 461 tests passed |
 | 64 | `exec_command` | Mark T008 complete and record checkpoint | Phase 4 complete |
 | 65 | `exec_command` (escalated) | Commit phase 4 with normal hooks | Feature-branch checkpoint requested |
+| 66 | `write_stdin` | Collect phase 4 commit | Commit dd427db created; hooks passed |
+| 67 | `apply_patch` | Add restarted-app happy path and update README/shared command contract | T009/T010 work written |
+| 68–69 | `exec_command`, `write_stdin` | Format and run phase 5 checkpoint | Build/lint passed; 462 tests passed, including /sessions restart with identical transcript |
+| 70 | `exec_command` | Check whitespace and inspect final engine/app decision paths | No whitespace errors; implementation matches updated decisions |
+| 71 | `exec_command` | Mark T009/T010 complete and record checkpoint | Phase 5 complete |
+| 72 | `exec_command` (escalated) | Commit phase 5 with normal hooks | Feature-branch checkpoint requested |

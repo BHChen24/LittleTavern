@@ -409,3 +409,44 @@ it.each(["undo", "player", "character"])(
     expect(f.screen()).toContain("There is no previous reply to bring back.");
   },
 );
+
+it("runs the undo, correction, character edit and restart happy path through the app", async () => {
+  const f = fixture(["First reply", "Second reply", "Corrected reply"]);
+  await f.character();
+  await f.app.submit("First message");
+  await f.app.submit("Second message");
+  await f.app.submit("/undo");
+  expect(f.app.editor.getText()).toBe("Second message");
+  f.app.editor.setText("Corrected second message");
+  await f.app.submit(f.app.editor.getText());
+  await f.app.submit("/edit");
+  f.pick("First reply");
+  await f.app.submit("Edited first reply");
+  const transcript = f.app.tui.children[1]?.render(500);
+  const history = f.app.chat?.history();
+  await f.app.quit();
+  const resumed = createApp({
+    paths: f.paths,
+    terminal: f.terminal,
+    env: { OPENROUTER_API_KEY: "synthetic-key" },
+    session: new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      getApiKey: () => "synthetic-key",
+      simulated: { replies: [] },
+    }),
+  });
+  cleanups.unshift(async () => {
+    await resumed.quit();
+  });
+  resumed.enterChat();
+  await resumed.submit("/sessions");
+  resumed.tui.getFocusedComponent()?.handleInput?.("\r");
+  expect(resumed.chat?.history()).toEqual(history);
+  expect(resumed.tui.children[1]?.render(500)).toEqual(transcript);
+  expect(resumed.chat?.history().map((item) => item.text)).toEqual([
+    "Welcome, Traveler.",
+    "First message",
+    "Edited first reply",
+  ]);
+});

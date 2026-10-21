@@ -147,8 +147,8 @@ acceptance scenario of US3 has a test.
 
 ## Phase 5: Happy path and docs
 
-- [ ] T009 Write the happy path T-h in `packages/tui/src/app-editing.test.ts`: a temporary home, a synthetic card with a greeting, send twice, `/undo`, change the text and send, `/edit` the first reply and save, then create a second app on the same home, resume the chat through the engine (`CharacterChat.resume`) or `/sessions`, and check that its transcript matches the first app's
-- [ ] T010 Update `README.md`: `/undo` and `/edit` in the command table with the contract descriptions, and a short paragraph: undo puts your text back into the input; edit continues the chat from the edited message; earlier versions stay in the session file. Add `/undo` and `/edit` rows "(added by 013)" to `specs/006-usability/contracts/commands.md`. Help lists both through `COMMANDS()` (spec FR-012)
+- [X] T009 Write the happy path T-h in `packages/tui/src/app-editing.test.ts`: a temporary home, a synthetic card with a greeting, send twice, `/undo`, change the text and send, `/edit` the first reply and save, then create a second app on the same home, resume the chat through the engine (`CharacterChat.resume`) or `/sessions`, and check that its transcript matches the first app's
+- [X] T010 Update `README.md`: `/undo` and `/edit` in the command table with the contract descriptions, and a short paragraph: undo puts your text back into the input; edit continues the chat from the edited message; earlier versions stay in the session file. Add `/undo` and `/edit` rows "(added by 013)" to `specs/006-usability/contracts/commands.md`. Help lists both through `COMMANDS()` (spec FR-012)
 
 **Checkpoint**: checks pass. Commit.
 
