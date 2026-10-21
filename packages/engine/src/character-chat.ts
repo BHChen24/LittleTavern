@@ -29,6 +29,7 @@ export interface ChatHistoryItem {
   role: "user" | "character";
   text: string;
   interrupted?: boolean;
+  entryId?: string;
 }
 
 export interface ChatListEntry {
@@ -115,7 +116,7 @@ function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
         typeof message.content === "string"
           ? message.content
           : message.content.map((block) => (block.type === "text" ? block.text : "")).join("");
-      history.push({ role: "user", text });
+      history.push({ role: "user", text, entryId: entry.id });
     }
     if (message.role === "assistant") {
       const text = message.content
@@ -123,8 +124,8 @@ function historyFromEntries(entries: SessionEntry[]): ChatHistoryItem[] {
         .join("");
       history.push(
         message.stopReason === "aborted"
-          ? { role: "character", text, interrupted: true }
-          : { role: "character", text },
+          ? { role: "character", text, interrupted: true, entryId: entry.id }
+          : { role: "character", text, entryId: entry.id },
       );
     }
   }
@@ -238,6 +239,13 @@ export class CharacterChat {
 
   history(): ChatHistoryItem[] {
     return historyFromEntries(this.manager.getBranch());
+  }
+
+  private messageEntry(entryId: string, role: "user" | "assistant") {
+    const entry = this.manager.getBranch().find((item) => item.id === entryId);
+    if (entry?.type !== "message" || entry.message.role !== role)
+      throw new Error(`The ${role} message is not on the current branch.`);
+    return entry;
   }
 
   async send(text: string): Promise<TurnResult | null> {

@@ -63,7 +63,7 @@ quickstart.md
 
 ## Phase 1: Foundational (engine)
 
-- [ ] T001 In `packages/engine/src/character-chat.ts`, add `entryId?: string` to `ChatHistoryItem` and set it in `historyFromEntries` for user and assistant message entries (`entry.id`). The greeting gets none (research R3). Add a private helper that returns the current branch's entry for an id only if it is a message with the expected role (`"user"` or `"assistant"`), and throws otherwise; `resendFrom` and `editReply` use it. Write T-a in `packages/engine/src/character-chat.test.ts`
+- [X] T001 In `packages/engine/src/character-chat.ts`, add `entryId?: string` to `ChatHistoryItem` and set it in `historyFromEntries` for user and assistant message entries (`entry.id`). The greeting gets none (research R3). Add a private helper that returns the current branch's entry for an id only if it is a message with the expected role (`"user"` or `"assistant"`), and throws otherwise; `resendFrom` and `editReply` use it. Write T-a in `packages/engine/src/character-chat.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 

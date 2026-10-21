@@ -243,7 +243,11 @@ it("regenerates a reply for a trailing user message and refuses to regenerate th
   expect(await chat.regenerate()).toBe("nothing-to-regenerate");
   const failed = await chat.send("hello");
   expect(failed?.outcome).toBe("error");
-  expect(chat.history().at(-1)).toEqual({ role: "user", text: "hello" });
+  expect(chat.history().at(-1)).toEqual({
+    role: "user",
+    text: "hello",
+    entryId: expect.any(String),
+  });
   const retried = await chat.regenerate();
   expect(retried).toMatchObject({ outcome: "completed", text: "Recovered." });
 });
@@ -423,4 +427,20 @@ it("records the session's configured options in the last-request trace", async (
   const chat = CharacterChat.start({ paths, session, item: importCharacter() });
   await chat.send("hello");
   expect(chat.lastTrace?.request).toEqual(request);
+});
+
+it("identifies stored messages while keeping the greeting out of editing", async () => {
+  const chat = CharacterChat.start({
+    paths,
+    session: simulated(["Reply"]),
+    item: importCharacter(),
+  });
+  await chat.send("Player text");
+  const history = chat.history();
+  expect(history[0]).not.toHaveProperty("entryId");
+  expect(history[1]).toMatchObject({ role: "user", entryId: expect.any(String) });
+  expect(history[2]).toMatchObject({ role: "character", entryId: expect.any(String) });
+  expect(history[1]?.entryId).not.toBe(history[2]?.entryId);
+  const [saved] = await listChats(paths);
+  expect(readChatHistory(paths, saved?.path ?? "")).toEqual(history);
 });
