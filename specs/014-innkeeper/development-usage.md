@@ -67,3 +67,16 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 59 | functions.exec / write_stdin | Collect Phase 3 required validation results | Exit running |
 | 60 | functions.exec / write_stdin | Collect final Phase 3 validation | Exit 0 |
 | 61 | functions.exec / exec_command | Mark Phase 3 tasks and save accounting snapshot | Completed |
+| 62 | functions.exec / exec_command | Commit Phase 3 after build, lint and 493 tests passed | running |
+| 63 | functions.exec / write_stdin | Collect Phase 3 commit and hook results | Commit completed |
+| 64 | functions.exec / exec_command | Verify saved-session ordering and existing resume error handling | Completed |
+| 65 | functions.exec / apply_patch | Add open-chat tests | Patch validation rejected an unnecessary import hunk; retrying without it |
+| 66 | functions.exec / apply_patch | Add new/resumed chat resolution, confirmation and end-turn tests | Applied before open-chat implementation |
+| 67 | functions.exec / apply_patch | Implement character matching, newest-chat lookup, approved end-turn and deferred app switching | Applied |
+| 68 | functions.exec / exec_command | Format, typecheck and run Phase 4 focused tests | Started |
+| 69 | functions.exec / write_stdin | Collect Phase 4 focused results | Exit 0 |
+| 70 | functions.exec / apply_patch | Fix restricted-name lint and add app-level character resolution and malformed-argument cases | Applied |
+| 71 | functions.exec / exec_command | Run required Phase 4 build, lint and full tests | Started |
+| 72 | functions.exec / write_stdin | Collect final Phase 4 validation | Exit 0 |
+| 73 | functions.exec / exec_command | Inspect status totals, documentation locations, and upcoming convergence workflow | Completed |
+| 74 | functions.exec / exec_command | Mark T007 and T008 complete and refresh accounting | Completed |

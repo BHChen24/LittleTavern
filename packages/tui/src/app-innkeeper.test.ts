@@ -13,6 +13,7 @@ import type { Terminal } from "@earendil-works/pi-tui";
 import {
   DEFAULT_MODEL_ID,
   importFile,
+  readUsageRecords,
   resolveAppPaths,
   type SimulatedReply,
 } from "@littletavern/engine";
@@ -53,6 +54,103 @@ vi.mock("@littletavern/engine", async (importOriginal) => {
 });
 
 const cleanups: (() => Promise<void>)[] = [];
+
+it.each(["Yes", "No", "Esc"])("handles %s when opening a new character chat", async (choice) => {
+  const f = fixture([
+    { toolCalls: [{ name: "open_chat", args: { character: "Alice", mode: "new" } }] },
+    "Declined opening.",
+  ]);
+  await f.app.submit("/innkeeper");
+  const sending = f.app.submit("Talk to Alice");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Start a new chat with Alice?"));
+  expect(f.app.chat).toBeNull();
+  f.input(choice === "Esc" ? "\x1b" : choice);
+  if (choice !== "Esc") f.input("\r");
+  await sending;
+  if (choice === "Yes") {
+    expect(f.app.chat?.character.name).toBe("Alice");
+    expect(f.screen()).toContain("Welcome, Traveler.");
+    const [record] = readUsageRecords(f.paths.usageLedgerFile);
+    expect(record?.sessionId).not.toBe(f.app.chat?.sessionId);
+    expect(script.requests).toHaveLength(1);
+    await f.app.submit("/innkeeper");
+    expect(f.screen()).toContain("Talk to Alice");
+    expect(f.screen()).toContain("· Innkeeper offered to open a chat");
+  } else {
+    expect(f.app.chat).toBeNull();
+    expect(f.screen()).toContain("Declined opening.");
+  }
+});
+
+it("resumes an existing chat after recording innkeeper usage", async () => {
+  const f = fixture([
+    "Earlier Alice reply.",
+    { toolCalls: [{ name: "open_chat", args: { character: "Alice", mode: "resume" } }] },
+  ]);
+  await f.character();
+  await f.app.submit("Earlier message.");
+  const savedId = f.app.chat?.sessionId;
+  await f.app.submit("/innkeeper");
+  const sending = f.app.submit("Continue Alice");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Continue your latest chat with Alice"));
+  f.input("\r");
+  await sending;
+  expect(f.app.chat?.sessionId).toBe(savedId);
+  expect(f.screen()).toContain("Earlier Alice reply.");
+  const records = readUsageRecords(f.paths.usageLedgerFile);
+  expect(records.at(-1)?.sessionId).not.toBe(savedId);
+});
+
+it.each([
+  ["Bob", "new", "No character matches"],
+  ["Ali", "new", "Several characters match"],
+  ["Alice", "resume", "There is no saved chat"],
+] as const)("reports %s/%s without asking to open a chat", async (character, mode, expected) => {
+  const f = fixture([
+    { toolCalls: [{ name: "open_chat", args: { character, mode } }] },
+    (history) => {
+      expect(history.at(-1)?.text).toContain(expected);
+      return "Please choose another chat.";
+    },
+  ]);
+  const second = join(f.home, "alicia.json");
+  writeFileSync(
+    second,
+    JSON.stringify({
+      spec: "chara_card_v3",
+      data: { name: "Alicia", description: "Another keeper" },
+    }),
+  );
+  expect(importFile(f.paths, second).ok).toBe(true);
+  await f.app.submit("/innkeeper");
+  await f.app.submit("Open a chat");
+  expect(f.app.chat).toBeNull();
+  expect(f.screen()).toContain("Please choose another chat.");
+  expect(f.overlay()).not.toContain("Start a new chat with");
+});
+
+it("rejects malformed tool arguments without confirmation or writes", async () => {
+  const f = fixture([
+    {
+      toolCalls: [
+        {
+          name: "change_settings",
+          args: { changes: [{ setting: "limits.replyTokens", value: "invalid" }] },
+        },
+      ],
+    },
+    (history) => {
+      expect(history.at(-1)?.role).toBe("toolResult");
+      return "The value was invalid.";
+    },
+  ]);
+  await f.app.submit("/innkeeper");
+  const before = readFileSync(f.paths.settingsFile, "utf8");
+  await f.app.submit("Bad setting");
+  expect(f.screen()).toContain("The value was invalid.");
+  expect(readFileSync(f.paths.settingsFile, "utf8")).toBe(before);
+  expect(existsSync(join(f.paths.configDir, "backups"))).toBe(false);
+});
 afterEach(async () => {
   for (const cleanup of cleanups.splice(0)) await cleanup();
 });

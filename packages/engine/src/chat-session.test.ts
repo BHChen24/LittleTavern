@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   appendUsageRecord,
+  importFile,
   readRequestSettings,
   readUsageRecords,
   resolveAppPaths,
@@ -237,6 +238,40 @@ function toolContext(home: string): InnkeeperToolContext {
     applied: () => {},
   };
 }
+
+it("ends an accepted open_chat without making a further provider request", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-open-end-"));
+  try {
+    const innkeeper = toolContext(home);
+    const file = join(home, "alice.json");
+    writeFileSync(
+      file,
+      JSON.stringify({ spec: "chara_card_v3", data: { name: "Alice", description: "Keeper" } }),
+    );
+    expect(importFile(innkeeper.paths, file).ok).toBe(true);
+    innkeeper.confirm = async () => true;
+    innkeeper.openChat = vi.fn();
+    const request = vi.fn();
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: "",
+      getApiKey: () => "synthetic-key",
+      innkeeper,
+      simulated: {
+        onRequest: request,
+        replies: [
+          { toolCalls: [{ name: "open_chat", args: { character: "Alice", mode: "new" } }] },
+          "Must not be requested",
+        ],
+      },
+    });
+    await session.send("Talk to Alice");
+    expect(innkeeper.openChat).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledOnce();
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
 
 it("runs an innkeeper tool, preserves ordered history and sums usage over every request", async () => {
   const home = mkdtempSync(join(tmpdir(), "lt-innkeeper-session-"));

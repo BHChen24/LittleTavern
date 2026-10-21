@@ -157,13 +157,16 @@ export function createApp(options: AppOptions = {}) {
   const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
   let confirming = false;
+  let pendingOpen: { item: CharacterItem; sessionPath?: string } | null = null;
   const innkeeper: InnkeeperToolContext = {
     paths,
     help: () =>
       `${helpText()}\nCharacter import folder: ${paths.importCharactersDir}\nLorebook import folder: ${paths.importLorebooksDir}\nPersona import folder: ${paths.importPersonasDir}\nSettings file: ${paths.settingsFile}\nSettings backups: ${join(paths.configDir, "backups")}/`,
     requestSettings: () => requestSettings,
     confirm: confirmInnkeeper,
-    openChat: () => {},
+    openChat: (item, sessionPath) => {
+      pendingOpen = { item, sessionPath };
+    },
     applied: (changes, backupPath) => {
       for (const { setting, value } of changes) {
         if (setting === "limits.replyTokens") requestSettings.replyTokens = value as number;
@@ -1325,6 +1328,22 @@ export function createApp(options: AppOptions = {}) {
     addMessage("user", display(value));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));
+    if (!current && pendingOpen) {
+      const next = pendingOpen;
+      pendingOpen = null;
+      if (!next.sessionPath) startChat(next.item);
+      else {
+        try {
+          setCharacterChat(CharacterChat.resume({ paths, session, sessionPath: next.sessionPath }));
+        } catch (error) {
+          logger.error(
+            error instanceof Error ? error : { error: String(error) },
+            "Chat resume failed",
+          );
+          errorNotice("Could not resume the chat. See the diagnostic log.");
+        }
+      }
+    }
   }
   editor.onSubmit = (value) => {
     void submit(value);

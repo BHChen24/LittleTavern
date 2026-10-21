@@ -17,9 +17,95 @@ import {
   writeSettings,
 } from "@littletavern/data";
 import { afterEach, expect, it, vi } from "vitest";
+import { CharacterChat, type CharacterItem, listChats } from "./character-chat.ts";
+import { ChatSession } from "./chat-session.ts";
 import { createInnkeeperTools, type InnkeeperToolContext } from "./innkeeper-tools.ts";
+import { DEFAULT_MODEL_ID } from "./models.ts";
 
 const homes: string[] = [];
+
+function addCharacter(
+  home: string,
+  paths: InnkeeperToolContext["paths"],
+  name: string,
+): CharacterItem {
+  const file = join(home, `${name}.json`);
+  writeFileSync(
+    file,
+    JSON.stringify({
+      spec: "chara_card_v3",
+      data: { name, description: "Keeper", first_mes: "Welcome." },
+    }),
+  );
+  const result = importFile(paths, file);
+  if (!result.ok || result.item.kind !== "character") throw new Error("Import failed");
+  return result.item;
+}
+
+it("reports unknown, ambiguous and unsaved characters without asking", async () => {
+  const f = fixture();
+  addCharacter(f.home, f.paths, "Alice");
+  addCharacter(f.home, f.paths, "Alicia");
+  expect(await f.call("open_chat", { character: "Bob", mode: "new" })).toMatchObject({
+    isError: true,
+    content: [{ text: expect.stringContaining('No character matches "Bob".') }],
+  });
+  expect(await f.call("open_chat", { character: "Ali", mode: "new" })).toMatchObject({
+    isError: true,
+    content: [{ text: expect.stringContaining('Several characters match "Ali":') }],
+  });
+  expect(await f.call("open_chat", { character: "Alice", mode: "resume" })).toMatchObject({
+    isError: true,
+    content: [{ text: "There is no saved chat with Alice." }],
+  });
+  expect(f.context.confirm).not.toHaveBeenCalled();
+  expect(f.context.openChat).not.toHaveBeenCalled();
+});
+
+it("confirms opening by id, case-insensitive name and unique substring; declines do nothing", async () => {
+  const f = fixture();
+  const alice = addCharacter(f.home, f.paths, "Alice");
+  expect(await f.call("open_chat", { character: "alice", mode: "new" })).toMatchObject({
+    content: [{ text: "The guest declined." }],
+  });
+  expect(f.context.openChat).not.toHaveBeenCalled();
+  f.context.confirm = vi.fn(async () => true);
+  for (const name of [alice.id, "aLiCe", "lic"]) {
+    expect(await f.call("open_chat", { character: name, mode: "new" })).toMatchObject({
+      details: { endTurn: true },
+    });
+    expect(f.context.confirm).toHaveBeenLastCalledWith(
+      { lines: [], title: "Start a new chat with Alice?" },
+      undefined,
+    );
+    expect(f.context.openChat).toHaveBeenLastCalledWith(alice);
+  }
+});
+
+it("resumes the newest saved chat belonging to the selected character", async () => {
+  const f = fixture();
+  const alice = addCharacter(f.home, f.paths, "Alice");
+  const bob = addCharacter(f.home, f.paths, "Bob");
+  const session = new ChatSession({
+    modelId: DEFAULT_MODEL_ID,
+    systemPrompt: "",
+    getApiKey: () => "synthetic-key",
+    simulated: { replies: ["First Alice", "Second Alice", "Bob reply"] },
+  });
+  await CharacterChat.start({ paths: f.paths, session, item: alice }).send("First");
+  await CharacterChat.start({ paths: f.paths, session, item: alice }).send("Second");
+  await CharacterChat.start({ paths: f.paths, session, item: bob }).send("Bob");
+  const newest = (await listChats(f.paths)).find((chat) => chat.characterName === "Alice");
+  f.context.confirm = vi.fn(async () => true);
+  expect(await f.call("open_chat", { character: "Alice", mode: "resume" })).toMatchObject({
+    details: { endTurn: true },
+  });
+  expect(f.context.openChat).toHaveBeenCalledExactlyOnceWith(alice, newest?.path);
+  expect(f.context.confirm).toHaveBeenCalledWith(
+    { lines: [], title: expect.stringContaining("Continue your latest chat with Alice (last ") },
+    undefined,
+  );
+});
 afterEach(() => {
   vi.unstubAllEnvs();
   for (const home of homes.splice(0)) rmSync(home, { recursive: true, force: true });

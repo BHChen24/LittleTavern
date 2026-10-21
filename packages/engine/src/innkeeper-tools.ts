@@ -14,7 +14,7 @@ import {
   updateSettings,
 } from "@littletavern/data";
 import { DEFAULT_ASSEMBLY_SETTINGS } from "./assembly/types.ts";
-import type { CharacterItem } from "./character-chat.ts";
+import { type CharacterItem, listChats, readChatCharacter } from "./character-chat.ts";
 
 export interface ConfirmRequest {
   lines: string[];
@@ -36,6 +36,66 @@ export interface InnkeeperToolContext {
 // This adapter is internal: the public engine API exposes only the context above.
 export function createInnkeeperTools(context: InnkeeperToolContext): AgentTool[] {
   return [
+    {
+      name: "open_chat",
+      label: "offered to open a chat",
+      description:
+        "Offer to start a new character chat or resume that character's most recent saved chat. The guest must confirm; opening ends this innkeeper turn.",
+      parameters: Type.Object({
+        character: Type.String({ minLength: 1 }),
+        mode: Type.Union([Type.Literal("new"), Type.Literal("resume")]),
+      }),
+      execute: async (_id, params, signal) => {
+        const { character, mode } = params as { character: string; mode: "new" | "resume" };
+        try {
+          const characters = listLibrary(context.paths).filter(
+            (item): item is CharacterItem => item.kind === "character",
+          );
+          const query = character.trim().toLowerCase();
+          const byId = characters.find((item) => item.id.toLowerCase() === query);
+          const exact = characters.filter((item) => item.character.name.toLowerCase() === query);
+          const matches = !query
+            ? []
+            : byId
+              ? [byId]
+              : exact.length
+                ? exact
+                : characters.filter((item) => item.character.name.toLowerCase().includes(query));
+          if (!matches.length)
+            return textResult(
+              `No character matches "${stripControls(character)}". Characters: ${characters.map((item) => stripControls(item.character.name)).join(", ")}.`,
+              true,
+            );
+          if (matches.length > 1)
+            return textResult(
+              `Several characters match "${stripControls(character)}": ${matches.map((item) => `${stripControls(item.character.name)} (${item.id})`).join(", ")}. Use the id.`,
+              true,
+            );
+          const item = matches[0] as CharacterItem;
+          const name = stripControls(item.character.name);
+          let sessionPath: string | undefined;
+          let title = `Start a new chat with ${name}?`;
+          if (mode === "resume") {
+            const chats = await listChats(context.paths);
+            const newest = chats.find(
+              (chat) => readChatCharacter(context.paths, chat.path)?.libraryId === item.id,
+            );
+            if (!newest) return textResult(`There is no saved chat with ${name}.`, true);
+            sessionPath = newest.path;
+            title = `Continue your latest chat with ${name} (last ${newest.modified.toLocaleString()})?`;
+          }
+          const accepted = await context.confirm({ lines: [], title }, signal);
+          if (!accepted || signal?.aborted) return textResult("The guest declined.");
+          if (sessionPath) context.openChat(item, sessionPath);
+          else context.openChat(item);
+          return textResult(`The chat with ${name} opens when you finish speaking.`, false, {
+            endTurn: true,
+          });
+        } catch (error) {
+          return textResult(error instanceof Error ? error.message : String(error), true);
+        }
+      },
+    },
     {
       name: "change_settings",
       label: "proposed a settings change",
@@ -181,10 +241,28 @@ export function createInnkeeperTools(context: InnkeeperToolContext): AgentTool[]
   ];
 }
 
-function textResult(text: string, isError = false) {
+function textResult(text: string, isError = false, details: { endTurn?: boolean } = {}) {
   return {
     content: [{ type: "text" as const, text }],
-    details: {},
+    details,
     ...(isError ? { isError: true } : {}),
   };
+}
+
+// Match the TUI's control stripping without importing the UI into the engine.
+function stripControls(text: string): string {
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: strip terminal OSC sequences
+  const osc = /\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)?/g;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: strip terminal CSI sequences
+  const csi = /\x1b\[[0-?]*[ -/]*[@-~]/g;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: strip other terminal escape sequences
+  const otherEscape = /\x1b[\s\S]?/g;
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: remove controls except newline and tab
+  const control = /[\x00-\x08\x0b-\x1f\x7f-\x9f]/g;
+  return text
+    .replace(/\r\n?/g, "\n")
+    .replace(osc, "")
+    .replace(csi, "")
+    .replace(otherEscape, "")
+    .replace(control, "");
 }
