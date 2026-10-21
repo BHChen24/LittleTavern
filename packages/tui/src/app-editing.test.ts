@@ -136,34 +136,43 @@ it.each([false, true])(
   },
 );
 
-it("refuses undo during streaming through submit and terminal Enter without changing input", async () => {
-  let release = () => {};
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
-  const f = fixture([
-    async () => {
-      await gate;
-      return "Reply";
-    },
-  ]);
-  await f.character();
-  f.app.start();
-  const pending = f.app.submit("Message");
-  try {
-    await vi.waitFor(() => expect(f.session.isStreaming).toBe(true));
-    const before = f.app.chat?.history();
-    f.app.editor.setText("/undo");
-    await f.app.submit("/undo");
-    f.terminalInput("\r");
-    expect(f.app.chat?.history()).toEqual(before);
-    expect(f.app.editor.getText()).toBe("/undo");
-    expect(f.screen().match(/Wait for the reply, or press Esc to stop it\./g)).toHaveLength(2);
-  } finally {
-    release();
-    await pending;
-  }
-});
+it.each([
+  { command: "/undo", mode: "character" },
+  { command: "/edit", mode: "character" },
+  { command: "/undo", mode: "innkeeper" },
+  { command: "/edit", mode: "innkeeper" },
+])(
+  "refuses $command during $mode streaming through submit and terminal Enter",
+  async ({ command, mode }) => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const f = fixture([
+      async () => {
+        await gate;
+        return "Reply";
+      },
+    ]);
+    if (mode === "character") await f.character();
+    else await f.app.submit("/innkeeper");
+    f.app.start();
+    const pending = f.app.submit("Message");
+    try {
+      await vi.waitFor(() => expect(f.session.isStreaming).toBe(true));
+      const before = f.app.chat?.history();
+      f.app.editor.setText(command);
+      await f.app.submit(command);
+      f.terminalInput("\r");
+      expect(f.app.chat?.history()).toEqual(before);
+      expect(f.app.editor.getText()).toBe(command);
+      expect(f.screen().match(/Wait for the reply, or press Esc to stop it\./g)).toHaveLength(2);
+    } finally {
+      release();
+      await pending;
+    }
+  },
+);
 
 it("lists messages newest first, labels their speakers, searches full text and omits the greeting", async () => {
   const f = fixture(["First reply\nHidden word", "Second reply"]);
@@ -381,3 +390,22 @@ it("shows the failure notice for a saved player edit and retries it with Ctrl+R"
   f.terminalInput("\x12");
   await vi.waitFor(() => expect(f.app.chat?.history().at(-1)?.text).toBe("Retried reply"));
 });
+
+it.each(["undo", "player", "character"])(
+  "clears previous-reply restoration after %s",
+  async (operation) => {
+    const f = fixture(["First reply", "Second reply", "Replacement", "Fresh reply"]);
+    await f.character();
+    await f.app.submit("First message");
+    await f.app.submit("Second message");
+    await f.app.submit("/regenerate");
+    if (operation === "undo") await f.app.submit("/undo");
+    else {
+      await f.app.submit("/edit");
+      f.pick(operation === "player" ? "First message" : "First reply");
+      await f.app.submit("Edited text");
+    }
+    await f.app.submit("/prev");
+    expect(f.screen()).toContain("There is no previous reply to bring back.");
+  },
+);

@@ -139,7 +139,7 @@ cleared.
 **Independent test**: covered by T-e, T-f and T-b to T-d. This phase checks that every
 acceptance scenario of US3 has a test.
 
-- [ ] T008 [US3] Check that the tests cover spec US3 scenarios 1–3 (innkeeper, no chat, streaming via `submit()` and via the input listener, `/prev` after undo, after `resendFrom` and after `editReply`). Add any missing case to `app-editing.test.ts` or `character-chat.test.ts`
+- [X] T008 [US3] Check that the tests cover spec US3 scenarios 1–3 (innkeeper, no chat, streaming via `submit()` and via the input listener, `/prev` after undo, after `resendFrom` and after `editReply`). Add any missing case to `app-editing.test.ts` or `character-chat.test.ts`
 
 **Checkpoint**: checks pass. Commit.
 

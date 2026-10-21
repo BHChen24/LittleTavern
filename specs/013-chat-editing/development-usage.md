@@ -53,3 +53,9 @@ unknown. No estimates or output-size counts are substituted for development toke
 | 57 | `exec_command` | Inspect change summary and external acceptance script | Offline script uses temporary home; result write needs scoped access outside workspace |
 | 58 | `exec_command` | Mark T004–T007 complete and record checkpoint | Phase 3 complete |
 | 59 | `exec_command` (escalated) | Commit phase 3 with normal hooks | Feature-branch checkpoint requested |
+| 60 | `write_stdin` | Collect phase 3 commit | Commit 959739c created; all hooks passed |
+| 61 | `exec_command` | Expand US3 streaming/refusal and restore-slot tests; run checkpoint | Both commands tested in character/innkeeper streaming via submit and terminal input |
+| 62 | `exec_command` | Read README/shared command contract and the full converge skill | Documentation integration and required later convergence workflow understood |
+| 63 | `write_stdin` | Collect phase 4 checkpoint | Build/lint passed; 461 tests passed |
+| 64 | `exec_command` | Mark T008 complete and record checkpoint | Phase 4 complete |
+| 65 | `exec_command` (escalated) | Commit phase 4 with normal hooks | Feature-branch checkpoint requested |
