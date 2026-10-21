@@ -21,7 +21,6 @@ the model sees.
 
 Some settings exist only in `settings.json`:
 - the reply cap, the spend cap and the sampling parameters (012);
-- the player's name after the first start;
 - the lore settings;
 - `mouse`.
 
@@ -54,7 +53,6 @@ per message, so it needs a cap on rounds, and its usage must count every request
   and can only be changed by editing `settings.json`:
   - `limits` (reply cap, spend cap, tool rounds);
   - `generation` (temperature, top P, top K, min P, repetition penalty);
-  - the player's name (`userName`; it is asked only on the first start);
   - the lore settings (`loreBudget`, `scanDepth`, `replyReserve`);
   - `mouse`.
 
@@ -63,6 +61,10 @@ per message, so it needs a cap on rounds, and its usage must count every request
   to the innkeeper; for the button-clicking things, the innkeeper teaches the player how.
 - Q: Is anything backed up? → A: Yes. Before every change, the current `settings.json` is
   backed up (owner).
+- Q: Can the innkeeper change the player's name (`userName`)? → A: No. `userName` is the
+  default name, asked once on the first start and used only when no persona is active. To be
+  called something else, the player uses a persona (`/persona`), whose name takes precedence.
+  The innkeeper explains this, and can say which name is in use.
 - Q: When does a change apply? → A: Immediately: the next request uses the new values. The
   exception is `mouse`, which the terminal sets up at start, so it applies after a restart, and
   the innkeeper says so. Editing `settings.json` by hand still needs a restart for the limits
@@ -95,9 +97,10 @@ help text.
 2. **Given** the innkeeper, **When** the player asks about their setup ("which model am I
    using?", "what characters do I have?"), **Then** it reads the settings or lists the
    characters or personas and answers from the result.
-3. **Given** a request to change the model, the persona or a lorebook, **When** the innkeeper
-   answers, **Then** it changes nothing and names the command (`/model`, `/persona`,
-   `/lorebooks`).
+3. **Given** a request to change the model, the persona, a lorebook or the name characters use,
+   **When** the innkeeper answers, **Then** it changes nothing and names the command (`/model`,
+   `/persona`, `/lorebooks`). For the name, it explains that a persona's name replaces the
+   default name.
 4. **Given** a request for the API key, **When** the innkeeper answers, **Then** it cannot see
    or change the key and points to `/apikey`.
 5. **Given** the player writes in another language, **When** the innkeeper answers, **Then** it
@@ -135,8 +138,6 @@ options; No changes nothing.
    uses the new cap from then on.
 7. **Given** a change to `mouse`, **When** it is confirmed, **Then** it is saved, and the app and
    the innkeeper say it applies after a restart.
-8. **Given** a new player name, **When** it is confirmed, **Then** characters use it from the next
-   request, unless a persona is active, whose name takes precedence (012).
 
 ---
 
@@ -232,7 +233,6 @@ Every innkeeper message can make several requests. They are capped, counted and 
     `limits.toolRounds` (whole number ≥ 1);
   - `generation.temperature` (0–2), `topP` (0–1), `topK` (whole number ≥ 1), `minP` (0–1) and
     `repetitionPenalty` (> 0), as in 012;
-  - `userName` (not blank after control characters are removed);
   - `loreBudget` (number > 0), `scanDepth` (whole number ≥ 0) and `replyReserve` (number ≥ 0),
     as `readSettings` accepts them today;
   - `mouse` (true or false).
@@ -248,8 +248,9 @@ Every innkeeper message can make several requests. They are capped, counted and 
 - **FR-009**: The open tool MUST start a new chat or resume the most recent saved chat with a
   named character, after the player confirms. It MUST report unknown or ambiguous names and the
   absence of a saved chat without asking.
-- **FR-010**: For requests about the model, the persona or lorebooks, the innkeeper MUST name
-  the command instead of changing them. It has no tool for them.
+- **FR-010**: For requests about the model, the persona, lorebooks or the player's name, the
+  innkeeper MUST name the command instead of changing them. It has no tool for them. The default
+  name (`userName`) is not changeable through the innkeeper.
 - **FR-011**: The tool rounds for one player message MUST stop at `limits.toolRounds` (default 5),
   with a notice naming the limit and the settings file.
 - **FR-012**: The usage of every request in an innkeeper turn MUST count toward the status bar,
@@ -273,7 +274,7 @@ Every innkeeper message can make several requests. They are capped, counted and 
 
 - **SC-001**: A new player can find out how to import their own character by asking the
   innkeeper one question, without opening the README.
-- **SC-002**: A player can change the reply cap, the temperature or their name through the
+- **SC-002**: A player can change the reply cap or the temperature through the
   innkeeper in one exchange plus one confirmation, without editing a file or restarting.
 - **SC-003**: No settings change happens without the player's Yes, and every change leaves a
   backup of the previous settings.
@@ -314,6 +315,7 @@ Every innkeeper message can make several requests. They are capped, counted and 
   settings file). It does not read the README file.
 - The innkeeper's prompt is written in English, like all repository text. It answers in the
   player's language because the prompt tells it to.
-- Out of scope: changing the model, the persona or lorebook attachments through the innkeeper;
+- Out of scope: changing the model, the persona, lorebook attachments or the default name
+  (`userName`) through the innkeeper;
   long-term memory; `/trace` for the innkeeper; an auto-approve mode; restoring a backup through
   the innkeeper (the player can copy the file back).
