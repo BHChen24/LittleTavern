@@ -9,7 +9,7 @@ its own application, not a port. SillyTavern is a design reference: LittleTavern
 and implements them independently. It is built on the [pi](https://github.com/earendil-works/pi)
 agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
-> **Status:** v0.1, an early version. Expect rough edges.
+> **Status:** v0.2, an early version. Expect rough edges.
 
 ## Features
 
@@ -20,8 +20,12 @@ agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
   `littletavern dry-run` shows the next request without sending it.
 - Personas are Markdown files; you can switch between them at any time.
 - New characters can be written from a Markdown template in `$EDITOR` and are saved as V3 cards.
-- Full-screen TUI with mouse scrolling, copy-on-select, transcript search, saved chats and
-  regenerate.
+- Full-screen TUI with mouse scrolling, copy-on-select, transcript search and saved chats.
+  Regenerate a reply, take back your last turn with `/undo`, or `/edit` any message and continue
+  the chat from there.
+- The innkeeper (`/innkeeper`) answers questions about the app, changes the settings that have no
+  command (limits, sampling, lore budget) after you confirm, with a backup of the old settings,
+  and opens character chats for you.
 - The status bar shows the session's tokens, cache hits and cost.
 
 ## Requirements
