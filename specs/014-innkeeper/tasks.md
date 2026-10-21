@@ -70,13 +70,13 @@ quickstart.md
 
 ## Phase 1: Foundational (settings and the session)
 
-- [ ] T001 In `packages/data/src/settings.ts` (research R6, data-model.md):
+- [X] T001 In `packages/data/src/settings.ts` (research R6, data-model.md):
   - move the validation rules into one table used by `readRequestSettings`, `readSettings` (lore fields and `mouse`) and a new exported `checkSettingChange(setting, value): string | null`. It returns the rule text for an invalid value, for a key not in the table, and for `null` on a non-removable key. The rules, verbatim from data-model.md: `limits.replyTokens` "whole number ≥ 0"; `limits.runSpendUsd` "number ≥ 0"; `limits.toolRounds` "whole number ≥ 1"; `generation.temperature` "number 0–2"; `generation.topP` "number 0–1"; `generation.topK` "whole number ≥ 1"; `generation.minP` "number 0–1"; `generation.repetitionPenalty` "number > 0"; `loreBudget` "number > 0"; `scanDepth` "whole number ≥ 0"; `replyReserve` "number ≥ 0"; `mouse` "true or false";
   - add `toolRounds` (default 5) to `RequestSettings` and `readRequestSettings`, with the 012 warning format;
   - add `updateSettings(paths, changes): { backupPath: string | null }` with the four steps in R6: a strict parse, a timestamped exclusive backup in `<configDir>/backups/`, nested set or delete, then the write.
 
   Keep `readSettings`'s and `readRequestSettings`'s existing behaviour and warnings unchanged. Export through the data barrel. Write T-a and T-b in `packages/data/src/settings.test.ts`
-- [ ] T002 In `packages/engine/src/innkeeper-tools.ts` (new) and `packages/engine/src/chat-session.ts` (research R1, R3, R4):
+- [X] T002 In `packages/engine/src/innkeeper-tools.ts` (new) and `packages/engine/src/chat-session.ts` (research R1, R3, R4):
   - in `innkeeper-tools.ts`, define the LittleTavern types `InnkeeperToolContext` and `ConfirmRequest` exactly as in data-model.md, and `createInnkeeperTools(context): AgentTool[]` with only `get_help` for now (contract label; result `context.help()`). Export the two types from the engine barrel; do **not** export `createInnkeeperTools` or any pi type (constitution II);
   - add `innkeeper?: InnkeeperToolContext` and `toolRounds?: number` to `ChatSessionOptions`;
   - build a second `Agent` for the innkeeper from the same model registry and `streamFn`, with `tools: options.innkeeper ? createInnkeeperTools(options.innkeeper) : []`, `toolExecution: "sequential"`, and `systemPrompt: options.systemPrompt`;

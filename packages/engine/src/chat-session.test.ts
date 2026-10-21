@@ -1,9 +1,15 @@
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { appendUsageRecord, readUsageRecords } from "@littletavern/data";
-import { expect, it } from "vitest";
+import {
+  appendUsageRecord,
+  readRequestSettings,
+  readUsageRecords,
+  resolveAppPaths,
+} from "@littletavern/data";
+import { expect, it, vi } from "vitest";
 import { ChatSession, type TurnResult } from "./chat-session.ts";
+import type { InnkeeperToolContext } from "./innkeeper-tools.ts";
 import { DEFAULT_MODEL_ID } from "./models.ts";
 import { DEFAULT_SYSTEM_PROMPT } from "./system-prompt.ts";
 import { sumUsage, toUsageRecord } from "./usage.ts";
@@ -218,4 +224,99 @@ it.each([
   }
   expect(session.request).toEqual(request);
   expect(turn).toMatchObject({ outcome: "completed", cutOff: true, text: "At the limit." });
+});
+
+function toolContext(home: string): InnkeeperToolContext {
+  const paths = resolveAppPaths({ LITTLETAVERN_HOME: home });
+  return {
+    paths,
+    help: () => "House rules: use /import.",
+    requestSettings: () => readRequestSettings(paths),
+    confirm: async () => false,
+    openChat: () => {},
+    applied: () => {},
+  };
+}
+
+it("runs an innkeeper tool, preserves ordered history and sums usage over every request", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-innkeeper-session-"));
+  try {
+    const innkeeper = toolContext(home);
+    const seen: string[][] = [];
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: "Guide",
+      getApiKey: () => "synthetic-key",
+      innkeeper,
+      simulated: {
+        replies: [
+          { text: "Looking it up.", toolCalls: [{ name: "get_help", args: {} }] },
+          (history) => {
+            seen.push(history.map((message) => message.text));
+            expect(history.at(-1)).toEqual({ role: "toolResult", text: innkeeper.help() });
+            return "Use /import.";
+          },
+          "Character reply.",
+          (history) => {
+            expect(history.some((message) => message.text === "Character input")).toBe(false);
+            return "Welcome back.";
+          },
+        ],
+      },
+    });
+    const calls = vi.fn();
+    const unsubscribe = session.onToolCall(calls);
+    const turn = await session.send("How do I import?");
+    expect(calls).toHaveBeenCalledExactlyOnceWith({
+      name: "get_help",
+      label: "read the house rules",
+    });
+    expect(turn?.usage.output).toBeGreaterThan(Math.ceil("Use /import.".length / 4));
+    expect(turn?.usage.totalTokens).toBe((turn?.usage.input ?? 0) + (turn?.usage.output ?? 0));
+    expect(turn?.text).toBe("Use /import.");
+    expect(seen).toHaveLength(1);
+    expect(session.innkeeperHistory()).toEqual([
+      { kind: "user", text: "How do I import?" },
+      { kind: "innkeeper", text: "Looking it up." },
+      { kind: "tool", text: "read the house rules" },
+      { kind: "innkeeper", text: "Use /import." },
+    ]);
+    await session.generate({
+      system: "Character",
+      messages: [{ role: "user", text: "Character input" }],
+      afterHistory: null,
+    });
+    await session.send("Back again");
+    unsubscribe();
+    session.clearConversation();
+    expect(session.innkeeperHistory()).toEqual([]);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+it("caps each innkeeper message and applies changed request options to its next request", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-innkeeper-round-"));
+  try {
+    const requests: unknown[] = [];
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: "",
+      getApiKey: () => "synthetic-key",
+      innkeeper: toolContext(home),
+      toolRounds: 1,
+      simulated: {
+        onRequest: (options) => requests.push(options),
+        replies: [{ toolCalls: [{ name: "get_help", args: {} }] }, "Next answer."],
+      },
+    });
+    expect(await session.send("Help")).toMatchObject({ toolLimitReached: true });
+    expect(requests).toHaveLength(1);
+    session.toolRounds = 5;
+    session.setRequest({ maxTokens: 1000, temperature: 0.7 });
+    expect(await session.send("Again")).toMatchObject({ text: "Next answer." });
+    expect(requests[1]).toMatchObject({ maxTokens: 1000, temperature: 0.7 });
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });

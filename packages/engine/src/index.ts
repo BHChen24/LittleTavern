@@ -43,6 +43,7 @@ export * from "./character-chat.ts";
 export * from "./chat-session.ts";
 export { copyText } from "./clipboard.ts";
 export * from "./dry-run.ts";
+export type { ConfirmRequest, InnkeeperToolContext } from "./innkeeper-tools.ts";
 export * from "./models.ts";
 export * from "./provider-errors.ts";
 export * from "./system-prompt.ts";
