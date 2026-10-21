@@ -23,6 +23,9 @@ assembled context and have no tools. Public engine interfaces expose only Little
 T001–T015 are complete. No implementation task or behavior question remains. The owner's
 real-model and visual acceptance checks remain manual.
 
+T016 (Up/Down input history, spec FR-015) was requested by the owner during acceptance and
+implemented by Claude in `9ccce36`, with a key-input test; the full suite then passed 511 tests.
+
 | Phase | Commit | Validation |
 |---|---|---|
 | 1: settings and session | `3d7e26f` | Build, lint, 480 tests passed |
