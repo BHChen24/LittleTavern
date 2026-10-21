@@ -36,19 +36,21 @@ import {
   type CharacterItem,
   type ChatHistoryItem,
   ChatSession,
+  type ConfirmRequest,
   copyText,
   createCharacterFromDraft,
   createLogger,
   createPersonaFromDraft,
   DEFAULT_ASSEMBLY_SETTINGS,
   DEFAULT_MODEL_ID,
-  DEFAULT_SYSTEM_PROMPT,
   describeProviderError,
   ensureImportFolders,
   findAllowedModel,
   forgetKey,
   getItem,
   type ImportReport,
+  INNKEEPER_SYSTEM_PROMPT,
+  type InnkeeperToolContext,
   importFile,
   type LorebookItem,
   listChats,
@@ -58,6 +60,7 @@ import {
   type PersonaItem,
   parsePersona,
   type RequestOptions,
+  type RequestSettings,
   readActivePersona,
   readRequestSettings,
   readSavedKey,
@@ -109,19 +112,7 @@ export interface AppOptions {
   session?: ChatSession;
 }
 
-export function createApp(options: AppOptions = {}) {
-  const env = options.env ?? process.env;
-  const paths = options.paths ?? resolveAppPaths(env);
-  const settings = readSettings(paths);
-  const requestSettings = readRequestSettings(paths);
-  let allowedSpend = requestSettings.runSpendUsd;
-  let cutOffNoteShown = false;
-  let unknownPriceNoteShown = false;
-  const limitsLine = formatLimits(
-    requestSettings.replyTokens,
-    requestSettings.runSpendUsd,
-    paths.settingsFile,
-  );
+function buildRequest(requestSettings: RequestSettings): RequestOptions {
   const request: RequestOptions = {};
   if (requestSettings.replyTokens > 0) request.maxTokens = requestSettings.replyTokens;
   if (requestSettings.generation.temperature !== undefined)
@@ -137,6 +128,23 @@ export function createApp(options: AppOptions = {}) {
     if (value !== undefined) samplingParams[key] = value;
   }
   if (Object.keys(samplingParams).length) request.samplingParams = samplingParams;
+  return request;
+}
+
+export function createApp(options: AppOptions = {}) {
+  const env = options.env ?? process.env;
+  const paths = options.paths ?? resolveAppPaths(env);
+  const settings = readSettings(paths);
+  const requestSettings = readRequestSettings(paths);
+  let allowedSpend = requestSettings.runSpendUsd;
+  let cutOffNoteShown = false;
+  let unknownPriceNoteShown = false;
+  const limitsLine = formatLimits(
+    requestSettings.replyTokens,
+    requestSettings.runSpendUsd,
+    paths.settingsFile,
+  );
+  const request = buildRequest(requestSettings);
   const storedModel = findAllowedModel(settings.model);
   let modelId = storedModel?.id ?? DEFAULT_MODEL_ID;
   let modelSelected = Boolean(storedModel);
@@ -148,12 +156,51 @@ export function createApp(options: AppOptions = {}) {
   const sessionId = randomUUID();
   const records: UsageRecord[] = [];
   const logger = createLogger(paths.logFile, () => secrets);
+  let confirming = false;
+  let innkeeperRoundLimit = requestSettings.toolRounds;
+  let pendingOpen: { item: CharacterItem; sessionPath?: string } | null = null;
+  const innkeeper: InnkeeperToolContext = {
+    paths,
+    help: () =>
+      `${helpText()}\nCharacter import folder: ${paths.importCharactersDir}\nLorebook import folder: ${paths.importLorebooksDir}\nPersona import folder: ${paths.importPersonasDir}\nSettings file: ${paths.settingsFile}\nSettings backups: ${join(paths.configDir, "backups")}/`,
+    requestSettings: () => requestSettings,
+    confirm: confirmInnkeeper,
+    openChat: (item, sessionPath) => {
+      pendingOpen = { item, sessionPath };
+    },
+    applied: (changes, backupPath) => {
+      for (const { setting, value } of changes) {
+        if (setting === "limits.replyTokens") requestSettings.replyTokens = value as number;
+        else if (setting === "limits.runSpendUsd") {
+          requestSettings.runSpendUsd = value as number;
+          allowedSpend = value as number;
+        } else if (setting === "limits.toolRounds") {
+          requestSettings.toolRounds = value as number;
+          session.toolRounds = value as number;
+        } else if (setting.startsWith("generation.")) {
+          const key = setting.slice("generation.".length) as keyof RequestSettings["generation"];
+          if (value === null) delete requestSettings.generation[key];
+          else requestSettings.generation[key] = value as number;
+        }
+      }
+      session.setRequest(buildRequest(requestSettings));
+      notice(
+        backupPath
+          ? `Settings saved. The previous settings were backed up to ${backupPath}.`
+          : "Settings saved.",
+      );
+      if (changes.some((change) => change.setting === "mouse"))
+        notice("The mouse setting applies after a restart.");
+    },
+  };
   const session =
     options.session ??
     new ChatSession({
       request,
       modelId,
-      systemPrompt: DEFAULT_SYSTEM_PROMPT,
+      systemPrompt: INNKEEPER_SYSTEM_PROMPT,
+      innkeeper,
+      toolRounds: requestSettings.toolRounds,
       getApiKey: () => activeKey?.value,
     });
   const tui = new TuiAltScreen(options.terminal ?? new ProcessTerminal(), undefined, undefined, {
@@ -279,8 +326,35 @@ export function createApp(options: AppOptions = {}) {
     tui.requestRender();
   };
   const errorNotice = (text: string) => notice(text, { kind: "error" });
+  function toolLine(label: string): void {
+    transcript.addChild(new Text(messageStyles.muted(`· Innkeeper ${display(label)}`)));
+    tui.requestRender();
+  }
   function showPanel(component: Component, options?: OverlayOptions): void {
     tui.showOverlay(new Frame(component, () => tui.terminal.rows), options);
+  }
+  function confirmInnkeeper(request: ConfirmRequest, signal?: AbortSignal): Promise<boolean> {
+    if (signal?.aborted) return Promise.resolve(false);
+    if (request.lines.length) notice(request.lines.join("\n"));
+    return new Promise((resolve) => {
+      confirming = true;
+      const picker = new ListPicker<boolean>(request.title, [
+        { value: true, label: "Yes", search: "Yes" },
+        { value: false, label: "No", search: "No" },
+      ]);
+      const choose = (accepted: boolean) => {
+        if (!confirming) return;
+        confirming = false;
+        signal?.removeEventListener("abort", abort);
+        closeOverlay();
+        resolve(accepted);
+      };
+      const abort = () => choose(false);
+      picker.onSelect = choose;
+      picker.onCancel = abort;
+      signal?.addEventListener("abort", abort, { once: true });
+      showPanel(picker);
+    });
   }
   function importSelected(selected: string): ImportReport | null {
     try {
@@ -712,6 +786,7 @@ export function createApp(options: AppOptions = {}) {
     editor.disableSubmit = true;
     tui.requestRender();
     try {
+      innkeeperRoundLimit = session.toolRounds;
       running = run();
       await running;
     } catch (error) {
@@ -729,8 +804,20 @@ export function createApp(options: AppOptions = {}) {
     reply?.setText(display(response));
     tui.requestRender();
   });
+  const onToolCall = session.onToolCall((call) => {
+    clearWaiting();
+    if (reply && !response) transcript.removeChild(reply);
+    toolLine(call.label);
+    reply = addMessage("character", "");
+    response = "";
+    tui.requestRender();
+  });
   const onFinish = session.onFinish((turn) => {
     clearWaiting();
+    if (turn.toolLimitReached)
+      notice(
+        `The innkeeper stopped after ${innkeeperRoundLimit} rounds of tool calls. Ask again, or raise limits.toolRounds in ${paths.settingsFile}.`,
+      );
     const record = toUsageRecord(turn, {
       sessionId: chat?.sessionId ?? sessionId,
       modelPrice: findAllowedModel(turn.model)?.price ?? null,
@@ -831,6 +918,7 @@ export function createApp(options: AppOptions = {}) {
         await running;
       } finally {
         onDelta();
+        onToolCall();
         onFinish();
         if (started) tui.stop();
         process.off("SIGINT", onSignal);
@@ -1144,7 +1232,13 @@ export function createApp(options: AppOptions = {}) {
         retries = null;
         innkeeperSelected = true;
         transcript.clear();
-        notice("You are talking to the innkeeper. Use /characters to start a character chat.");
+        for (const item of session.innkeeperHistory()) {
+          if (item.kind === "tool") toolLine(item.text);
+          else addMessage(item.kind === "user" ? "user" : "character", display(item.text));
+        }
+        notice(
+          "You are talking to the innkeeper. Ask how anything works, or ask to change the hard settings. Use /characters to start a character chat.",
+        );
         updateStatus();
         return;
       },
@@ -1240,8 +1334,25 @@ export function createApp(options: AppOptions = {}) {
     addMessage("user", display(value));
     const current = chat;
     await stream(() => (current ? current.send(value) : session.send(value)));
+    if (!current && pendingOpen) {
+      const next = pendingOpen;
+      pendingOpen = null;
+      if (!next.sessionPath) startChat(next.item);
+      else {
+        try {
+          setCharacterChat(CharacterChat.resume({ paths, session, sessionPath: next.sessionPath }));
+        } catch (error) {
+          logger.error(
+            error instanceof Error ? error : { error: String(error) },
+            "Chat resume failed",
+          );
+          errorNotice("Could not resume the chat. See the diagnostic log.");
+        }
+      }
+    }
   }
   editor.onSubmit = (value) => {
+    if (value.trim()) editor.addToHistory(value);
     void submit(value);
   };
   tui.addInputListener((data) => {
@@ -1278,7 +1389,7 @@ export function createApp(options: AppOptions = {}) {
       void regenerate();
       return { consume: true };
     }
-    if (matchesKey(data, "escape") && session.isStreaming) {
+    if (matchesKey(data, "escape") && session.isStreaming && !confirming) {
       clearWaiting();
       session.abort();
       return { consume: true };

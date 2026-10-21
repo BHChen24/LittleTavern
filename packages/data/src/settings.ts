@@ -1,4 +1,5 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { AppPaths } from "./paths.ts";
 
 export interface Settings {
@@ -24,8 +25,42 @@ export interface GenerationSettings {
 export interface RequestSettings {
   replyTokens: number;
   runSpendUsd: number;
+  toolRounds: number;
   generation: GenerationSettings;
   warnings: string[];
+}
+
+interface SettingRule {
+  rule: string;
+  removable: boolean;
+  valid(value: unknown): boolean;
+}
+
+function numeric(rule: string, removable: boolean, valid: (value: number) => boolean): SettingRule {
+  return { rule, removable, valid: (value) => typeof value === "number" && valid(value) };
+}
+
+export const SETTING_RULES: Record<string, SettingRule> = {
+  "limits.replyTokens": numeric("whole number ≥ 0", false, (n) => Number.isInteger(n) && n >= 0),
+  "limits.runSpendUsd": numeric("number ≥ 0", false, (n) => n >= 0),
+  "limits.toolRounds": numeric("whole number ≥ 1", false, (n) => Number.isInteger(n) && n >= 1),
+  "generation.temperature": numeric("number 0–2", true, (n) => n >= 0 && n <= 2),
+  "generation.topP": numeric("number 0–1", true, (n) => n >= 0 && n <= 1),
+  "generation.topK": numeric("whole number ≥ 1", true, (n) => Number.isInteger(n) && n >= 1),
+  "generation.minP": numeric("number 0–1", true, (n) => n >= 0 && n <= 1),
+  "generation.repetitionPenalty": numeric("number > 0", true, (n) => n > 0),
+  loreBudget: numeric("number > 0", true, (n) => n > 0),
+  scanDepth: numeric("whole number ≥ 0", true, (n) => Number.isInteger(n) && n >= 0),
+  replyReserve: numeric("number ≥ 0", true, (n) => n >= 0),
+  mouse: { rule: "true or false", removable: false, valid: (value) => typeof value === "boolean" },
+};
+
+export function checkSettingChange(setting: string, value: unknown): string | null {
+  const rule = Object.hasOwn(SETTING_RULES, setting) ? SETTING_RULES[setting] : undefined;
+  if (!rule) return "a supported setting";
+  if (value === null && rule.removable) return null;
+  if (typeof value === "number" && !Number.isFinite(value)) return rule.rule;
+  return rule.valid(value) ? null : rule.rule;
 }
 
 /** Request settings are read separately so existing settings consumers stay unchanged. */
@@ -44,39 +79,27 @@ export function readRequestSettings(paths: AppPaths): RequestSettings {
     values: Record<string, unknown>,
     key: string,
     prefix: string,
-    valid: (value: number) => boolean,
-    rule: string,
   ): number | undefined {
     const value = values[key];
     if (value === undefined) return undefined;
-    if (typeof value === "number" && Number.isFinite(value) && valid(value)) return value;
-    warnings.push(`Ignored ${prefix}.${key} in settings.json: ${rule}.`);
+    const rule = checkSettingChange(`${prefix}.${key}`, value);
+    if (typeof value === "number" && rule === null) return value;
+    warnings.push(
+      `Ignored ${prefix}.${key} in settings.json: ${rule ?? SETTING_RULES[`${prefix}.${key}`]?.rule}.`,
+    );
     return undefined;
   }
   const limits = section("limits");
   const generation = section("generation");
   const result: RequestSettings = {
-    replyTokens:
-      number(
-        limits,
-        "replyTokens",
-        "limits",
-        (n) => Number.isInteger(n) && n >= 0,
-        "whole number ≥ 0",
-      ) ?? 4096,
-    runSpendUsd: number(limits, "runSpendUsd", "limits", (n) => n >= 0, "number ≥ 0") ?? 1,
+    replyTokens: number(limits, "replyTokens", "limits") ?? 4096,
+    runSpendUsd: number(limits, "runSpendUsd", "limits") ?? 1,
+    toolRounds: number(limits, "toolRounds", "limits") ?? 5,
     generation: {},
     warnings,
   };
-  const rules: [keyof GenerationSettings, (value: number) => boolean, string][] = [
-    ["temperature", (n) => n >= 0 && n <= 2, "number 0–2"],
-    ["topP", (n) => n >= 0 && n <= 1, "number 0–1"],
-    ["topK", (n) => Number.isInteger(n) && n >= 1, "whole number ≥ 1"],
-    ["minP", (n) => n >= 0 && n <= 1, "number 0–1"],
-    ["repetitionPenalty", (n) => n > 0, "number > 0"],
-  ];
-  for (const [key, valid, rule] of rules) {
-    const value = number(generation, key, "generation", valid, rule);
+  for (const key of ["temperature", "topP", "topK", "minP", "repetitionPenalty"] as const) {
+    const value = number(generation, key, "generation");
     if (value !== undefined) result.generation[key] = value;
   }
   return result;
@@ -105,17 +128,14 @@ export function readSettings(paths: AppPaths): Settings {
   const raw = readFile(paths);
   const settings: Settings = {};
   if (typeof raw.examplesAdded === "boolean") settings.examplesAdded = raw.examplesAdded;
-  if (typeof raw.mouse === "boolean") settings.mouse = raw.mouse;
+  if (SETTING_RULES.mouse?.valid(raw.mouse)) settings.mouse = raw.mouse as boolean;
   if (typeof raw.model === "string") settings.model = raw.model;
   if (typeof raw.userName === "string" && raw.userName.trim()) settings.userName = raw.userName;
   if (raw.persona === null || (typeof raw.persona === "string" && raw.persona.trim()))
     settings.persona = raw.persona;
-  if (typeof raw.loreBudget === "number" && raw.loreBudget > 0)
-    settings.loreBudget = raw.loreBudget;
-  if (typeof raw.scanDepth === "number" && Number.isInteger(raw.scanDepth) && raw.scanDepth >= 0)
-    settings.scanDepth = raw.scanDepth;
-  if (typeof raw.replyReserve === "number" && raw.replyReserve >= 0)
-    settings.replyReserve = raw.replyReserve;
+  for (const key of ["loreBudget", "scanDepth", "replyReserve"] as const) {
+    if (SETTING_RULES[key]?.valid(raw[key])) settings[key] = raw[key] as number;
+  }
   if (isAttachments(raw.lorebookAttachments))
     settings.lorebookAttachments = raw.lorebookAttachments;
   return settings;
@@ -126,4 +146,80 @@ export function writeSettings(paths: AppPaths, patch: Settings): void {
   mkdirSync(paths.configDir, { recursive: true });
   const merged = { ...readFile(paths), ...patch };
   writeFileSync(paths.settingsFile, `${JSON.stringify(merged, null, 2)}\n`);
+}
+
+export interface SettingChange {
+  setting: string;
+  value: number | boolean | null;
+}
+
+/** Strict read, exclusive backup, nested changes, then replace the complete file. */
+export function updateSettings(
+  paths: AppPaths,
+  changes: SettingChange[],
+): { backupPath: string | null } {
+  for (const { setting, value } of changes) {
+    const rule = checkSettingChange(setting, value);
+    if (rule) throw new Error(`${setting} must be ${rule}.`);
+  }
+  let original: Buffer | undefined;
+  try {
+    original = readFileSync(paths.settingsFile);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+  let parsed: Record<string, unknown> = {};
+  if (original) {
+    try {
+      const value: unknown = JSON.parse(original.toString("utf8"));
+      if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error();
+      parsed = value as Record<string, unknown>;
+    } catch {
+      throw new Error("settings.json is not valid JSON. Fix or remove it first.");
+    }
+  }
+  mkdirSync(paths.configDir, { recursive: true });
+  let backupPath: string | null = null;
+  if (original) {
+    const directory = join(paths.configDir, "backups");
+    mkdirSync(directory, { recursive: true });
+    const timestamp = new Date()
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace("T", "-")
+      .replace(".", "-")
+      .replace("Z", "");
+    for (let suffix = 0; ; suffix++) {
+      const candidate = join(directory, `settings-${timestamp}${suffix ? `-${suffix}` : ""}.json`);
+      try {
+        writeFileSync(candidate, original, { flag: "wx" });
+        backupPath = candidate;
+        break;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+      }
+    }
+  }
+  for (const { setting, value } of changes) {
+    const [section, key] = setting.split(".");
+    if (!section) continue;
+    let target = parsed;
+    if (key) {
+      const existing = parsed[section];
+      if (!existing || typeof existing !== "object" || Array.isArray(existing))
+        parsed[section] = {};
+      target = parsed[section] as Record<string, unknown>;
+    }
+    if (value === null) delete target[key ?? section];
+    else target[key ?? section] = value;
+  }
+  // A failed write must leave the original file intact.
+  const temporary = `${paths.settingsFile}.${process.pid}.tmp`;
+  try {
+    writeFileSync(temporary, `${JSON.stringify(parsed, null, 2)}\n`, { flag: "wx" });
+    renameSync(temporary, paths.settingsFile);
+  } finally {
+    rmSync(temporary, { force: true });
+  }
+  return { backupPath };
 }

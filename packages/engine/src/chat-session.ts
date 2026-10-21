@@ -1,8 +1,19 @@
-import { Agent } from "@earendil-works/pi-agent-core";
-import { type AssistantMessage, createModels, type Message } from "@earendil-works/pi-ai";
-import { fauxAssistantMessage, fauxProvider } from "@earendil-works/pi-ai/providers/faux";
+import { Agent, type AgentOptions } from "@earendil-works/pi-agent-core";
+import {
+  type AssistantMessage,
+  createModels,
+  type JsonObject,
+  type Message,
+} from "@earendil-works/pi-ai";
+import {
+  fauxAssistantMessage,
+  fauxProvider,
+  fauxText,
+  fauxToolCall,
+} from "@earendil-works/pi-ai/providers/faux";
 import { openrouterProvider } from "@earendil-works/pi-ai/providers/openrouter";
 import { isBlank } from "./api-key.ts";
+import { createInnkeeperTools, type InnkeeperToolContext } from "./innkeeper-tools.ts";
 import { findAllowedModel, type ModelPrice } from "./models.ts";
 
 export interface TurnUsage {
@@ -15,6 +26,7 @@ export interface TurnUsage {
   cost: { input: number; output: number; cacheRead: number; cacheWrite: number; total: number };
 }
 export interface TurnResult {
+  toolLimitReached?: boolean;
   outcome: "completed" | "interrupted" | "error";
   cutOff: boolean;
   text: string;
@@ -33,6 +45,7 @@ export interface SimulatedMessage {
 }
 export type SimulatedReply =
   | string
+  | { text?: string; toolCalls: { name: string; args: Record<string, unknown> }[] }
   | { text: string; errorMessage: string }
   | { text: string; stopReason: "length" }
   | ((history: SimulatedMessage[]) => string | Promise<string>);
@@ -43,6 +56,8 @@ export interface ChatContext {
   afterHistory: string | null;
 }
 export interface ChatSessionOptions {
+  innkeeper?: InnkeeperToolContext;
+  toolRounds?: number;
   modelId: string;
   systemPrompt: string;
   getApiKey: () => string | undefined;
@@ -68,8 +83,30 @@ export interface RequestOptions {
   samplingParams?: Record<string, number>;
 }
 
+export interface InnkeeperHistoryItem {
+  kind: "user" | "innkeeper" | "tool";
+  text: string;
+}
+
+function emptyUsage(): TurnUsage {
+  return {
+    input: 0,
+    output: 0,
+    cacheRead: 0,
+    cacheWrite: 0,
+    totalTokens: 0,
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+  };
+}
+
 export class ChatSession {
   private agent: Agent;
+  private innkeeper: Agent;
+  private toolCalls = new Set<(call: { name: string; label: string }) => void>();
+  private rounds = 0;
+  private roundLimit = 5;
+  private toolLimitReached = false;
+  private usage = emptyUsage();
   private models = createModels();
   private options: ChatSessionOptions;
   private deltas = new Set<(delta: string) => void>();
@@ -101,6 +138,11 @@ export class ChatSession {
         options.simulated.replies.map((reply) => async (context, streamOptions) => {
           options.simulated?.onRequest?.(streamOptions);
           if (typeof reply === "string") return fauxAssistantMessage(reply);
+          if (typeof reply === "object" && "toolCalls" in reply)
+            return fauxAssistantMessage([
+              ...(reply.text ? [fauxText(reply.text)] : []),
+              ...reply.toolCalls.map((call) => fauxToolCall(call.name, call.args as JsonObject)),
+            ]);
           if (typeof reply === "object")
             return fauxAssistantMessage(reply.text, {
               stopReason: "stopReason" in reply ? reply.stopReason : "error",
@@ -125,21 +167,62 @@ export class ChatSession {
     }
     const model = this.models.getModel("openrouter", options.modelId);
     if (!model || !findAllowedModel(options.modelId)) throw new Error("Model is not allowed");
+    const streamFn: AgentOptions["streamFn"] = (model, context, streamOptions) =>
+        this.models.streamSimple(model, context, { ...streamOptions, ...this.request }),
+      getApiKey = () => this.options.getApiKey();
     this.agent = new Agent({
       initialState: { systemPrompt: options.systemPrompt, model, tools: [] },
-      streamFn: (model, context, streamOptions) =>
-        this.models.streamSimple(model, context, { ...streamOptions, ...this.request }),
-      getApiKey: () => this.options.getApiKey(),
-      // generate() replaces the whole transcript with an assembled context; send() leaves it alone.
+      streamFn,
+      getApiKey,
       transformContext: async (messages) => this.pendingContext ?? messages,
     });
-    this.agent.subscribe((event) => {
-      if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
-        for (const listener of this.deltas) listener(event.assistantMessageEvent.delta);
-      }
-      if (event.type === "message_end" && event.message.role === "assistant")
-        this.finalMessage = event.message;
+    this.innkeeper = new Agent({
+      initialState: {
+        systemPrompt: options.systemPrompt,
+        model,
+        tools: options.innkeeper ? createInnkeeperTools(options.innkeeper) : [],
+      },
+      streamFn,
+      getApiKey,
+      toolExecution: "sequential",
+      finishTurn: (turn) => {
+        if (
+          turn.toolResults.some(
+            (result) =>
+              result.details &&
+              typeof result.details === "object" &&
+              "endTurn" in result.details &&
+              result.details.endTurn === true,
+          )
+        )
+          return { action: "end" };
+        if (turn.toolResults.length && ++this.rounds >= this.roundLimit) {
+          this.toolLimitReached = true;
+          return { action: "end" };
+        }
+      },
     });
+    for (const agent of [this.agent, this.innkeeper])
+      agent.subscribe((event) => {
+        if (event.type === "message_update" && event.assistantMessageEvent.type === "text_delta") {
+          for (const listener of this.deltas) listener(event.assistantMessageEvent.delta);
+        }
+        if (event.type === "message_end" && event.message.role === "assistant") {
+          this.finalMessage = event.message;
+          const usage = event.message.usage;
+          for (const key of ["input", "output", "cacheRead", "cacheWrite", "totalTokens"] as const)
+            this.usage[key] += usage[key];
+          if (usage.reasoning !== undefined)
+            this.usage.reasoning = (this.usage.reasoning ?? 0) + usage.reasoning;
+          for (const key of ["input", "output", "cacheRead", "cacheWrite", "total"] as const)
+            this.usage.cost[key] += usage.cost[key];
+        }
+        if (event.type === "tool_execution_start") {
+          const label =
+            agent.state.tools.find((tool) => tool.name === event.toolName)?.label ?? event.toolName;
+          for (const listener of this.toolCalls) listener({ name: event.toolName, label });
+        }
+      });
   }
 
   get isStreaming(): boolean {
@@ -147,6 +230,49 @@ export class ChatSession {
   }
   get request(): RequestOptions {
     return this.options.request ?? {};
+  }
+  setRequest(request: RequestOptions): void {
+    this.options.request = request;
+  }
+  get toolRounds(): number {
+    return this.options.toolRounds ?? 5;
+  }
+  set toolRounds(value: number) {
+    this.options.toolRounds = value;
+  }
+  onToolCall(listener: (call: { name: string; label: string }) => void): () => void {
+    this.toolCalls.add(listener);
+    return () => {
+      this.toolCalls.delete(listener);
+    };
+  }
+  innkeeperHistory(): InnkeeperHistoryItem[] {
+    const items: InnkeeperHistoryItem[] = [];
+    for (const message of this.innkeeper.state.messages) {
+      if (message.role === "user") {
+        const text =
+          typeof message.content === "string"
+            ? message.content
+            : message.content
+                .filter((block) => block.type === "text")
+                .map((block) => (block.type === "text" ? block.text : ""))
+                .join("");
+        items.push({ kind: "user", text });
+      } else if (message.role === "assistant") {
+        for (const block of message.content) {
+          if (block.type === "text" && block.text)
+            items.push({ kind: "innkeeper", text: block.text });
+          if (block.type === "toolCall")
+            items.push({
+              kind: "tool",
+              text:
+                this.innkeeper.state.tools.find((tool) => tool.name === block.name)?.label ??
+                block.name,
+            });
+        }
+      }
+    }
+    return items;
   }
   get modelId(): string {
     return this.agent.state.model.id;
@@ -165,12 +291,14 @@ export class ChatSession {
   }
   abort(): void {
     this.agent.abort();
+    this.innkeeper.abort();
   }
   setModel(modelId: string): void {
     if (this.sending) throw new Error("Cannot change model while streaming");
     const model = this.models.getModel("openrouter", modelId);
     if (!model || !findAllowedModel(modelId)) throw new Error("Model is not allowed");
     this.agent.state.model = model;
+    this.innkeeper.state.model = model;
   }
 
   private getFinalMessage(): AssistantMessage | undefined {
@@ -178,28 +306,26 @@ export class ChatSession {
   }
 
   clearConversation(): void {
-    this.agent.state.messages = [];
+    const first = this.innkeeper.state.messages[0];
+    this.innkeeper.state.messages = first?.role === "system" ? [first] : [];
   }
 
   async send(text: string): Promise<TurnResult | null> {
     if (this.sending || isBlank(text) || isBlank(this.options.getApiKey())) return null;
-    return this.run(() => this.agent.prompt(text));
+    return this.run(() => this.innkeeper.prompt(text));
   }
 
   /**
-   * Runs one turn against a fully assembled context. The plain-chat transcript is restored
-   * afterwards, so switching back to plain chat is unaffected.
+   * Runs a character turn against our assembled context, separate from the innkeeper.
    */
   async generate(context: ChatContext): Promise<TurnResult | null> {
     const last = context.messages.at(-1);
     if (this.sending || last?.role !== "user" || isBlank(this.options.getApiKey())) return null;
-    const saved = [...this.agent.state.messages];
     this.pendingContext = this.toMessages(context);
     try {
       return await this.run(() => this.agent.prompt(last.text));
     } finally {
       this.pendingContext = undefined;
-      this.agent.state.messages = saved;
     }
   }
 
@@ -238,12 +364,17 @@ export class ChatSession {
   private async run(prompt: () => Promise<void>): Promise<TurnResult> {
     this.sending = true;
     this.finalMessage = undefined;
+    this.usage = emptyUsage();
+    this.rounds = 0;
+    this.roundLimit = this.toolRounds;
+    this.toolLimitReached = false;
     const started = Date.now();
     try {
       await prompt();
       const message = this.getFinalMessage();
       if (!message) throw new Error("Request ended without an assistant message");
       const turn: TurnResult = {
+        ...(this.toolLimitReached ? { toolLimitReached: true } : {}),
         cutOff: message.stopReason === "length",
         outcome:
           message.stopReason === "aborted"
@@ -261,7 +392,7 @@ export class ChatSession {
         api: message.api,
         startedAt: new Date(started).toISOString(),
         durationMs: message.durationMs ?? Date.now() - started,
-        usage: { ...message.usage, cost: { ...message.usage.cost } },
+        usage: { ...this.usage, cost: { ...this.usage.cost } },
       };
       for (const listener of this.finishes) await listener(turn);
       return turn;

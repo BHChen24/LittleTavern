@@ -9,7 +9,7 @@ its own application, not a port. SillyTavern is a design reference: LittleTavern
 and implements them independently. It is built on the [pi](https://github.com/earendil-works/pi)
 agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
 
-> **Status:** v0.1, an early version. Expect rough edges.
+> **Status:** v0.2, an early version. Expect rough edges.
 
 ## Features
 
@@ -20,8 +20,12 @@ agent framework (`pi-ai`, `pi-agent-core`, `pi-tui`).
   `littletavern dry-run` shows the next request without sending it.
 - Personas are Markdown files; you can switch between them at any time.
 - New characters can be written from a Markdown template in `$EDITOR` and are saved as V3 cards.
-- Full-screen TUI with mouse scrolling, copy-on-select, transcript search, saved chats and
-  regenerate.
+- Full-screen TUI with mouse scrolling, copy-on-select, transcript search and saved chats.
+  Regenerate a reply, take back your last turn with `/undo`, or `/edit` any message and continue
+  the chat from there.
+- The innkeeper (`/innkeeper`) answers questions about the app, changes the settings that have no
+  command (limits, sampling, lore budget) after you confirm, with a backup of the old settings,
+  and opens character chats for you.
 - The status bar shows the session's tokens, cache hits and cost.
 
 ## Requirements
@@ -79,7 +83,7 @@ Type `/` at any time to see the commands, with completion.
 | `/persona` | Choose, create or edit who you are in the story |
 | `/import` | Import a card or lorebook from the import folders |
 | `/library`, `/show` | List the library, or pick an item to inspect |
-| `/innkeeper` | Talk to the innkeeper (a chat without a character) |
+| `/innkeeper` | Ask the innkeeper for help or to change settings |
 | `/model` | Choose a model |
 | `/apikey` | Add, replace or forget your OpenRouter key |
 | `/help` | Show commands and key bindings |
@@ -88,6 +92,7 @@ Type `/` at any time to see the commands, with completion.
 | Key | What it does |
 |---|---|
 | Enter | Send |
+| Up / Down | Recall what you typed earlier in this run |
 | Esc | Interrupt a reply; close a picker |
 | Ctrl+R | Regenerate the last reply |
 | Ctrl+O | Write the current message in `$EDITOR` |
@@ -109,20 +114,47 @@ technical details in the diagnostic log. In character chats, retry with Ctrl+R o
 retryable failure notices count manual retries. Partial failed replies are marked incomplete
 and are neither saved nor sent with later requests. There are no automatic retries.
 
+## The innkeeper
+
+Use `/innkeeper` to ask how LittleTavern works. It can look up commands, key bindings, import
+folders and file locations, read settings without credentials, and list characters and
+personas. Each tool call appears as a muted line in the conversation.
+
+The innkeeper can change the hard settings: reply, spend and tool-round limits; sampling
+parameters; `loreBudget`, `scanDepth` and `replyReserve`; and `mouse`. Every settings change
+shows the old and new values and asks **Yes** or **No**. No or Esc writes nothing. Before
+saving, it copies the existing settings file to `<configDir>/backups/` and shows the backup
+path. Backups never overwrite earlier backups. If there was no settings file, it creates one
+without a backup. To restore a backup, copy it back to `settings.json` yourself.
+
+Confirmed changes apply to the next request without restarting; `mouse` applies after a
+restart. Optional sampling parameters and lore settings can be removed to restore defaults.
+For the model, persona, lorebook attachments or the name characters use, the innkeeper teaches
+you `/model`, `/persona` or `/lorebooks`. It cannot read or change your API key; use `/apikey`.
+
+It can also offer to start a new character chat or continue that character's most recent saved
+chat. Both need confirmation. The innkeeper's conversation stays separate from character
+chats, returns when you enter `/innkeeper`, and is lost on quit. `/new` clears it.
+
+One innkeeper message can make several model requests. Their tokens and costs all count
+toward the status bar, run spending and usage ledger. `limits.toolRounds` defaults to 5 and
+caps the rounds of tool calls per message; reaching it stops the turn with a notice.
+
 ## Limits and generation settings
 
 By default, each request asks for at most **4096 output tokens**, including reasoning tokens,
-and the app asks before starting another request once this run has spent **$1**. A request already
+and the app asks before another message or regeneration once this run has spent **$1**. A request already
 in progress finishes and may cross the threshold. `Continue` adds another cap's worth to this
 run's allowance; `Stop` keeps your message in the input. Unknown model prices cannot be checked
 against the spending limit. A reply cut off at the token limit is saved normally.
 
 The home screen and setup notice show the limits and the path to `settings.json` until a chat
-starts. Edit that file to change the limits and sampling parameters, then **restart the app**:
+starts. Ask the innkeeper to change limits or sampling parameters for immediate use, or edit
+that file and **restart the app**:
 
 ```json
 {
-  "limits": { "replyTokens": 4096, "runSpendUsd": 1 },
+  "limits": { "replyTokens": 4096, "runSpendUsd": 1, "toolRounds": 5 },
   "generation": {
     "temperature": 1.1,
     "topP": 0.9,
@@ -137,6 +169,7 @@ starts. Edit that file to change the limits and sampling parameters, then **rest
 |---|---|
 | `limits.replyTokens` | Whole number at least 0; 0 removes the app's reply cap |
 | `limits.runSpendUsd` | Number at least 0, in USD; 0 turns off the spending limit |
+| `limits.toolRounds` | Whole number at least 1; default 5 tool rounds per innkeeper message |
 | `generation.temperature` | 0 to 2 |
 | `generation.topP`, `generation.minP` | 0 to 1 |
 | `generation.topK` | Whole number at least 1 |

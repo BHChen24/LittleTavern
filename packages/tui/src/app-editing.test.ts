@@ -450,3 +450,29 @@ it("runs the undo, correction, character edit and restart happy path through the
     "Edited first reply",
   ]);
 });
+
+it("recalls earlier input with Up and Down", async () => {
+  const f = fixture(["First reply", "Second reply"]);
+  await f.character();
+  const type = async (text: string, replies: number) => {
+    for (const key of text) f.app.editor.handleInput(key);
+    f.app.editor.handleInput("\r");
+    await vi.waitFor(() =>
+      expect(f.app.chat?.history().filter((item) => item.role === "user")).toHaveLength(replies),
+    );
+    await vi.waitFor(() => expect(f.app.session.isStreaming).toBe(false));
+  };
+  await type("First message", 1);
+  await type("Second message", 2);
+  expect(f.app.editor.getText()).toBe("");
+  const up = "\x1b[A";
+  const down = "\x1b[B";
+  f.app.editor.handleInput(up);
+  expect(f.app.editor.getText()).toBe("Second message");
+  f.app.editor.handleInput(up);
+  expect(f.app.editor.getText()).toBe("First message");
+  f.app.editor.handleInput(down);
+  expect(f.app.editor.getText()).toBe("Second message");
+  f.app.editor.handleInput(down);
+  expect(f.app.editor.getText()).toBe("");
+});

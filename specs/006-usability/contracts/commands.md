@@ -16,7 +16,7 @@ This replaces the in-app command list from 001, 002, 004 and 005. The single sou
 | `/edit` | — | Edit a message and continue the chat from it (added by 013) |
 | `/trace` | — | Show why the last request looked the way it did |
 | `/lorebooks` | — | Choose or import lorebooks for the current character (changed by 011) |
-| `/innkeeper` | — | Talk to the innkeeper |
+| `/innkeeper` | — | Ask the innkeeper for help or to change settings (changed by 014) |
 | `/import` | — | Import a card or lorebook from the import folders (changed by 010) |
 | `/library` | — | List the library |
 | `/show` | — | Inspect a library item with a picker (changed by 011) |

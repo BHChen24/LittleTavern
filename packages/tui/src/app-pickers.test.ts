@@ -391,7 +391,12 @@ it("clears innkeeper history and stays in innkeeper mode", async () => {
   expect(screen()).not.toContain("Earlier reply.");
   expect(screen()).toContain("Talk to the innkeeper");
   await app.submit("New message.");
-  expect(seen).toEqual([[{ role: "user", text: "New message." }]]);
+  expect(seen).toEqual([
+    [
+      { role: "system", text: DEFAULT_SYSTEM_PROMPT },
+      { role: "user", text: "New message." },
+    ],
+  ]);
   expect(screen()).toContain("Fresh reply.");
   expect(app.chat).toBeNull();
 });
