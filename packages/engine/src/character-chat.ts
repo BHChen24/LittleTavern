@@ -248,6 +248,38 @@ export class CharacterChat {
     return entry;
   }
 
+  undo(): { text: string } | "nothing-to-undo" {
+    if (this.isStreaming) return "nothing-to-undo";
+    const branch = this.manager.getBranch();
+    const index = branch.findLastIndex(
+      (entry) => entry.type === "message" && entry.message.role === "user",
+    );
+    if (index < 0) return "nothing-to-undo";
+    const entry = branch[index];
+    const before = branch[index - 1];
+    if (entry?.type !== "message" || entry.message.role !== "user" || !before)
+      throw new Error("The last player message has no preceding entry.");
+    if (before.type !== "message" && before.type !== "custom" && before.type !== "session_info")
+      throw new Error("Cannot undo after this session entry type.");
+    if (before.parentId) this.manager.branch(before.parentId);
+    else this.manager.resetLeaf();
+    if (before.type === "message") {
+      const message = before.message;
+      if (message.role !== "user" && message.role !== "assistant")
+        throw new Error("Cannot copy this message role during undo.");
+      this.manager.appendMessage(message);
+    } else if (before.type === "custom")
+      this.manager.appendCustomEntry(before.customType, before.data);
+    else this.manager.appendSessionInfo(before.name ?? "");
+    this.replaced = undefined;
+    const content = entry.message.content;
+    const text =
+      typeof content === "string"
+        ? content
+        : content.map((block) => (block.type === "text" ? block.text : "")).join("");
+    return { text };
+  }
+
   async send(text: string): Promise<TurnResult | null> {
     if (this.isStreaming || !text.trim()) return null;
     this.replaced = undefined;

@@ -77,7 +77,7 @@ restart.
 **Independent test**: two turns, `/undo`, one turn on screen and in the next request, the text in
 the input; reopening the file shows one turn.
 
-- [ ] T002 [US1] In `packages/engine/src/character-chat.ts`, add `undo(): { text: string } | "nothing-to-undo"` exactly as research R2 describes:
+- [X] T002 [US1] In `packages/engine/src/character-chat.ts`, add `undo(): { text: string } | "nothing-to-undo"` exactly as research R2 describes:
   1. scan `getBranch()` backwards for the last user message; none → `"nothing-to-undo"`;
   2. `before` = the entry just before it on the branch;
   3. `branch(before.parentId)`, or `resetLeaf()` when `before.parentId` is null;
@@ -85,7 +85,7 @@ the input; reopening the file shows one turn.
   5. clear `replaced`; return the user message's text (joined text blocks, as `historyFromEntries` does).
 
   Return `"nothing-to-undo"` while streaming. Do not change `regenerateTarget`, `regenerate` or `prev`. Write T-b with every case in plan.md, including the card without a greeting (undo the first turn, reopen with `CharacterChat.resume`, send again), the entry ids kept in the file, and the unchanged usage totals and `lastTrace`
-- [ ] T003 [US1] Add `undo` to `COMMANDS()` in `packages/tui/src/commands.ts`, right after `prev`, with the contract description. In `packages/tui/src/app.ts`, add the handler (research R5):
+- [X] T003 [US1] Add `undo` to `COMMANDS()` in `packages/tui/src/commands.ts`, right after `prev`, with the contract description. In `packages/tui/src/app.ts`, add the handler (research R5):
   - no character chat: `/undo works in character chats.`;
   - `"nothing-to-undo"`: `There is nothing to undo.`;
   - otherwise `renderHistory(chat.history())` and `editor.setText(text)`.

@@ -887,7 +887,7 @@ export function createApp(options: AppOptions = {}) {
     const text = value.trim();
     if (closing || !text) return;
     if (session.isStreaming) {
-      if (text === "/new" || text === "/prev")
+      if (["/new", "/prev", "/undo"].includes(text))
         notice("Wait for the reply, or press Esc to stop it.");
       return;
     }
@@ -1108,6 +1108,18 @@ export function createApp(options: AppOptions = {}) {
           notice("There is no previous reply to bring back. /prev works right after a regenerate.");
         else renderHistory(chat.history());
       },
+      undo: () => {
+        if (!chat) {
+          notice("/undo works in character chats.");
+          return;
+        }
+        const result = chat.undo();
+        if (result === "nothing-to-undo") notice("There is nothing to undo.");
+        else {
+          renderHistory(chat.history());
+          editor.setText(result.text);
+        }
+      },
       model: openModelPicker,
       help: async () => {
         const innerWidth = Math.max(1, Math.min(80, tui.terminal.columns) - 4);
@@ -1154,7 +1166,7 @@ export function createApp(options: AppOptions = {}) {
       session.isStreaming &&
       tui.getFocusedComponent() === editor &&
       matchesKey(data, "enter") &&
-      ["/new", "/prev"].includes(editor.getText().trim())
+      ["/new", "/prev", "/undo"].includes(editor.getText().trim())
     ) {
       notice("Wait for the reply, or press Esc to stop it.");
       return { consume: true };

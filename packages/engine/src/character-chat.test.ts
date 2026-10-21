@@ -444,3 +444,127 @@ it("identifies stored messages while keeping the greeting out of editing", async
   const [saved] = await listChats(paths);
   expect(readChatHistory(paths, saved?.path ?? "")).toEqual(history);
 });
+
+async function savedPath(chat: CharacterChat): Promise<string> {
+  const saved = (await listChats(paths)).find((entry) => entry.sessionId === chat.sessionId);
+  if (!saved) throw new Error("Expected a saved chat");
+  return saved.path;
+}
+
+it("undoes a full turn without losing saved entries, paid usage or the last trace", async () => {
+  const seen: Seen[] = [];
+  const session = simulated(["First reply", "Second reply", "Replacement", recorder(seen, "Next")]);
+  let requests = 0;
+  session.onFinish(() => {
+    requests += 1;
+  });
+  const item = importCharacter();
+  const chat = CharacterChat.start({ paths, session, item });
+  await chat.send("First message");
+  await chat.send("Second message");
+  await chat.regenerate();
+  const file = await savedPath(chat);
+  const before = readFileSync(file, "utf8");
+  const trace = chat.lastTrace;
+  expect(chat.undo()).toEqual({ text: "Second message" });
+  expect(chat.history().map((entry) => entry.text)).toEqual([
+    greetingFor(paths, item),
+    "First message",
+    "First reply",
+  ]);
+  expect(chat.prev()).toBe("nothing-to-restore");
+  expect(chat.regenerateTarget()).toBe("reply");
+  expect(chat.lastTrace).toBe(trace);
+  expect(requests).toBe(3);
+  expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+  expect(
+    CharacterChat.resume({ paths, session: simulated([]), sessionPath: file }).history(),
+  ).toEqual(chat.history());
+  await chat.send("Continue");
+  expect(seen[0]?.filter((message) => message.role !== "system")).toEqual([
+    { role: "assistant", text: greetingFor(paths, item) },
+    { role: "user", text: "First message" },
+    { role: "assistant", text: "First reply" },
+    { role: "user", text: "Continue" },
+  ]);
+});
+
+it.each([true, false])(
+  "undoes back to the start, reopens and sends again, greeting=%s",
+  async (greeting) => {
+    const item = importCharacter(greeting ? "Greeting" : "");
+    const chat = CharacterChat.start({ paths, session: simulated(["One", "Two"]), item });
+    expect(chat.undo()).toBe("nothing-to-undo");
+    await chat.send("First");
+    await chat.send("Second");
+    const file = await savedPath(chat);
+    const before = readFileSync(file, "utf8");
+    expect(chat.undo()).toEqual({ text: "Second" });
+    expect(chat.undo()).toEqual({ text: "First" });
+    expect(chat.undo()).toBe("nothing-to-undo");
+    expect(chat.history()).toEqual(greeting ? [{ role: "character", text: "Greeting" }] : []);
+    expect(chat.regenerateTarget()).toBeNull();
+    expect(readFileSync(file, "utf8").startsWith(before)).toBe(true);
+    const reopened = CharacterChat.resume({
+      paths,
+      session: simulated(["New reply"]),
+      sessionPath: file,
+    });
+    expect(reopened.history()).toEqual(chat.history());
+    expect(reopened.libraryId).toBe(item.id);
+    await reopened.send("Fresh");
+    expect(
+      reopened
+        .history()
+        .slice(-2)
+        .map((entry) => entry.text),
+    ).toEqual(["Fresh", "New reply"]);
+  },
+);
+
+it("undoes reply-less messages including one preceded by another failed send", async () => {
+  const session = simulated([
+    { text: "", errorMessage: "failure" },
+    { text: "", errorMessage: "failure" },
+  ]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("First failed");
+  await chat.send("Second failed");
+  expect(chat.undo()).toEqual({ text: "Second failed" });
+  expect(chat.history().at(-1)?.text).toBe("First failed");
+  expect(chat.regenerateTarget()).toBe("user");
+  expect(chat.undo()).toEqual({ text: "First failed" });
+  expect(chat.history()).toHaveLength(1);
+  expect(
+    CharacterChat.resume({ paths, session, sessionPath: await savedPath(chat) }).history(),
+  ).toEqual(chat.history());
+});
+
+it("regenerates the previous reply after undo and refuses undo during a request", async () => {
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const session = simulated([
+    "First",
+    "Second",
+    async () => {
+      await gate;
+      return "New first";
+    },
+  ]);
+  const chat = CharacterChat.start({ paths, session, item: importCharacter() });
+  await chat.send("One");
+  await chat.send("Two");
+  chat.undo();
+  const pending = chat.regenerate();
+  try {
+    expect(chat.undo()).toBe("nothing-to-undo");
+  } finally {
+    release();
+    await pending;
+  }
+  expect(chat.history().at(-1)?.text).toBe("New first");
+  expect(chat.prev()).toBe("restored");
+  expect(chat.history().at(-1)?.text).toBe("First");
+});
