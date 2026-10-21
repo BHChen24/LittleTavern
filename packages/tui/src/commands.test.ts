@@ -32,7 +32,8 @@ it("generates help for exactly the contracted commands and key bindings", () => 
   expect(helpText()).toContain("/innkeeper  Ask the innkeeper for help or to change settings");
   expect(helpText()).not.toContain("/key");
   expect(helpText()).not.toContain("/forget-key");
-  for (const key of ["Ctrl+C", "Ctrl+R", "Esc", "Enter"]) expect(helpText()).toContain(key);
+  for (const key of ["Ctrl+C", "Ctrl+R", "Esc", "Enter", "Up/Down"])
+    expect(helpText()).toContain(key);
 });
 it("offers no id arguments or completions for the picker commands", () => {
   for (const name of ["characters", "show", "lorebooks", "new"]) {

@@ -1352,6 +1352,7 @@ export function createApp(options: AppOptions = {}) {
     }
   }
   editor.onSubmit = (value) => {
+    if (value.trim()) editor.addToHistory(value);
     void submit(value);
   };
   tui.addInputListener((data) => {

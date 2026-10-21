@@ -88,6 +88,7 @@ Type `/` at any time to see the commands, with completion.
 | Key | What it does |
 |---|---|
 | Enter | Send |
+| Up / Down | Recall what you typed earlier in this run |
 | Esc | Interrupt a reply; close a picker |
 | Ctrl+R | Regenerate the last reply |
 | Ctrl+O | Write the current message in `$EDITOR` |

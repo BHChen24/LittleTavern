@@ -45,7 +45,14 @@ per message, so it needs a cap on rounds, and its usage must count every request
 - Q: Does a change need the player's approval? → A: Yes, every time. There is no auto-approve
   mode.
 
-### Session 2026-10-20 (after 0.1.1)
+#### Session 2026-10-20 (owner acceptance)
+
+- Q: Can the player recall earlier input? → A: Yes. Up and Down in the input recall what the
+  player submitted earlier in this run, as in a shell: messages and commands, in every chat and
+  in the innkeeper. History is in memory only and is lost on quit. Requested by the owner during
+  the 014 acceptance; it uses the input's built-in history.
+
+## Session 2026-10-20 (after 0.1.1)
 
 - Q: Which tools does it have? → A: Reading the settings (never the API key), listing characters
   and personas, the app's help, opening a character chat, and changing settings.
@@ -263,6 +270,9 @@ Every innkeeper message can make several requests. They are capped, counted and 
   describe what the innkeeper can do, the confirmation, the backups and `limits.toolRounds`. The
   innkeeper's own help (its help tool) MUST name the backups folder, so it can answer where
   backups are.
+- **FR-015**: Up and Down in the input MUST recall the text the player submitted earlier in this
+  run (newest first; Down returns to the unsent draft). The API key, typed in its own masked
+  input, MUST NOT enter this history. Help and the README MUST mention the keys.
 
 ### Key Entities
 
