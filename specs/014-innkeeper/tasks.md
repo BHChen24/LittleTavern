@@ -172,8 +172,8 @@ the turn stops with the contract notice; the status bar cost equals the summed u
 
 ## Phase 6: Happy path and docs
 
-- [ ] T010 Write the happy path T-f in `packages/tui/src/app-innkeeper.test.ts`: a fresh home with the example Alice; `/innkeeper`; a faux `get_help` then an answer; a faux `change_settings` for `limits.replyTokens` 1000 → Yes → a backup in `<configDir>/backups/`; a faux `open_chat` for Alice → Yes → after the run, the Alice chat is open; a send there asks for 1000 output tokens (`simulated.onRequest`)
-- [ ] T011 Check that help lists `/innkeeper` with the contract description and that `get_help`'s text names the backups folder (spec FR-014). Update `README.md`: what the innkeeper can look up and change, that every change asks first and is backed up to `<configDir>/backups/`, that changes apply immediately (`mouse` after a restart), and `limits.toolRounds` in the limits section. Update the `/innkeeper` row in the command table and in `specs/006-usability/contracts/commands.md` (note "changed by 014")
+- [X] T010 Write the happy path T-f in `packages/tui/src/app-innkeeper.test.ts`: a fresh home with the example Alice; `/innkeeper`; a faux `get_help` then an answer; a faux `change_settings` for `limits.replyTokens` 1000 → Yes → a backup in `<configDir>/backups/`; a faux `open_chat` for Alice → Yes → after the run, the Alice chat is open; a send there asks for 1000 output tokens (`simulated.onRequest`)
+- [X] T011 Check that help lists `/innkeeper` with the contract description and that `get_help`'s text names the backups folder (spec FR-014). Update `README.md`: what the innkeeper can look up and change, that every change asks first and is backed up to `<configDir>/backups/`, that changes apply immediately (`mouse` after a restart), and `limits.toolRounds` in the limits section. Update the `/innkeeper` row in the command table and in `specs/006-usability/contracts/commands.md` (note "changed by 014")
 
 **Checkpoint**: checks pass. Commit.
 

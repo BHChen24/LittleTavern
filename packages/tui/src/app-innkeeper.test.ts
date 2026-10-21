@@ -56,6 +56,57 @@ vi.mock("@littletavern/engine", async (importOriginal) => {
 
 const cleanups: (() => Promise<void>)[] = [];
 
+it("runs the happy path from help through a confirmed cap and opening Alice", async () => {
+  const f = fixture(
+    [
+      { toolCalls: [{ name: "get_help", args: {} }] },
+      (history) => {
+        expect(history.at(-1)?.text).toContain("Character import folder:");
+        return "Put a card in the import folder and use /import.";
+      },
+      {
+        toolCalls: [
+          {
+            name: "change_settings",
+            args: { changes: [{ setting: "limits.replyTokens", value: 1000 }] },
+          },
+        ],
+      },
+      "Replies are now capped.",
+      { toolCalls: [{ name: "open_chat", args: { character: "Alice", mode: "new" } }] },
+      "Hello from Alice.",
+    ],
+    { limits: { replyTokens: 4096 } },
+  );
+  await f.app.submit("/innkeeper");
+  await f.app.submit("How do I add a character?");
+  expect(f.screen()).toContain("· Innkeeper read the house rules");
+  expect(f.screen()).toContain("Put a card in the import folder");
+  const original = readFileSync(f.paths.settingsFile, "utf8");
+  const changing = f.app.submit("Cap replies at 1000 tokens");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Apply these settings changes?"));
+  f.input("\r");
+  await changing;
+  const backups = readdirSync(join(f.paths.configDir, "backups"));
+  expect(backups).toHaveLength(1);
+  expect(readFileSync(join(f.paths.configDir, "backups", backups[0] as string), "utf8")).toBe(
+    original,
+  );
+  const opening = f.app.submit("Talk to Alice");
+  await vi.waitFor(() => expect(f.overlay()).toContain("Start a new chat with Alice?"));
+  f.input("\r");
+  await opening;
+  expect(f.app.chat?.character.name).toBe("Alice");
+  await f.app.submit("Hello Alice");
+  expect(script.requests).toHaveLength(6);
+  expect(script.requests[5]).toMatchObject({ maxTokens: 1000 });
+  expect(f.screen()).toContain("Hello from Alice.");
+  const records = readUsageRecords(f.paths.usageLedgerFile);
+  expect(records).toHaveLength(4);
+  expect(records[2]?.sessionId).not.toBe(f.app.chat?.sessionId);
+  expect(records[3]?.sessionId).toBe(f.app.chat?.sessionId);
+});
+
 it("shows the round-limit notice and counts the turn's usage in status and ledger", async () => {
   const f = fixture([{ toolCalls: [{ name: "get_help", args: {} }] }, "Must not be requested."], {
     limits: { toolRounds: 1 },

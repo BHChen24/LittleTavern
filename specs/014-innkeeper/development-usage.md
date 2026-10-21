@@ -89,3 +89,11 @@ in the conversation. Checkpoint snapshots include subsequent calls.
 | 81 | functions.exec / write_stdin | Collect Phase 5 validation results | Exit running |
 | 82 | functions.exec / write_stdin | Collect final Phase 5 validation | Exit 0 |
 | 83 | functions.exec / exec_command | Mark T009 complete and refresh accounting snapshot | Completed |
+| 84 | functions.exec / exec_command | Commit Phase 5 after build, lint and 508 tests passed | Started |
+| 85 | functions.exec / write_stdin | Collect Phase 5 commit and hook results | Commit completed |
+| 86 | functions.exec / exec_command | Inspect shipped example installation for the prescribed fresh-home happy path | Completed |
+| 87 | functions.exec / apply_patch | Add full faux happy path and document innkeeper capabilities, confirmation, backups and toolRounds | Applied |
+| 88 | functions.exec / exec_command | Run required Phase 6 build, lint and full tests | Started |
+| 89 | functions.exec / write_stdin | Collect Phase 6 validation | Exit 0 |
+| 90 | functions.exec / exec_command | Read full convergence skill and verify offline acceptance behavior | Completed |
+| 91 | functions.exec / exec_command | Mark T010 and T011 complete and refresh accounting | Completed |
