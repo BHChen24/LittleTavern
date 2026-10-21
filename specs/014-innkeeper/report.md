@@ -5,7 +5,8 @@
 `/innkeeper` is now a tool-using guide with its own in-memory conversation. It can read safe
 settings, list characters and personas, look up built-in help, propose settings changes, and
 offer to start or resume a character chat. Returning to it restores the conversation and
-muted tool lines; `/new` clears it.
+muted tool lines; `/new` clears it while preserving the innkeeper's system prompt and tool
+declarations.
 
 Settings changes validate before confirmation. Yes creates an exclusive byte-for-byte backup
 of the existing file, preserves unrelated and unknown fields, saves the changes, and updates
@@ -19,7 +20,7 @@ assembled context and have no tools. Public engine interfaces expose only Little
 
 ## Tasks completed and not completed
 
-T001–T014 are complete. No implementation task or behavior question remains. The owner's
+T001–T015 are complete. No implementation task or behavior question remains. The owner's
 real-model and visual acceptance checks remain manual.
 
 | Phase | Commit | Validation |
@@ -30,9 +31,11 @@ real-model and visual acceptance checks remain manual.
 | 4: new and resumed character chats | `1f161ca` | Build, lint, 505 tests passed |
 | 5: limits and usage accounting | `f43146f` | Build, lint, 508 tests passed |
 | 6: happy path and documentation | `d4fe465` | Build, lint, 509 tests passed |
+| 7: original validation and report | `40c99f3` | Build, lint, 509 tests; offline acceptance 19/19 |
 
-Phase 7 records final verification, convergence, and this report in the final feature-branch
-commit. No push, tag, publication, or pull-request operation was performed.
+Phase 8 fixes the prompt-reset bug found in the owner's review under T015 and updates the
+tests, convergence result, and report in its feature-branch commit. No push, tag, publication,
+or pull-request operation was performed.
 
 ## Test results
 
@@ -42,7 +45,7 @@ Final required checks passed:
 pnpm build && pnpm lint && pnpm test
 Checked 143 files. No fixes applied.
 Test Files 67 passed (67)
-Tests 509 passed (509)
+Tests 510 passed (510)
 ```
 
 | Planned group | Evidence |
@@ -50,8 +53,8 @@ Tests 509 passed (509)
 | T-a | Every allowed setting, invalid values, removal rules, unsupported keys, non-finite changes, and valid/invalid/default tool-round settings |
 | T-b | Exact original bytes in backups, nested sibling and unknown-field preservation, optional removal, same-millisecond backup collisions, missing file, malformed and non-object JSON |
 | T-c | Safe settings from active limits/generation and current lore, credentials/environment exclusion, help, character and active-persona lists, invalid/declined/accepted changes, backup-path callback, malformed/write errors, character resolution and newest matching saved chat |
-| T-d | Real internal tools driven by faux tool calls, final answer receives the result, ordered history, listeners, separate character context, next-request options, per-message cap, next-message round-limit changes, accepted open ends without another request, exact sum of every token and cost field |
-| T-e | Ordered muted lines and replay, Yes/No/Esc, old/new values, abort during confirmation, backup notice, live cap and sampling removal, hand-edit preservation, spend allowance, mouse restart notice, new/resumed chat opening after usage recording, unknown/ambiguous/unsaved names, malformed arguments, round-limit notice, status/ledger accounting, provider-failure retry hint, `/new` |
+| T-d | Real internal tools driven by faux tool calls, final answer receives the result, ordered history, listeners, separate character context, next-request options, per-message cap, next-message round-limit changes, accepted open ends without another request, exact sum of every token and cost field, preserved prompt and functioning tools after reset |
+| T-e | Ordered muted lines and replay, Yes/No/Esc, old/new values, abort during confirmation, backup notice, live cap and sampling removal, hand-edit preservation, spend allowance, mouse restart notice, new/resumed chat opening after usage recording, unknown/ambiguous/unsaved names, malformed arguments, round-limit notice, status/ledger accounting, provider-failure retry hint, `/new` followed by a fresh help request with the innkeeper prompt |
 | T-f | Fresh temporary home with a synthetic Alice: help lookup, confirmed 1000-token cap, exact backup, approved chat opening, then a character request with `maxTokens: 1000` |
 | Regression suite | Existing character-chat and 013 editing tests pass; two existing TUI assertions were updated for the required innkeeper wording |
 
@@ -63,7 +66,7 @@ The required offline acceptance suite passed **19 checks, 0 failures**:
 bash ../acceptance/run-v1-acceptance.sh --auto-only --repo "$PWD"
 ```
 
-Record: `../acceptance/results/v1-acceptance-20261020-225857.md`. It used a fresh temporary
+Latest record: `../acceptance/results/v1-acceptance-20261020-231512.md`. It used a fresh temporary
 application home, no API key, and no network. Third-party sample cards stayed outside the
 repository. Committed test fixtures are generated synthetic data.
 
@@ -74,6 +77,16 @@ tone, and UI appearance remain the owner's manual checks from [quickstart.md](./
 No real provider request, real editor, local LLM, or GPU was launched.
 
 ## Deviations from spec or plan
+
+The owner's review found that `/new` dropped the leading system message, which stores both
+the prompt and tool declarations in pi 1.3.0. The original engine and picker reset tests
+incorrectly expected that loss, so the initial passing suite and convergence review missed
+the defect. T015 now preserves the leading system message and removes the later conversation.
+
+Before the production fix, three strengthened reset regressions failed. After the fix, all
+34 focused engine/app tests pass, and the full suite passes 510 tests. Coverage now checks
+the prompt in subsequent request context, removal of earlier exchanges, and a working
+`get_help` call after `/new`. The existing picker assertion also requires its configured prompt.
 
 No product behavior deviation was needed. The current design artifacts include the design
 owner's resolutions of the five findings in the historical [analysis.md](./analysis.md).
@@ -103,7 +116,8 @@ then request a reply cap and sampling change. Check the old/new lines, Yes/No pi
 path, and requested options in a later character chat's `/trace`.
 
 Try new and resumed Alice chats, return to `/innkeeper`, and check the conversation and muted
-tool lines. Test decline and Esc, invalid top P, guidance for model/persona changes, the mouse
+tool lines. Use `/new`, then ask another help question: old messages should be gone while the
+innkeeper's identity and tool use remain. Test decline and Esc, invalid top P, guidance for model/persona changes, the mouse
 restart notice, a one-round cap, and a malformed settings file.
 
 ## Development tool and token usage
@@ -119,17 +133,17 @@ external acceptance result write. All commit secret scans passed; no hook was by
 
 ## Convergence
 
-T013 applied `speckit-converge` to the present implementation. The review checked all 14
+After the T015 fix, `speckit-converge` was rerun against the present implementation. The review checked all 14
 functional requirements, 5 success criteria, 22 acceptance scenarios, 12 edge cases, research
-decisions R1–R10, the six planned test groups, and the 14 tasks. It checked the seven
+decisions R1–R10, the six planned test groups, and all 15 tasks. It checked the seven
 constitution principles and applicable technology, licensing, safety, and workflow constraints.
 
 Outcome: **converged**. No missing, partial, contradicting, or unrequested implementation
 finding remained. No additional task or empty convergence phase was appended.
 
-The task file was byte-for-byte unchanged during convergence. Its before/after SHA256 was
-`cf7ce32ecaa465625075fdcbd64615ed47271fe260e14b90dd990f667cee72cf`.
-The final implementation workflow updates T012–T014 markers afterward.
+The task file was byte-for-byte unchanged during this convergence rerun. Its before/after
+SHA256 was `37a00bebd7d3685098107aff0fa8e89b7a15ad5221eb43ad9e7f6bb7f1abbf17`.
+The implementation workflow marks T015 complete afterward.
 
 No `.specify/extensions.yml` exists; pre/post implementation and convergence hooks were skipped.
 
@@ -140,4 +154,5 @@ No `.specify/extensions.yml` exists; pre/post implementation and convergence hoo
 - Muted tool lines, confirmation layout, and Yes/No/Esc behavior in a real terminal.
 - Saved settings and backup paths, live request changes, and mouse behavior after restart.
 - New/resumed character chat opening and innkeeper conversation replay.
+- `/new` clears earlier messages and retains the innkeeper's identity and tool use.
 - Round-limit and malformed-file notices.

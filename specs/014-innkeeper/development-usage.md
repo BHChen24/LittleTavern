@@ -113,3 +113,38 @@ without creating a recursive bookkeeping commit. Earlier analysis accounting rem
 | 103 | functions.exec / exec_command | Write final development accounting snapshot | Completed |
 | 104 | functions.exec / exec_command | Commit Phase 7 report, final task markers and accounting using normal hooks | Final result recorded in conversation after this snapshot |
 | 105 | functions.exec / exec_command | Verify final commit, clean feature worktree and completed task markers | Final result recorded in conversation after this snapshot |
+
+## T015 review-fix rerun
+
+Platform-reported token usage for this rerun: **unknown**. The final commit and status results
+are recorded in the conversation after this snapshot.
+
+| # | Tool | Purpose | Outcome |
+|---|---|---|---|
+| 1 | functions.exec / exec_command | Check implementation hooks and prerequisites; read active tasks and notes; inspect branch/worktree | Clean 014-innkeeper branch; new T015 identifies prompt loss after /new; no hooks |
+| 2 | functions.exec / exec_command | Reload plan, data model, contracts and quickstart; scan checklists | Exit 0 |
+| 3 | functions.exec / exec_command | Inspect reset code/tests and verify pinned pi system-message behavior | Exit 0 |
+| 4 | functions.exec / exec_command | Read exact reset tests, scoped requirements, report and existing ignore setup | Completed |
+| 5 | functions.exec / apply_patch | Correct old reset assertion and add engine/app prompt-and-tool persistence regression coverage | Applied before production fix |
+| 6 | functions.exec / exec_command | Reproduce T015 with strengthened reset regressions before changing production code | Started |
+| 7 | functions.exec / write_stdin | Collect reset regression failures before the fix | Failed as expected: 3 reset regressions reproduced prompt loss |
+| 8 | functions.exec / apply_patch | Preserve the leading system message while clearing innkeeper conversation history | Applied minimal T015 fix |
+| 9 | functions.exec / exec_command | Format, typecheck and rerun focused reset regressions after the fix | Started |
+| 10 | functions.exec / write_stdin | Collect focused post-fix results | Exit 0 |
+| 11 | functions.exec / exec_command | Run required T015 build, lint and full regression suite | Started |
+| 12 | functions.exec / exec_command | Initialize convergence rerun, capture task hash and inspect minimal fix and regression coverage | Completed; no hooks |
+| 13 | functions.exec / exec_command | Reassess scoped behavior against all requirements and T015; verify task file unchanged and convergence hooks absent | No remaining implementation gaps; 15 tasks; task hash unchanged |
+| 14 | functions.exec / write_stdin | Collect full post-fix regression results | Exit 1 |
+| 15 | functions.exec / exec_command | Inspect the additional legacy picker assertion that expected prompt removal | Confirmed same obsolete reset expectation |
+| 16 | functions.exec / apply_patch | Correct the existing picker reset regression to require its configured system prompt | Applied |
+| 17 | functions.exec / exec_command | Rerun required checks after correcting both legacy prompt-removal assertions | Started |
+| 18 | functions.exec / write_stdin | Collect corrected full regression results | Exit 0 |
+| 19 | functions.exec / exec_command | Complete convergence checks against governing rules, planned test groups and reset behavior; verify unchanged tasks and hooks | Converged; no additional work or task-file changes |
+| 20 | functions.exec / exec_command | Rerun offline acceptance after T015 with a temporary home and no API key | Started |
+| 21 | functions.exec / write_stdin | Collect post-fix offline acceptance results | Exit 0 |
+| 22 | functions.exec / apply_patch | Document T015 root cause and regression results, update convergence and acceptance record, mark task complete | Applied |
+| 23 | functions.exec / exec_command | Verify all 15 task markers, whitespace and final change scope; check post-implementation hooks | Passed; no hooks |
+| 24 | functions.exec / exec_command | Append T015 development accounting and check whitespace | Completed |
+| 25 | functions.exec / exec_command | Commit T015 fix and report with normal secret-scan/lint/message hooks | Final result recorded in the conversation |
+| 26 | functions.exec / write_stdin | Collect T015 commit and hook completion | Final result recorded in the conversation |
+| 27 | functions.exec / exec_command | Verify final commit, clean feature worktree and completed tasks | Final result recorded in the conversation |

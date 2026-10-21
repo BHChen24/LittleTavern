@@ -306,7 +306,8 @@ export class ChatSession {
   }
 
   clearConversation(): void {
-    this.innkeeper.state.messages = [];
+    const first = this.innkeeper.state.messages[0];
+    this.innkeeper.state.messages = first?.role === "system" ? [first] : [];
   }
 
   async send(text: string): Promise<TurnResult | null> {

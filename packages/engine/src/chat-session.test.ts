@@ -13,7 +13,7 @@ import { expect, it, vi } from "vitest";
 import { ChatSession, type TurnResult } from "./chat-session.ts";
 import type { InnkeeperToolContext } from "./innkeeper-tools.ts";
 import { DEFAULT_MODEL_ID } from "./models.ts";
-import { DEFAULT_SYSTEM_PROMPT } from "./system-prompt.ts";
+import { DEFAULT_SYSTEM_PROMPT, INNKEEPER_SYSTEM_PROMPT } from "./system-prompt.ts";
 import { sumUsage, toUsageRecord } from "./usage.ts";
 
 it("streams text and supplies the earlier conversation on a second turn", async () => {
@@ -65,7 +65,10 @@ it("clears earlier conversation before the next request", async () => {
       replies: [
         "Earlier reply.",
         (history) => {
-          expect(history).toEqual([{ role: "user", text: "New conversation." }]);
+          expect(history).toEqual([
+            { role: "system", text: DEFAULT_SYSTEM_PROMPT },
+            { role: "user", text: "New conversation." },
+          ]);
           return "Fresh reply.";
         },
       ],
@@ -74,6 +77,50 @@ it("clears earlier conversation before the next request", async () => {
   await session.send("Earlier message.");
   session.clearConversation();
   expect((await session.send("New conversation."))?.text).toBe("Fresh reply.");
+  expect(session.innkeeperHistory()).toEqual([
+    { kind: "user", text: "New conversation." },
+    { kind: "innkeeper", text: "Fresh reply." },
+  ]);
+});
+
+it("keeps the innkeeper prompt and tools when clearing its conversation", async () => {
+  const home = mkdtempSync(join(tmpdir(), "lt-reset-innkeeper-"));
+  try {
+    const innkeeper = toolContext(home);
+    const session = new ChatSession({
+      modelId: DEFAULT_MODEL_ID,
+      systemPrompt: INNKEEPER_SYSTEM_PROMPT,
+      getApiKey: () => "synthetic-key",
+      innkeeper,
+      simulated: {
+        replies: [
+          "Earlier answer.",
+          { toolCalls: [{ name: "get_help", args: {} }] },
+          (history) => {
+            expect(history[0]).toEqual({ role: "system", text: INNKEEPER_SYSTEM_PROMPT });
+            expect(history.filter((message) => message.role === "user")).toEqual([
+              { role: "user", text: "Fresh question." },
+            ]);
+            expect(history.at(-1)).toEqual({ role: "toolResult", text: innkeeper.help() });
+            return "Fresh answer from help.";
+          },
+        ],
+      },
+    });
+    await session.send("Earlier question.");
+    session.clearConversation();
+    expect(session.innkeeperHistory()).toEqual([]);
+    expect(await session.send("Fresh question.")).toMatchObject({
+      text: "Fresh answer from help.",
+    });
+    expect(session.innkeeperHistory()).toEqual([
+      { kind: "user", text: "Fresh question." },
+      { kind: "tool", text: "read the house rules" },
+      { kind: "innkeeper", text: "Fresh answer from help." },
+    ]);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
 });
 
 it("interrupts streaming while retaining partial text", async () => {

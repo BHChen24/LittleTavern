@@ -12,6 +12,7 @@ import { join } from "node:path";
 import type { Terminal } from "@earendil-works/pi-tui";
 import {
   DEFAULT_MODEL_ID,
+  INNKEEPER_SYSTEM_PROMPT,
   importFile,
   readUsageRecords,
   resolveAppPaths,
@@ -339,6 +340,15 @@ it("shows tool calls between reply segments and restores the innkeeper conversat
         expect(help).toContain(path);
       return "Use the import folder.";
     },
+    { toolCalls: [{ name: "get_help", args: {} }] },
+    (history) => {
+      expect(history[0]).toEqual({ role: "system", text: INNKEEPER_SYSTEM_PROMPT });
+      expect(history.filter((message) => message.role === "user")).toEqual([
+        { role: "user", text: "Fresh help question." },
+      ]);
+      expect(history.at(-1)?.text).toContain("Character import folder:");
+      return "Fresh help answer.";
+    },
   ]);
   await f.app.submit("/innkeeper");
   await f.app.submit("How do I import?");
@@ -357,6 +367,15 @@ it("shows tool calls between reply segments and restores the innkeeper conversat
   await f.app.submit("/new");
   expect(f.screen()).not.toContain("How do I import?");
   expect(f.app.session.innkeeperHistory()).toEqual([]);
+  await f.app.submit("Fresh help question.");
+  expect(f.app.session.innkeeperHistory()).toEqual([
+    { kind: "user", text: "Fresh help question." },
+    { kind: "tool", text: "read the house rules" },
+    { kind: "innkeeper", text: "Fresh help answer." },
+  ]);
+  expect(f.screen()).toContain("Fresh help answer.");
+  expect(f.screen()).toContain("· Innkeeper read the house rules");
+  expect(f.screen()).not.toContain("How do I import?");
 });
 
 it.each(["Yes", "No", "Esc"])("handles %s in the settings confirmation", async (choice) => {
